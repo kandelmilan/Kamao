@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400" fill="none">
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="0" y2="400" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FBFFE0"/>
+      <stop offset="1" stop-color="#F4F4F4"/>
+    </linearGradient>
+    <linearGradient id="photoGrad" x1="108" y1="163" x2="192" y2="233" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#E6F694"/>
+      <stop offset="1" stop-color="#FF9E7A"/>
+    </linearGradient>
+  </defs>
+
+  <!-- card background -->
+  <rect x="0" y="0" width="300" height="400" rx="32" fill="url(#bgGrad)"/>
+
+  <!-- sparkles -->
+  <path d="M64 96 L69 108 L81 113 L69 118 L64 130 L59 118 L47 113 L59 108 Z" fill="#121212" opacity="0.55"/>
+  <path d="M238 78 L241 86 L249 89 L241 92 L238 100 L235 92 L227 89 L235 86 Z" fill="#FF9E7A"/>
+
+  <!-- phone -->
+  <rect x="90" y="140" width="120" height="210" rx="20" fill="#FFFFFF" stroke="#121212" stroke-width="4"/>
+  <rect x="100" y="155" width="100" height="140" rx="10" fill="#EEEEEE"/>
+
+  <!-- photo thumbnail on screen -->
+  <rect x="108" y="163" width="84" height="70" rx="8" fill="url(#photoGrad)"/>
+
+  <!-- like heart -->
+  <path
+    d="M150 265
+       c-8 -8 -20 -4 -20 7
+       c0 9 12 16 20 22
+       c8 -6 20 -13 20 -22
+       c0 -11 -12 -15 -20 -7 Z"
+    fill="#FF6B57"
+  />
+
+  <!-- caption lines -->
+  <rect x="118" y="278" width="64" height="6" rx="3" fill="#D6D6D6"/>
+  <rect x="118" y="288" width="40" height="6" rx="3" fill="#E4E4E4"/>
+
+  <!-- home indicator -->
+  <rect x="132" y="332" width="36" height="6" rx="3" fill="#121212" opacity="0.5"/>
+
+  <!-- coin badge -->
+  <circle cx="205" cy="150" r="34" fill="#FFD54A" stroke="#121212" stroke-width="4"/>
+  <text x="205" y="161" font-family="Arial, sans-serif" font-size="30" font-weight="700"
+        fill="#121212" text-anchor="middle">$</text>
+</svg>
