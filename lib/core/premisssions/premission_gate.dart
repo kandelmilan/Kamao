@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:kamao/core/core.dart';
 
-/// Wraps a page and only builds it if the user has [permission].
-/// Otherwise shows a simple "not allowed" placeholder instead of
-/// letting the page (and its API calls) load at all.
 class PermissionGate extends StatelessWidget {
   const PermissionGate({
     super.key,

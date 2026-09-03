@@ -44,4 +44,6 @@ class AppConstants {
   static const String firstLaunchKey = 'first_launch';
 
   static const String lastActivityKey = 'last_activity';
+
+  static const String assetBaseUrl = 'https://aayurise.gyanbato.com';
 }

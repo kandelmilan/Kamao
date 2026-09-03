@@ -9,8 +9,6 @@ import 'package:get/get.dart' hide Response, FormData;
 import 'package:kamao/app/app.dart';
 import 'package:kamao/core/core.dart';
 
-import 'api_endpoints.dart';
-
 class ApiInterceptor extends Interceptor {
   ApiInterceptor(this._refreshDio);
 

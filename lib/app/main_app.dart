@@ -69,8 +69,7 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
         title: 'Kamao',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.light,
-        // initialBinding: InitialBinding(),
-        initialRoute: AppRoutes.splash,
+        initialRoute: AppRoutes.onboarding,
         getPages: AppPages.routes,
       ),
     );

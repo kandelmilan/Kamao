@@ -1,17 +1,12 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:kamao/app/app.dart';
 import 'package:kamao/src/tenant/tenant.dart';
 import '../controllers/auth_controller.dart';
-import 'register_view.dart';
+import 'login_view.dart' show DottedCirclePainter;
 
-// Brand palette — matches splash_view.dart / home_view.dart (Figma
-// Campaign App reference). Kept local per-file, same convention as
-// those two screens, rather than pulled from the old app/theme
-// AppColors indigo palette, so Login visually belongs with the rest of
-// the authenticated-brand flow instead of standing out on its own.
+// Same brand palette as login_view.dart — kept local per-file per the same
+// convention used there, so Register visually matches Login exactly.
 class _Palette {
   _Palette._();
 
@@ -25,8 +20,13 @@ class _Palette {
   static const white = Colors.white;
 }
 
-class LoginView extends GetView<AuthController> {
-  LoginView({super.key});
+// Adjust this list to whatever account types the backend actually accepts
+// for this tenant — "Creator" is confirmed from the sample request, the
+// others are placeholders.
+const List<String> _kAccountTypes = ['Creator'];
+
+class RegisterView extends GetView<AuthController> {
+  RegisterView({super.key});
   TenantController get tenantController => Get.find<TenantController>();
 
   static const _brandColor = _Palette.purple;
@@ -122,8 +122,31 @@ class LoginView extends GetView<AuthController> {
     });
   }
 
-  Widget _loginErrorMessage(double scale) {
-    final message = controller.loginErrorMessage.value;
+  Widget _buildAccountTypeField() {
+    return Obx(() {
+      final selected = controller.selectedAccountType.value;
+
+      return DropdownButtonFormField<String>(
+        initialValue: selected.isEmpty ? null : selected,
+        isExpanded: true,
+        icon: const Icon(Icons.keyboard_arrow_down),
+        style: const TextStyle(fontSize: 16, color: _textColor),
+        dropdownColor: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        hint: const Text('Select account type'),
+        decoration: _buildFieldDecoration(hint: 'Select account type'),
+        items: [
+          for (final type in _kAccountTypes)
+            DropdownMenuItem(value: type, child: Text(type)),
+        ],
+        onChanged: (value) {
+          if (value != null) controller.selectedAccountType.value = value;
+        },
+      );
+    });
+  }
+
+  Widget _errorMessage(String? message, double scale) {
     if (message == null || message.isEmpty) return const SizedBox.shrink();
 
     return AnimatedSwitcher(
@@ -199,17 +222,10 @@ class LoginView extends GetView<AuthController> {
             final headerVerticalPadding = 24.0 * scale;
             final fieldSpacing = 18.0 * scale;
             final sectionSpacing = 20.0 * scale;
-            // IMPORTANT: derived from screenHeight (full device height,
-            // same source as `scale`), NOT constraints.maxHeight. The
-            // latter is the Scaffold body's height, which shrinks the
-            // moment the keyboard opens (resizeToAvoidBottomInset: true).
-            // Since the header is wrapped in a fixed-size SizedBox +
-            // ClipRect, a shrinking headerHeight clips the "Welcome Back"
-            // title right out of view whenever a field is focused. Tying
-            // it to screenHeight keeps the header a constant size
-            // regardless of the keyboard — the page just scrolls instead
-            // of the header shrinking.
-            final headerHeight = screenHeight * 0.34 + topPadding;
+            // Same reasoning as login_view.dart: tied to screenHeight, not
+            // constraints.maxHeight, so the header doesn't collapse when
+            // the keyboard opens.
+            final headerHeight = screenHeight * 0.28 + topPadding;
 
             final cardTopPadding =
                 (_illustrationToTitleGap -
@@ -243,7 +259,7 @@ class LoginView extends GetView<AuthController> {
                           children: [
                             Positioned(
                               left: -204,
-                              top: 125 + topPadding,
+                              top: 100 + topPadding,
                               child: Container(
                                 width: 275.32,
                                 height: 275.32,
@@ -298,19 +314,6 @@ class LoginView extends GetView<AuthController> {
                                 ],
                               ),
                             ),
-                            Positioned(
-                              right: 10,
-                              top: 180 + topPadding,
-                              child: CustomPaint(
-                                size: const Size(100, 100),
-                                painter: DottedCirclePainter(
-                                  color: _Palette.white.withOpacity(0.1),
-                                  strokeWidth: 1.0,
-                                  dashLength: 8.0,
-                                  spaceLength: 8.0,
-                                ),
-                              ),
-                            ),
                             Padding(
                               padding: EdgeInsets.fromLTRB(
                                 24,
@@ -324,7 +327,7 @@ class LoginView extends GetView<AuthController> {
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Text(
-                                      'Welcome Back',
+                                      'Create Account',
                                       textAlign: TextAlign.center,
                                       style: TextStyle(
                                         color: Colors.white,
@@ -334,7 +337,7 @@ class LoginView extends GetView<AuthController> {
                                     ),
                                     SizedBox(height: 6 * scale),
                                     Text(
-                                      'Login and start managing your projects ',
+                                      'Sign up to start managing your projects',
                                       textAlign: TextAlign.center,
                                       style: TextStyle(
                                         color: Colors.white.withOpacity(.75),
@@ -351,7 +354,7 @@ class LoginView extends GetView<AuthController> {
                     ),
                   ),
                   Transform.translate(
-                    offset: Offset(0, -80),
+                    offset: const Offset(0, -80),
                     child: Container(
                       width: double.infinity,
                       padding: EdgeInsets.fromLTRB(
@@ -375,7 +378,7 @@ class LoginView extends GetView<AuthController> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                'Login',
+                                'Register',
                                 style: TextStyle(
                                   fontSize: 24 * scale,
                                   fontWeight: FontWeight.bold,
@@ -387,46 +390,128 @@ class LoginView extends GetView<AuthController> {
                               SizedBox(height: 8 * scale),
                               _buildOrganizationField(context),
                               SizedBox(height: fieldSpacing),
+                              _fieldLabel('Full Name'),
+                              SizedBox(height: 8 * scale),
+                              TextField(
+                                controller: controller.fullNameController,
+                                keyboardType: TextInputType.name,
+                                textCapitalization: TextCapitalization.words,
+                                decoration: _buildFieldDecoration(
+                                  hint: 'Your full name',
+                                ),
+                              ),
+                              SizedBox(height: fieldSpacing),
                               _fieldLabel('Email Address'),
                               SizedBox(height: 8 * scale),
                               TextField(
-                                controller: controller.emailController,
+                                controller: controller.registerEmailController,
                                 keyboardType: TextInputType.emailAddress,
                                 decoration: _buildFieldDecoration(
                                   hint: 'yourcompany@gmail.com',
                                 ),
                               ),
                               SizedBox(height: fieldSpacing),
+                              _fieldLabel('Account Type'),
+                              SizedBox(height: 8 * scale),
+                              _buildAccountTypeField(),
+                              SizedBox(height: fieldSpacing),
                               _fieldLabel('Password'),
                               SizedBox(height: 8 * scale),
                               TextField(
-                                controller: controller.passwordController,
-                                obscureText: controller.obscurePassword.value,
+                                controller:
+                                    controller.registerPasswordController,
+                                obscureText:
+                                    controller.obscureRegisterPassword.value,
                                 decoration: _buildFieldDecoration(
-                                  hint: 'Enter Your Password',
+                                  hint: 'Create a password',
                                   suffixIcon: IconButton(
                                     icon: Icon(
-                                      controller.obscurePassword.value
+                                      controller.obscureRegisterPassword.value
                                           ? Icons.visibility_off_outlined
                                           : Icons.visibility_outlined,
                                       color: Colors.grey.shade600,
                                     ),
-                                    onPressed:
-                                        controller.togglePasswordVisibility,
+                                    onPressed: controller
+                                        .toggleRegisterPasswordVisibility,
                                   ),
                                 ),
                               ),
-                              _loginErrorMessage(scale),
+                              SizedBox(height: fieldSpacing),
+                              _fieldLabel('Confirm Password'),
+                              SizedBox(height: 8 * scale),
+                              TextField(
+                                controller:
+                                    controller.confirmPasswordController,
+                                obscureText:
+                                    controller.obscureConfirmPassword.value,
+                                decoration: _buildFieldDecoration(
+                                  hint: 'Re-enter your password',
+                                  suffixIcon: IconButton(
+                                    icon: Icon(
+                                      controller.obscureConfirmPassword.value
+                                          ? Icons.visibility_off_outlined
+                                          : Icons.visibility_outlined,
+                                      color: Colors.grey.shade600,
+                                    ),
+                                    onPressed: controller
+                                        .toggleConfirmPasswordVisibility,
+                                  ),
+                                ),
+                              ),
+                              SizedBox(height: fieldSpacing),
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  SizedBox(
+                                    height: 24,
+                                    width: 24,
+                                    child: Checkbox(
+                                      value:
+                                          controller.acceptedMinimumAge.value,
+                                      activeColor: _brandColor,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      onChanged: (value) {
+                                        controller.acceptedMinimumAge.value =
+                                            value ?? false;
+                                      },
+                                    ),
+                                  ),
+                                  SizedBox(width: 10 * scale),
+                                  Expanded(
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        controller.acceptedMinimumAge.value =
+                                            !controller
+                                                .acceptedMinimumAge
+                                                .value;
+                                      },
+                                      child: Text(
+                                        'I confirm that I meet the minimum age requirement.',
+                                        style: TextStyle(
+                                          color: _Palette.heading,
+                                          fontSize: 13.5 * scale,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              _errorMessage(
+                                controller.registerErrorMessage.value,
+                                scale,
+                              ),
                               SizedBox(height: sectionSpacing),
                               SizedBox(
                                 width: double.infinity,
                                 height: 54 * scale,
                                 child: ElevatedButton(
-                                  onPressed: controller.isLoading.value
+                                  onPressed: controller.isRegistering.value
                                       ? null
                                       : () {
                                           FocusScope.of(context).unfocus();
-                                          controller.login();
+                                          controller.register();
                                         },
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: _brandColor,
@@ -436,7 +521,7 @@ class LoginView extends GetView<AuthController> {
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                   ),
-                                  child: controller.isLoading.value
+                                  child: controller.isRegistering.value
                                       ? const SizedBox(
                                           width: 24,
                                           height: 24,
@@ -446,7 +531,7 @@ class LoginView extends GetView<AuthController> {
                                           ),
                                         )
                                       : Text(
-                                          'Sign in',
+                                          'Create Account',
                                           style: TextStyle(
                                             fontSize: 16 * scale,
                                             fontWeight: FontWeight.w600,
@@ -457,46 +542,13 @@ class LoginView extends GetView<AuthController> {
                               SizedBox(height: 12 * scale),
                               Center(
                                 child: TextButton(
-                                  onPressed: () => {
-                                    debugPrint(AppRoutes.forgotPassword),
-                                    Get.toNamed(AppRoutes.forgotPassword),
-                                  },
+                                  onPressed: () => Get.back(),
                                   child: Text(
-                                    'Forgot your Password ?',
+                                    'Already have an account? Sign in',
                                     style: TextStyle(
                                       color: _brandColor,
                                       fontWeight: FontWeight.w600,
                                       fontSize: 14 * scale,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              SizedBox(height: 4 * scale),
-                              Center(
-                                child: TextButton(
-                                  onPressed: () {
-                                    FocusScope.of(context).unfocus();
-                                    Get.to(() => RegisterView());
-                                  },
-                                  child: RichText(
-                                    text: TextSpan(
-                                      style: TextStyle(
-                                        fontSize: 14 * scale,
-                                        fontWeight: FontWeight.w500,
-                                        color: Colors.grey.shade600,
-                                      ),
-                                      children: [
-                                        const TextSpan(
-                                          text: "Don't have an account? ",
-                                        ),
-                                        TextSpan(
-                                          text: 'Sign up',
-                                          style: TextStyle(
-                                            color: _brandColor,
-                                            fontWeight: FontWeight.w700,
-                                          ),
-                                        ),
-                                      ],
                                     ),
                                   ),
                                 ),
@@ -515,53 +567,4 @@ class LoginView extends GetView<AuthController> {
       ),
     );
   }
-}
-
-class DottedCirclePainter extends CustomPainter {
-  final Color color;
-  final double strokeWidth;
-  final double dashLength;
-  final double spaceLength;
-
-  DottedCirclePainter({
-    required this.color,
-    this.strokeWidth = 1.0,
-    this.dashLength = 10.0,
-    this.spaceLength = 20.0,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final Paint paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth
-      ..strokeCap = StrokeCap.butt;
-
-    final double radius = (size.width / 2) - (strokeWidth / 2);
-    final Path path = Path()
-      ..addOval(
-        Rect.fromCircle(
-          center: Offset(size.width / 2, size.height / 2),
-          radius: radius,
-        ),
-      );
-
-    final PathMetric pathMetric = path.computeMetrics().first;
-    final Path dashedPath = Path();
-
-    double distance = 0.0;
-    while (distance < pathMetric.length) {
-      dashedPath.addPath(
-        pathMetric.extractPath(distance, distance + dashLength),
-        Offset.zero,
-      );
-      distance += dashLength + spaceLength;
-    }
-
-    canvas.drawPath(dashedPath, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

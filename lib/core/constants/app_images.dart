@@ -12,4 +12,8 @@ class AppImages {
       "$_onboarding/onboarding_illustration_center.svg";
   static const String onboarding2 =
       "$_onboarding/onboarding_illustration_side.svg";
+
+  static const String _home = "$_image/home";
+  static const String sparkline = "$_home/sparkline.svg";
+  static const String featureBrand = "$_home/featurebrand.svg";
 }

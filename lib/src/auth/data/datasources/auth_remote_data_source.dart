@@ -7,6 +7,10 @@ abstract class AuthRemoteDataSource {
     LoginRequestModel request,
   );
 
+  Future<Either<Failure, ApiResponse<RegisterResponseModel>>> register(
+    RegisterRequestModel request,
+  );
+
   Future<Either<Failure, ApiResponse<LoginResponseModel>>> refreshToken(
     RefreshTokenRequestModel request,
   );
@@ -28,6 +32,16 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     return ApiResponseHandler.handleResponse<LoginResponseModel>(
       () => _apiService.post(ApiEndpoints.login, data: request.toJson()),
       (data) => LoginResponseModel.fromJson(data as Map<String, dynamic>),
+    );
+  }
+
+  @override
+  Future<Either<Failure, ApiResponse<RegisterResponseModel>>> register(
+    RegisterRequestModel request,
+  ) {
+    return ApiResponseHandler.handleResponse<RegisterResponseModel>(
+      () => _apiService.post(ApiEndpoints.register, data: request.toJson()),
+      (data) => RegisterResponseModel.fromJson(data as Map<String, dynamic>),
     );
   }
 

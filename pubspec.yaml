@@ -23,6 +23,8 @@ dependencies:
   remixicon: ^4.9.3
   flutter_svg: ^2.2.0
   google_fonts: ^6.2.1
+  url_launcher: ^6.3.1
+  app_links: ^6.3.2
 
 dev_dependencies:
   flutter_test:
@@ -34,6 +36,8 @@ flutter:
   assets:
     - assets/images/onboarding/onboarding_illustration_center.svg
     - assets/images/onboarding/onboarding_illustration_side.svg
+    - assets/images/home/sparkline.svg
+    - assets/images/home/featurebrand.svg
 
   uses-material-design: true
   
