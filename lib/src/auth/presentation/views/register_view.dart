@@ -1,149 +1,140 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:kamao/src/tenant/tenant.dart';
 import '../controllers/auth_controller.dart';
-import 'login_view.dart' show DottedCirclePainter;
+import '../widgets/app_logo.dart';
 
-// Same brand palette as login_view.dart — kept local per-file per the same
-// convention used there, so Register visually matches Login exactly.
+// Register screen — matches Figma "Campaign App" register reference.
+// Same local-palette convention as login_view.dart, so the two screens
+// look identical.
 class _Palette {
   _Palette._();
 
-  static const walletGradientStart = Color(0xFF6F338D);
-  static const walletGradientMid = Color(0xFF571A78);
-  static const walletGradientEnd = Color(0xFF3E0163);
   static const purple = Color(0xFF4B0070);
-  static const coral = Color(0xFFFF6B6B);
-  static const heading = Color(0xFF353037);
-  static const ink = Color(0xFF17121A);
-  static const white = Colors.white;
+  static const heading = Color(0xFF4A434D);
+  static const subtitle = Color(0xFF7B7B7B);
+  static const gradientLilac = Color(0xFFF1D9FF);
 }
-
-// Adjust this list to whatever account types the backend actually accepts
-// for this tenant — "Creator" is confirmed from the sample request, the
-// others are placeholders.
-const List<String> _kAccountTypes = ['Creator'];
 
 class RegisterView extends GetView<AuthController> {
   RegisterView({super.key});
+
   TenantController get tenantController => Get.find<TenantController>();
 
   static const _brandColor = _Palette.purple;
-  static const _textColor = _Palette.ink;
-  static const double _illustrationToTitleGap = 28.0;
-  static const double _cardOverlap = 24.0;
 
   InputDecoration _buildFieldDecoration({
     required String hint,
     Widget? suffixIcon,
+    Widget? prefixIcon,
   }) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: TextStyle(color: Colors.grey.shade400),
+      hintStyle: const TextStyle(
+        color: _Palette.subtitle,
+        fontWeight: FontWeight.w400,
+        fontSize: 15,
+      ),
       suffixIcon: suffixIcon,
+      prefixIcon: prefixIcon,
+      prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
       filled: true,
       fillColor: Colors.white,
       contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 18),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         borderSide: BorderSide(color: Colors.grey.shade300),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         borderSide: BorderSide(color: Colors.grey.shade300),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         borderSide: const BorderSide(color: _brandColor, width: 2),
       ),
     );
   }
 
-  Widget _fieldLabel(String label, {bool required = true}) {
-    return RichText(
-      text: TextSpan(
-        text: label,
-        style: const TextStyle(
-          color: _Palette.heading,
-          fontWeight: FontWeight.w600,
-          fontSize: 14.5,
-        ),
-        children: required
-            ? const [
-                TextSpan(
-                  text: ' *',
-                  style: TextStyle(color: Colors.redAccent),
-                ),
-              ]
-            : [],
+  Widget _fieldLabel(String label) {
+    return Text(
+      label,
+      style: const TextStyle(
+        color: _Palette.heading,
+        fontWeight: FontWeight.w700,
+        fontSize: 12,
+        // Same tracking as login_view.dart's field labels.
+        letterSpacing: 0.6,
       ),
     );
   }
 
-  Widget _buildOrganizationField(BuildContext context) {
-    return Obx(() {
-      final tenants = tenantController.tenants;
-      final isLoading = tenantController.isLoading.value;
-      final selectedCode = controller.selectedTenantCode.value;
-
-      final currentValue = tenants.any((t) => (t.code) == selectedCode)
-          ? selectedCode
-          : null;
-
-      return DropdownButtonFormField<String>(
-        initialValue: currentValue,
-        isExpanded: true,
-        icon: isLoading
-            ? const Padding(
-                padding: EdgeInsets.all(4),
-                child: SizedBox(
-                  height: 16,
-                  width: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-              )
-            : const Icon(Icons.keyboard_arrow_down),
-        style: const TextStyle(fontSize: 16, color: _textColor),
-        dropdownColor: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        hint: const Text('Select organization'),
-        decoration: _buildFieldDecoration(hint: 'Select organization'),
-        items: [
-          for (final tenant in tenants)
-            DropdownMenuItem(value: tenant.code, child: Text(tenant.name)),
+  Widget _phonePrefix() {
+    return Padding(
+      padding: const EdgeInsets.only(left: 18, right: 10),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text(
+            '+977',
+            style: TextStyle(
+              color: _Palette.purple,
+              fontWeight: FontWeight.w700,
+              fontSize: 15,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Container(width: 1, height: 20, color: Colors.grey.shade300),
         ],
-        onChanged: isLoading
-            ? null
-            : (value) {
-                if (value != null) controller.selectedTenantCode.value = value;
-              },
-      );
-    });
+      ),
+    );
   }
 
-  Widget _buildAccountTypeField() {
-    return Obx(() {
-      final selected = controller.selectedAccountType.value;
+  // ---------------------------------------------------------------------
+  // Organization dropdown — same as login_view.dart, backed by
+  // TenantController and controller.selectedTenantCode.
+  // ---------------------------------------------------------------------
+  Widget _buildOrganizationField(BuildContext context) {
+    final tenants = tenantController.tenants;
+    final isTenantLoading = tenantController.isLoading.value;
+    final selectedCode = controller.selectedTenantCode.value;
 
-      return DropdownButtonFormField<String>(
-        initialValue: selected.isEmpty ? null : selected,
-        isExpanded: true,
-        icon: const Icon(Icons.keyboard_arrow_down),
-        style: const TextStyle(fontSize: 16, color: _textColor),
-        dropdownColor: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        hint: const Text('Select account type'),
-        decoration: _buildFieldDecoration(hint: 'Select account type'),
-        items: [
-          for (final type in _kAccountTypes)
-            DropdownMenuItem(value: type, child: Text(type)),
-        ],
-        onChanged: (value) {
-          if (value != null) controller.selectedAccountType.value = value;
-        },
-      );
-    });
+    final currentValue = tenants.any((t) => t.code == selectedCode)
+        ? selectedCode
+        : null;
+
+    return DropdownButtonFormField<String>(
+      initialValue: currentValue,
+      isExpanded: true,
+      icon: isTenantLoading
+          ? const Padding(
+              padding: EdgeInsets.all(4),
+              child: SizedBox(
+                height: 16,
+                width: 16,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            )
+          : const Icon(Icons.keyboard_arrow_down),
+      style: const TextStyle(
+        fontSize: 15,
+        color: _Palette.heading,
+        fontWeight: FontWeight.w400,
+      ),
+      dropdownColor: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      hint: const Text('Select organization'),
+      decoration: _buildFieldDecoration(hint: 'Select organization'),
+      items: [
+        for (final tenant in tenants)
+          DropdownMenuItem(value: tenant.code, child: Text(tenant.name)),
+      ],
+      onChanged: isTenantLoading
+          ? null
+          : (value) {
+              if (value != null) controller.selectedTenantCode.value = value;
+            },
+    );
   }
 
   Widget _errorMessage(String? message, double scale) {
@@ -210,360 +201,248 @@ class RegisterView extends GetView<AuthController> {
     return Scaffold(
       backgroundColor: Colors.white,
       resizeToAvoidBottomInset: true,
-      body: AnnotatedRegion<SystemUiOverlayStyle>(
-        value: SystemUiOverlayStyle.light,
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final topPadding = MediaQuery.of(context).padding.top;
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final screenHeight = MediaQuery.sizeOf(context).height;
+          final scale = (screenHeight / 812).clamp(0.75, 1.0);
 
-            final screenHeight = MediaQuery.sizeOf(context).height;
-            final scale = (screenHeight / 812).clamp(0.6, 1.0);
-
-            final headerVerticalPadding = 24.0 * scale;
-            final fieldSpacing = 18.0 * scale;
-            final sectionSpacing = 20.0 * scale;
-            // Same reasoning as login_view.dart: tied to screenHeight, not
-            // constraints.maxHeight, so the header doesn't collapse when
-            // the keyboard opens.
-            final headerHeight = screenHeight * 0.28 + topPadding;
-
-            final cardTopPadding =
-                (_illustrationToTitleGap -
-                        headerVerticalPadding +
-                        _cardOverlap * scale)
-                    .clamp(8.0, 60.0);
-
-            return SingleChildScrollView(
+          return DecoratedBox(
+            // Same lilac → white gradient as login_view.dart.
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [_Palette.gradientLilac, Colors.white],
+                stops: [0.0, 0.4],
+              ),
+            ),
+            child: SingleChildScrollView(
               physics: const ClampingScrollPhysics(),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SizedBox(
-                    height: headerHeight,
-                    child: ClipRect(
-                      child: Container(
-                        width: double.infinity,
-                        decoration: const BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              _Palette.walletGradientStart,
-                              _Palette.walletGradientMid,
-                              _Palette.walletGradientEnd,
-                            ],
-                            stops: [0.0, 0.5, 1.0],
+              child: ConstrainedBox(
+                // Same centering approach as login_view.dart: scrolls
+                // normally once content (or the keyboard) needs more
+                // room than the screen provides.
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: IntrinsicHeight(
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      24,
+                      32 * scale,
+                      24,
+                      32 * scale,
+                    ),
+                    child: Obx(
+                      () => Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const AppLogo(size: 96),
+
+                          Text(
+                            'Create Account',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: _Palette.heading,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 24 * scale,
+                              height: 1.0,
+                            ),
                           ),
-                        ),
-                        child: Stack(
-                          children: [
-                            Positioned(
-                              left: -204,
-                              top: 100 + topPadding,
-                              child: Container(
-                                width: 275.32,
-                                height: 275.32,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: _Palette.white.withOpacity(.06),
+                          SizedBox(height: 8 * scale),
+                          // FittedBox + maxLines: 1 guarantees this never
+                          // wraps to a second line, same as login_view.dart.
+                          SizedBox(
+                            width: double.infinity,
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                'Sign up now to start earning cashbacks in NPR!',
+                                textAlign: TextAlign.center,
+                                maxLines: 1,
+                                style: TextStyle(
+                                  color: _Palette.subtitle,
+                                  fontWeight: FontWeight.w400,
+                                  fontSize: 14,
+                                  height: 1.0,
                                 ),
                               ),
                             ),
-                            Positioned(
-                              right: -110,
-                              top: -15 + topPadding,
-                              child: Stack(
-                                alignment: Alignment.center,
-                                children: [
-                                  SizedBox(
-                                    width: 222,
-                                    height: 222,
-                                    child: CustomPaint(
-                                      painter: DottedCirclePainter(
-                                        color: _Palette.coral.withOpacity(.25),
-                                        strokeWidth: 1,
-                                        dashLength: 6,
-                                        spaceLength: 7,
-                                      ),
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          color: _Palette.white.withOpacity(
-                                            .04,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  Container(
-                                    width: 200,
-                                    height: 200,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: _Palette.white.withOpacity(.045),
-                                    ),
-                                  ),
-                                  Container(
-                                    width: 160,
-                                    height: 160,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: _Palette.white.withOpacity(.07),
-                                    ),
-                                  ),
-                                ],
+                          ),
+                          SizedBox(height: 32 * scale),
+
+                          // Align(
+                          //   alignment: Alignment.centerLeft,
+                          //   child: _fieldLabel('ORGANIZATION'),
+                          // ),
+                          // SizedBox(height: 8 * scale),
+                          // _buildOrganizationField(context),
+                          // SizedBox(height: 18 * scale),
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: _fieldLabel('FULL NAME'),
+                          ),
+                          SizedBox(height: 8 * scale),
+                          TextField(
+                            controller: controller.fullNameController,
+                            keyboardType: TextInputType.name,
+                            textCapitalization: TextCapitalization.words,
+                            decoration: _buildFieldDecoration(hint: 'John Doe'),
+                          ),
+                          SizedBox(height: 18 * scale),
+
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: _fieldLabel('EMAIL ADDRESS'),
+                          ),
+                          SizedBox(height: 8 * scale),
+                          TextField(
+                            controller: controller.registerEmailController,
+                            keyboardType: TextInputType.emailAddress,
+                            decoration: _buildFieldDecoration(
+                              hint: 'john.doe@example.com',
+                            ),
+                          ),
+                          SizedBox(height: 18 * scale),
+
+                          // Align(
+                          //   alignment: Alignment.centerLeft,
+                          //   child: _fieldLabel('PHONE NUMBER'),
+                          // ),
+                          // SizedBox(height: 8 * scale),
+                          // TextField(
+                          //   // controller: controller.phoneController,
+                          //   keyboardType: TextInputType.phone,
+                          //   decoration: _buildFieldDecoration(
+                          //     hint: '98XXXXXXXX',
+                          //     prefixIcon: _phonePrefix(),
+                          //   ),
+                          // ),
+                          // SizedBox(height: 18 * scale),
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: _fieldLabel('PASSWORD'),
+                          ),
+                          SizedBox(height: 8 * scale),
+                          TextField(
+                            controller: controller.registerPasswordController,
+                            obscureText:
+                                controller.obscureRegisterPassword.value,
+                            decoration: _buildFieldDecoration(
+                              hint: 'Create a password',
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  controller.obscureRegisterPassword.value
+                                      ? Icons.visibility_off_outlined
+                                      : Icons.visibility_outlined,
+                                  color: Colors.grey.shade500,
+                                ),
+                                onPressed:
+                                    controller.toggleRegisterPasswordVisibility,
                               ),
                             ),
-                            Padding(
-                              padding: EdgeInsets.fromLTRB(
-                                24,
-                                0,
-                                24,
-                                headerVerticalPadding,
+                          ),
+                          SizedBox(height: 18 * scale),
+
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: _fieldLabel('CONFIRM PASSWORD'),
+                          ),
+                          SizedBox(height: 8 * scale),
+                          TextField(
+                            controller: controller.confirmPasswordController,
+                            obscureText:
+                                controller.obscureConfirmPassword.value,
+                            decoration: _buildFieldDecoration(
+                              hint: 'Re-enter your password',
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  controller.obscureConfirmPassword.value
+                                      ? Icons.visibility_off_outlined
+                                      : Icons.visibility_outlined,
+                                  color: Colors.grey.shade500,
+                                ),
+                                onPressed:
+                                    controller.toggleConfirmPasswordVisibility,
                               ),
-                              child: Center(
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      'Create Account',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
+                            ),
+                          ),
+
+                          _errorMessage(
+                            controller.registerErrorMessage.value,
+                            scale,
+                          ),
+
+                          SizedBox(height: 28 * scale),
+                          SizedBox(
+                            width: double.infinity,
+                            height: 56 * scale,
+                            child: ElevatedButton(
+                              onPressed: controller.isRegistering.value
+                                  ? null
+                                  : () {
+                                      FocusScope.of(context).unfocus();
+                                      controller.register();
+                                    },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: _brandColor,
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                              ),
+                              child: controller.isRegistering.value
+                                  ? const SizedBox(
+                                      width: 24,
+                                      height: 24,
+                                      child: CircularProgressIndicator(
                                         color: Colors.white,
-                                        fontSize: 22 * scale,
+                                        strokeWidth: 2.5,
+                                      ),
+                                    )
+                                  : Text(
+                                      'Create free account',
+                                      style: TextStyle(
+                                        fontSize: 16 * scale,
                                         fontWeight: FontWeight.w700,
                                       ),
                                     ),
-                                    SizedBox(height: 6 * scale),
-                                    Text(
-                                      'Sign up to start managing your projects',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        color: Colors.white.withOpacity(.75),
-                                        fontSize: 14 * scale,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
                             ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  Transform.translate(
-                    offset: const Offset(0, -80),
-                    child: Container(
-                      width: double.infinity,
-                      padding: EdgeInsets.fromLTRB(
-                        24,
-                        cardTopPadding,
-                        24,
-                        30 * scale,
-                      ),
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(52),
-                          topRight: Radius.circular(52),
-                        ),
-                      ),
-                      child: SafeArea(
-                        top: false,
-                        child: Obx(
-                          () => Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                'Register',
+                          ),
+                          SizedBox(height: 20 * scale),
+                          TextButton(
+                            onPressed: () => Get.back(),
+                            child: RichText(
+                              text: TextSpan(
                                 style: TextStyle(
-                                  fontSize: 24 * scale,
-                                  fontWeight: FontWeight.bold,
-                                  color: _Palette.heading,
+                                  fontSize: 14 * scale,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.grey.shade600,
                                 ),
-                              ),
-                              SizedBox(height: sectionSpacing),
-                              _fieldLabel('Organization'),
-                              SizedBox(height: 8 * scale),
-                              _buildOrganizationField(context),
-                              SizedBox(height: fieldSpacing),
-                              _fieldLabel('Full Name'),
-                              SizedBox(height: 8 * scale),
-                              TextField(
-                                controller: controller.fullNameController,
-                                keyboardType: TextInputType.name,
-                                textCapitalization: TextCapitalization.words,
-                                decoration: _buildFieldDecoration(
-                                  hint: 'Your full name',
-                                ),
-                              ),
-                              SizedBox(height: fieldSpacing),
-                              _fieldLabel('Email Address'),
-                              SizedBox(height: 8 * scale),
-                              TextField(
-                                controller: controller.registerEmailController,
-                                keyboardType: TextInputType.emailAddress,
-                                decoration: _buildFieldDecoration(
-                                  hint: 'yourcompany@gmail.com',
-                                ),
-                              ),
-                              SizedBox(height: fieldSpacing),
-                              _fieldLabel('Account Type'),
-                              SizedBox(height: 8 * scale),
-                              _buildAccountTypeField(),
-                              SizedBox(height: fieldSpacing),
-                              _fieldLabel('Password'),
-                              SizedBox(height: 8 * scale),
-                              TextField(
-                                controller:
-                                    controller.registerPasswordController,
-                                obscureText:
-                                    controller.obscureRegisterPassword.value,
-                                decoration: _buildFieldDecoration(
-                                  hint: 'Create a password',
-                                  suffixIcon: IconButton(
-                                    icon: Icon(
-                                      controller.obscureRegisterPassword.value
-                                          ? Icons.visibility_off_outlined
-                                          : Icons.visibility_outlined,
-                                      color: Colors.grey.shade600,
-                                    ),
-                                    onPressed: controller
-                                        .toggleRegisterPasswordVisibility,
-                                  ),
-                                ),
-                              ),
-                              SizedBox(height: fieldSpacing),
-                              _fieldLabel('Confirm Password'),
-                              SizedBox(height: 8 * scale),
-                              TextField(
-                                controller:
-                                    controller.confirmPasswordController,
-                                obscureText:
-                                    controller.obscureConfirmPassword.value,
-                                decoration: _buildFieldDecoration(
-                                  hint: 'Re-enter your password',
-                                  suffixIcon: IconButton(
-                                    icon: Icon(
-                                      controller.obscureConfirmPassword.value
-                                          ? Icons.visibility_off_outlined
-                                          : Icons.visibility_outlined,
-                                      color: Colors.grey.shade600,
-                                    ),
-                                    onPressed: controller
-                                        .toggleConfirmPasswordVisibility,
-                                  ),
-                                ),
-                              ),
-                              SizedBox(height: fieldSpacing),
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  SizedBox(
-                                    height: 24,
-                                    width: 24,
-                                    child: Checkbox(
-                                      value:
-                                          controller.acceptedMinimumAge.value,
-                                      activeColor: _brandColor,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(4),
-                                      ),
-                                      onChanged: (value) {
-                                        controller.acceptedMinimumAge.value =
-                                            value ?? false;
-                                      },
-                                    ),
+                                  const TextSpan(
+                                    text: 'Already Have an Account ? ',
                                   ),
-                                  SizedBox(width: 10 * scale),
-                                  Expanded(
-                                    child: GestureDetector(
-                                      onTap: () {
-                                        controller.acceptedMinimumAge.value =
-                                            !controller
-                                                .acceptedMinimumAge
-                                                .value;
-                                      },
-                                      child: Text(
-                                        'I confirm that I meet the minimum age requirement.',
-                                        style: TextStyle(
-                                          color: _Palette.heading,
-                                          fontSize: 13.5 * scale,
-                                        ),
-                                      ),
+                                  TextSpan(
+                                    text: 'Login',
+                                    style: TextStyle(
+                                      color: _brandColor,
+                                      fontWeight: FontWeight.w700,
                                     ),
                                   ),
                                 ],
                               ),
-                              _errorMessage(
-                                controller.registerErrorMessage.value,
-                                scale,
-                              ),
-                              SizedBox(height: sectionSpacing),
-                              SizedBox(
-                                width: double.infinity,
-                                height: 54 * scale,
-                                child: ElevatedButton(
-                                  onPressed: controller.isRegistering.value
-                                      ? null
-                                      : () {
-                                          FocusScope.of(context).unfocus();
-                                          controller.register();
-                                        },
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: _brandColor,
-                                    foregroundColor: Colors.white,
-                                    elevation: 0,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                  ),
-                                  child: controller.isRegistering.value
-                                      ? const SizedBox(
-                                          width: 24,
-                                          height: 24,
-                                          child: CircularProgressIndicator(
-                                            color: Colors.white,
-                                            strokeWidth: 2.5,
-                                          ),
-                                        )
-                                      : Text(
-                                          'Create Account',
-                                          style: TextStyle(
-                                            fontSize: 16 * scale,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                ),
-                              ),
-                              SizedBox(height: 12 * scale),
-                              Center(
-                                child: TextButton(
-                                  onPressed: () => Get.back(),
-                                  child: Text(
-                                    'Already have an account? Sign in',
-                                    style: TextStyle(
-                                      color: _brandColor,
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 14 * scale,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
-                        ),
+                        ],
                       ),
                     ),
                   ),
-                ],
+                ),
               ),
-            );
-          },
-        ),
+            ),
+          );
+        },
       ),
     );
   }

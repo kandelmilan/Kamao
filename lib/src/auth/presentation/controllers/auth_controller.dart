@@ -269,7 +269,7 @@ class AuthController extends GetxController {
 
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
-  final tenantCodeController = TextEditingController();
+  // final tenantCodeController = TextEditingController();
 
   // Register-only text controllers. Kept separate from the login ones above
   // so switching between the two screens never leaves stale text behind.
@@ -295,7 +295,7 @@ class AuthController extends GetxController {
   final obscureRegisterPassword = true.obs;
   final obscureConfirmPassword = true.obs;
   final RxString selectedAccountType = ''.obs;
-  final RxBool acceptedMinimumAge = false.obs;
+  final RxBool acceptedMinimumAge = true.obs;
   final registerResponse = Rxn<RegisterResponseEntity>();
   final RxnString registerErrorMessage = RxnString();
 
@@ -304,40 +304,167 @@ class AuthController extends GetxController {
   //==========================================================
   // login
   //==========================================================
+  // Future<void> login() async {
+  //   // Dismiss the keyboard right away so any resulting layout resize
+  //   // (header/body height depends on the keyboard-adjusted screen height)
+  //   // happens instantly on tap — not later, after the error response
+  //   // lands, which is what made the screen appear to "jump" or
+  //   // navigate away and back.
+  //   FocusManager.instance.primaryFocus?.unfocus();
+
+  //   loginErrorMessage.value = null;
+
+  //   if (selectedTenantCode.value.isEmpty) {
+  //     Get.snackbar('Organization', 'Please select an organization.');
+  //     return;
+  //   }
+
+  //   isLoading.value = true;
+
+  //   final request = LoginRequestEntity(
+  //     email: emailController.text.trim(),
+  //     password: passwordController.text.trim(),
+  //     tenantCode: selectedTenantCode.value,
+  //   );
+
+  //   final result = await _loginUserUsecase(Params(data: request));
+
+  //   await result.fold(
+  //     (failure) async {
+  //       // Inline instead of a snackbar — surfaced under the password field.
+  //       loginErrorMessage.value = failure.message;
+  //       // Wrong credentials shouldn't leave a stale password sitting in
+  //       // the field — clear it so the next attempt starts fresh. Email
+  //       // and the selected organization are left as-is since those were
+  //       // probably correct.
+  //       // passwordController.clear();
+  //     },
+  //     (response) async {
+  //       loginResponse.value = response;
+
+  //       final storage = Get.find<AuthStorageService>();
+  //       await storage.saveLoginSession(
+  //         accessToken: response.data.accessToken,
+  //         refreshToken: response.data.refreshToken,
+  //         userId: response.data.userId,
+  //         tenantId: response.data.tenantId,
+  //         sessionId: response.data.sessionId,
+  //         roleId: response.data.roleId,
+  //       );
+
+  //       await getMe();
+  //       Get.find<InactivityService>().initialize();
+  //       // Wipe the form now that we're navigating away from it — nothing
+  //       // left behind if the user ever lands back on this screen (e.g.
+  //       // after a future logout).
+  //       clearFields();
+  //       await Get.offAllNamed(AppRoutes.mainNav);
+  //     },
+  //   );
+
+  //   isLoading.value = false;
+  // }
+
+  //==========================================================
+  // register
+  //==========================================================
+  // Future<void> register() async {
+  //   // Same reasoning as login(): drop the keyboard first so the
+  //   // keyboard-driven layout resize doesn't fight with the error message
+  //   // that's about to appear.
+  //   FocusManager.instance.primaryFocus?.unfocus();
+
+  //   registerErrorMessage.value = null;
+
+  //   if (selectedTenantCode.value.isEmpty) {
+  //     Get.snackbar('Organization', 'Please select an organization.');
+  //     return;
+  //   }
+
+  //   if (fullNameController.text.trim().isEmpty) {
+  //     Get.snackbar('Full Name', 'Please enter your full name.');
+  //     return;
+  //   }
+
+  //   // if (selectedAccountType.value.isEmpty) {
+  //   //   Get.snackbar('Account Type', 'Please select an account type.');
+  //   //   return;
+  //   // }
+
+  //   if (registerPasswordController.text != confirmPasswordController.text) {
+  //     // Client-side only — the API itself doesn't take a confirmation
+  //     // field, so this never leaves the device.
+  //     registerErrorMessage.value = 'Passwords do not match.';
+  //     return;
+  //   }
+
+  //   if (!acceptedMinimumAge.value) {
+  //     Get.snackbar(
+  //       'Age Confirmation',
+  //       'Please confirm you meet the minimum age requirement.',
+  //     );
+  //     return;
+  //   }
+
+  //   isRegistering.value = true;
+
+  //   final request = RegisterRequestEntity(
+  //     // tenantCode: selectedTenantCode.value,
+  //     fullName: fullNameController.text.trim(),
+  //     email: registerEmailController.text.trim(),
+  //     password: registerPasswordController.text.trim(),
+  //     // accountType: selectedAccountType.value,
+  //     acceptedMinimumAge: acceptedMinimumAge.value,
+  //   );
+
+  //   final result = await _registerUserUsecase(Params(data: request));
+
+  //   result.fold(
+  //     (failure) {
+  //       registerErrorMessage.value = failure.message;
+  //     },
+  //     (response) {
+  //       registerResponse.value = response;
+
+  //       // Deliberately NOT persisting the returned tokens or auto-logging
+  //       // in here, even though the API returns a full access/refresh
+  //       // token pair just like login does. Product wants a fresh, empty
+  //       // Login screen after registering — not to be dropped straight
+  //       // into the app. Both forms are cleared so nothing lingers if the
+  //       // user navigates back to either screen later.
+  //       clearFields();
+  //       clearRegisterFields();
+
+  //       Get.snackbar(
+  //         'Account Created',
+  //         'Your account has been created. Please sign in.',
+  //       );
+
+  //       Get.offAllNamed(AppRoutes.login);
+  //     },
+  //   );
+
+  //   isRegistering.value = false;
+  // }
+
   Future<void> login() async {
-    // Dismiss the keyboard right away so any resulting layout resize
-    // (header/body height depends on the keyboard-adjusted screen height)
-    // happens instantly on tap — not later, after the error response
-    // lands, which is what made the screen appear to "jump" or
-    // navigate away and back.
     FocusManager.instance.primaryFocus?.unfocus();
 
     loginErrorMessage.value = null;
-
-    if (selectedTenantCode.value.isEmpty) {
-      Get.snackbar('Organization', 'Please select an organization.');
-      return;
-    }
 
     isLoading.value = true;
 
     final request = LoginRequestEntity(
       email: emailController.text.trim(),
       password: passwordController.text.trim(),
-      tenantCode: selectedTenantCode.value,
+      // tenantCode defaults to 'Demo'
     );
 
     final result = await _loginUserUsecase(Params(data: request));
 
     await result.fold(
       (failure) async {
-        // Inline instead of a snackbar — surfaced under the password field.
         loginErrorMessage.value = failure.message;
-        // Wrong credentials shouldn't leave a stale password sitting in
-        // the field — clear it so the next attempt starts fresh. Email
-        // and the selected organization are left as-is since those were
-        // probably correct.
-        // passwordController.clear();
       },
       (response) async {
         loginResponse.value = response;
@@ -354,9 +481,6 @@ class AuthController extends GetxController {
 
         await getMe();
         Get.find<InactivityService>().initialize();
-        // Wipe the form now that we're navigating away from it — nothing
-        // left behind if the user ever lands back on this screen (e.g.
-        // after a future logout).
         clearFields();
         await Get.offAllNamed(AppRoutes.mainNav);
       },
@@ -365,35 +489,17 @@ class AuthController extends GetxController {
     isLoading.value = false;
   }
 
-  //==========================================================
-  // register
-  //==========================================================
   Future<void> register() async {
-    // Same reasoning as login(): drop the keyboard first so the
-    // keyboard-driven layout resize doesn't fight with the error message
-    // that's about to appear.
     FocusManager.instance.primaryFocus?.unfocus();
 
     registerErrorMessage.value = null;
-
-    if (selectedTenantCode.value.isEmpty) {
-      Get.snackbar('Organization', 'Please select an organization.');
-      return;
-    }
 
     if (fullNameController.text.trim().isEmpty) {
       Get.snackbar('Full Name', 'Please enter your full name.');
       return;
     }
 
-    if (selectedAccountType.value.isEmpty) {
-      Get.snackbar('Account Type', 'Please select an account type.');
-      return;
-    }
-
     if (registerPasswordController.text != confirmPasswordController.text) {
-      // Client-side only — the API itself doesn't take a confirmation
-      // field, so this never leaves the device.
       registerErrorMessage.value = 'Passwords do not match.';
       return;
     }
@@ -409,11 +515,10 @@ class AuthController extends GetxController {
     isRegistering.value = true;
 
     final request = RegisterRequestEntity(
-      tenantCode: selectedTenantCode.value,
+      // tenantCode defaults to 'Demo', accountType defaults to 'Creator'
       fullName: fullNameController.text.trim(),
       email: registerEmailController.text.trim(),
       password: registerPasswordController.text.trim(),
-      accountType: selectedAccountType.value,
       acceptedMinimumAge: acceptedMinimumAge.value,
     );
 
@@ -425,13 +530,6 @@ class AuthController extends GetxController {
       },
       (response) {
         registerResponse.value = response;
-
-        // Deliberately NOT persisting the returned tokens or auto-logging
-        // in here, even though the API returns a full access/refresh
-        // token pair just like login does. Product wants a fresh, empty
-        // Login screen after registering — not to be dropped straight
-        // into the app. Both forms are cleared so nothing lingers if the
-        // user navigates back to either screen later.
         clearFields();
         clearRegisterFields();
 
@@ -553,6 +651,8 @@ class AuthController extends GetxController {
 
     Get.offAllNamed(AppRoutes.login);
   }
+  
+  
   //==========================================================
   // Toggle Password
   //==========================================================
@@ -576,8 +676,8 @@ class AuthController extends GetxController {
   void clearFields() {
     emailController.clear();
     passwordController.clear();
-    tenantCodeController.clear();
-    selectedTenantCode.value = '';
+    // tenantCodeController.clear();
+    // selectedTenantCode.value = '';
     loginErrorMessage.value = null;
   }
 
@@ -586,7 +686,7 @@ class AuthController extends GetxController {
     registerEmailController.clear();
     registerPasswordController.clear();
     confirmPasswordController.clear();
-    selectedAccountType.value = '';
+    // selectedAccountType.value = '';
     acceptedMinimumAge.value = false;
     registerErrorMessage.value = null;
   }
@@ -606,7 +706,7 @@ class AuthController extends GetxController {
   void onClose() {
     emailController.dispose();
     passwordController.dispose();
-    tenantCodeController.dispose();
+    // tenantCodeController.dispose();
     fullNameController.dispose();
     registerEmailController.dispose();
     registerPasswordController.dispose();

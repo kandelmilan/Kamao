@@ -74,7 +74,7 @@ class AppColors {
   // in HomeController's categories yet, so this token is here for
   // when that state is wired up — it isn't consumed anywhere yet.
   static const Color filterChipInactiveText = Color(0xFF7B7B7B);
-
+  //
   // Featured-brand-row logo placeholder (Figma "brand-logo" node
   // 32:3543): #F3F4F6 fill with the existing chipUnselectedBorder
   // (#E7E3E9) outline — distinct from socialCardBg/socialCardBorder,

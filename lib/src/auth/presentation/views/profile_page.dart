@@ -143,6 +143,9 @@ class ProfilePage extends StatelessWidget {
                                         ),
                                       ),
                                     ),
+                                 
+                                 
+                                 
                                   ],
                                 ),
                         ),
@@ -313,6 +316,9 @@ class ProfilePage extends StatelessWidget {
       ),
     );
   }
+
+
+
 
   Widget _permissionsBody(
     BuildContext context,
