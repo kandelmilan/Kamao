@@ -47,5 +47,4 @@ app.*.map.json
 
 
 lib/src/main_nav/
-lib/src/wallet/
 lib/src/social_connections/

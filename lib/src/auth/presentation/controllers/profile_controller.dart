@@ -127,7 +127,7 @@ class ProfileController extends GetxController {
   }
 
   void openWallet() {
-    // TODO: Get.toNamed(Routes.wallet);
+    Get.toNamed(AppRoutes.wallet);
   }
 
   void openEditProfile() {

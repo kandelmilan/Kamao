@@ -9,6 +9,9 @@ import 'package:kamao/src/home/presentation/views/marketplace_page.dart';
 import 'package:kamao/src/main_nav/main_nav.dart';
 import 'package:kamao/src/onboarding/onboarding.dart';
 import 'package:kamao/src/splash/splash.dart';
+import 'package:kamao/src/wallet/presentation/bindings%20/wallet_bindings.dart';
+import 'package:kamao/src/wallet/presentation/views/wallet_transactions_view.dart';
+import 'package:kamao/src/wallet/presentation/views/wallet_view.dart';
 import 'app_routes.dart';
 
 abstract class AppPages {
@@ -53,6 +56,16 @@ abstract class AppPages {
       name: AppRoutes.marketplace,
       page: () => const MarketplacePage(),
       binding: MarketplaceBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.wallet,
+      page: () => WalletView(),
+      binding: WalletBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.walletdetails,
+      page: () => WalletTransactionsView(),
+      binding: WalletBinding(),
     ),
   ];
 }

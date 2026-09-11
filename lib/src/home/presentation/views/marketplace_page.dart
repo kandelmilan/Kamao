@@ -473,6 +473,8 @@ class _FeaturedCampaignCard extends StatelessWidget {
   }
 }
 
+
+
 // ═════════════════════════════════════════════════════════════
 // New campaign avatar — 72px circle, 2px white border,
 // label Roboto 500 14/normal, #433D46

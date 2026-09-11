@@ -33,9 +33,10 @@ class ApiEndpoints {
       '/creator/marketplace/$campaignId';
   static String marketplaceFavourite(String campaignId) =>
       '/creator/marketplace/$campaignId/favourite';
-
   static String marketplaceView(String campaignId) =>
       '/creator/marketplace/$campaignId/view';
   static const String marketplaceFeatured = '/creator/marketplace/featured';
   static const String marketplaceList = '/creator/marketplace';
+  static const String walletWithdrawals = '/creator/wallet/withdrawals';
+  static const String walletPayoutMethod = '/creator/wallet/payout-method';
 }

@@ -179,6 +179,7 @@ import 'package:kamao/core/utils/image_url_resolver.dart';
 import 'package:kamao/src/home/domain/entities/app_config_entity.dart';
 import 'package:kamao/src/home/domain/entities/campaign/campaign_entity.dart';
 import 'package:kamao/src/home/domain/entities/marketplace_campaign_entity.dart';
+import 'package:kamao/src/home/domain/repositories/marketplace_repository.dart';
 import 'package:kamao/src/home/domain/usecase/campaign/get_campaigns_usecase.dart';
 import 'package:kamao/src/home/domain/usecase/get_app_config_usecase.dart';
 import 'package:kamao/src/home/domain/usecase/marketplace/get_campaign_detail_usecase.dart';
@@ -186,6 +187,7 @@ import 'package:kamao/src/home/domain/usecase/marketplace/get_featured_campaigns
 import 'package:kamao/src/home/domain/usecase/marketplace/get_new_campaigns_usecase.dart';
 import 'package:kamao/src/home/domain/usecase/marketplace/toggle_favourite_campaign_usecase.dart';
 import 'package:kamao/src/home/presentation/utils/campaign_list/campaign_list_page.dart';
+import 'package:kamao/src/home/presentation/utils/featured_campaigns_list/featured_campaigns_list.dart';
 
 class MarketplaceController extends GetxController {
   MarketplaceController({
@@ -315,30 +317,18 @@ class MarketplaceController extends GetxController {
   }
 
   Future<void> onSeeAllFeatured() async {
+    final marketplaceRepository = Get.find<MarketplaceRepository>();
+
     Get.to(
-      () => CampaignListPage<MarketplaceCampaignEntity>(
+      () => FeaturedCampaignsPage<MarketplaceCampaignEntity>(
         title: 'Featured Campaigns',
-        take: 20,
-        enableSearch: true,
-        idOf: (c) => c.id,
+        fetcher: ({required page, required take, search}) =>
+            marketplaceRepository.getFeaturedCampaigns(take: take),
         nameOf: (c) => c.brandName,
-        logoUrlOf: (c) => resolveImageUrl(c.brandLogoUrl),
-        fetcher: ({required int page, required int take, String? search}) {
-          if (page > 1) {
-            return Future.value(
-              const Right<Failure, List<MarketplaceCampaignEntity>>([]),
-            );
-          }
-          return _getFeaturedCampaigns(
-            FeaturedCampaignsParams(
-              take: take,
-              category: selectedCategory.value,
-            ),
-          );
-        },
-        emptyMessage: 'No featured campaigns found',
-        onCampaignTap: (campaign) =>
-            Get.toNamed(AppRoutes.campaignDetail, arguments: campaign.id),
+        subtitleOf: (c) => c.objective,
+        coverUrlOf: (c) => resolveImageUrl(c.brandCoverUrl),
+        onCampaignTap: (c) =>
+            Get.toNamed(AppRoutes.campaignDetail, arguments: c.id),
       ),
     );
   }

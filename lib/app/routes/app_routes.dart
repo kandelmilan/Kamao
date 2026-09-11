@@ -11,4 +11,6 @@ abstract class AppRoutes {
   static const mainNav = '/main-nav';
   static const campaignDetail = '/campaign-detail';
   static const marketplace = '/marketplace';
+  static const wallet = '/wallet';
+  static const walletdetails = '/wallet-details';
 }

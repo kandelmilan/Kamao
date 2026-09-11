@@ -11,15 +11,19 @@ class ProfileBinding extends Bindings {
   void dependencies() {
     Get.lazyPut<ProfileRemoteDataSource>(
       () => ProfileRemoteDataSourceImpl(Get.find<ApiService>()),
+      fenix: true,
     );
     Get.lazyPut<ProfileRepository>(
       () => ProfileRepositoryImpl(Get.find<ProfileRemoteDataSource>()),
+      fenix: true,
     );
     Get.lazyPut<GetCreatorProfileUseCase>(
       () => GetCreatorProfileUseCase(Get.find<ProfileRepository>()),
+      fenix: true,
     );
     Get.lazyPut<ProfileController>(
       () => ProfileController(Get.find<GetCreatorProfileUseCase>()),
+      fenix: true,
     );
   }
 }

@@ -19,6 +19,8 @@ class AppImages {
   static const String wallet = "$_home/wallet1.svg";
   static const String walletBackground = "$_home/wallet_bc.svg";
   static const String categoryHelperPng = "$_home/category_helper.png";
+  static const String esewa = "$_home/esewa.png";
+  static const String khalti = "$_home/khalti.png";
 
   static const String appLogo = "$_image/app_logo.png";
 }
