@@ -9,6 +9,7 @@ export 'services/inactivity/auto_logout_handler.dart';
 export 'services/inactivity/inactivity_service.dart';
 export 'constants/app_constants.dart';
 export 'constants/app_images.dart';
+export 'widgets/app_logo.dart';
 export 'errors/api_exception.dart';
 export 'errors/failure.dart';
 export 'services/storage/auth-storage_service.dart';

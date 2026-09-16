@@ -1,21 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:kamao/app/theme/app_colors.dart';
 import 'package:kamao/src/home/presentation/utils/campaign_list/campaign_list_controller.dart';
 import 'package:kamao/src/home/presentation/utils/campaign_list/campaign_list_types.dart';
 
 // ═════════════════════════════════════════════════════════════
-// Palette — exact Figma hex values, kept local to this feature
+// Palette — aligned with AppColors / Brands / Home mint theme
 // ═════════════════════════════════════════════════════════════
 class _Palette {
   const _Palette._();
 
-  static const gradientLilac = Color(0xFFF1D9FF);
-  static const titleText = Color(0xFF353037);
-  static const searchBorder = Color(0xFFEDECED);
-  static const searchHint = Color(0xFF7B7B7B);
-  static const cardBorder = Color(0xFFEAECF0);
-  static const subtitleText = Color(0xFF6F6875);
+  static const pageBg = AppColors.homeBg;
+  static const gradientMint = AppColors.walletChipBg;
+  static const titleText = AppColors.heading;
+  static const searchBorder = AppColors.searchBorder;
+  static const searchHint = AppColors.filterChipInactiveText;
+  static const cardBorder = AppColors.chipUnselectedBorder;
+  static const subtitleText = AppColors.bodyGrey;
+  static const fallbackBg = AppColors.brandLogoBg;
 }
 
 // ═════════════════════════════════════════════════════════════
@@ -88,20 +91,20 @@ class _FeaturedCampaignsPageState<T> extends State<FeaturedCampaignsPage<T>> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: _Palette.pageBg,
       body: Stack(
         children: [
-          Positioned(
+          const Positioned(
             top: 0,
             left: 0,
             right: 0,
             height: 260,
             child: DecoratedBox(
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
+                gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [_Palette.gradientLilac, Colors.white],
+                  colors: [_Palette.gradientMint, _Palette.pageBg],
                   stops: [0.0, 0.85],
                 ),
               ),
@@ -199,7 +202,7 @@ class _FeaturedCampaignsPageState<T> extends State<FeaturedCampaignsPage<T>> {
 }
 
 // ═════════════════════════════════════════════════════════════
-// Header — back button + title (Roboto 700 18/24, #353037)
+// Header — back arrow + title
 // ═════════════════════════════════════════════════════════════
 class _Header extends StatelessWidget {
   const _Header({required this.title});
@@ -209,29 +212,29 @@ class _Header extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+      padding: const EdgeInsets.fromLTRB(12, 8, 20, 0),
       child: Row(
         children: [
-          InkWell(
-            onTap: () => Navigator.of(context).maybePop(),
-            borderRadius: BorderRadius.circular(20),
-            child: const Padding(
-              padding: EdgeInsets.all(4),
-              child: Icon(
-                Icons.arrow_back_ios_new,
-                size: 18,
-                color: _Palette.titleText,
-              ),
+          IconButton(
+            onPressed: () => Get.back(),
+            tooltip: 'Back',
+            icon: const Icon(
+              Icons.arrow_back_ios_new,
+              size: 18,
+              color: _Palette.titleText,
             ),
           ),
-          const SizedBox(width: 8),
-          Text(
-            title,
-            style: GoogleFonts.roboto(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              height: 24 / 18,
-              color: _Palette.titleText,
+          Expanded(
+            child: Text(
+              title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.roboto(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                height: 24 / 18,
+                color: _Palette.titleText,
+              ),
             ),
           ),
         ],
@@ -406,7 +409,7 @@ class _ImageFallback extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const ColoredBox(
-      color: Color(0xFFF4F4F4),
+      color: _Palette.fallbackBg,
       child: Icon(
         Icons.storefront_outlined,
         size: 28,

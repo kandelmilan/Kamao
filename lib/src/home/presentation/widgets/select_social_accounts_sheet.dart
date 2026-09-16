@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 import 'package:remixicon/remixicon.dart';
 import 'package:kamao/src/home/presentation/controllers/social_accounts_sheet_controller.dart';
 import 'package:kamao/src/social_connections/data/repositories/social_connections_repository.dart';
+import 'package:kamao/src/social_connections/domain/entities/social_platform_type.dart';
+import 'package:kamao/src/social_connections/presentation/controllers/social_connections_controller.dart';
 
 /// Opens the picker. Returns the account the user tapped, or null
 /// if they hit Cancel / dismissed the sheet.
@@ -48,18 +50,8 @@ class _SelectSocialAccountsSheetState extends State<SelectSocialAccountsSheet> {
   }
 
   IconData _iconFor(String platformId) {
-    switch (platformId.toLowerCase()) {
-      case 'tiktok':
-        return RemixIcons.tiktok_fill;
-      case 'instagram':
-        return RemixIcons.instagram_line;
-      case 'facebook':
-        return RemixIcons.facebook_line;
-      case 'youtube':
-        return RemixIcons.youtube_line;
-      default:
-        return RemixIcons.global_line;
-    }
+    final platform = SocialPlatformType.tryParse(platformId);
+    return platform?.icon ?? RemixIcons.global_line;
   }
 
   @override
@@ -125,14 +117,30 @@ class _SelectSocialAccountsSheetState extends State<SelectSocialAccountsSheet> {
                       );
                     }
                     if (controller.accounts.isEmpty) {
-                      return const Center(
-                        child: Text(
-                          'No connected social accounts yet.',
-                          style: TextStyle(
-                            fontFamily: 'Roboto',
-                            fontSize: 14,
-                            color: Color(0xFF6E6971),
-                          ),
+                      return Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Text(
+                              'No connected social accounts yet.',
+                              style: TextStyle(
+                                fontFamily: 'Roboto',
+                                fontSize: 14,
+                                color: Color(0xFF6E6971),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            TextButton(
+                              onPressed: () {
+                                final social =
+                                    Get.find<SocialConnectionsController>();
+                                Navigator.of(context).pop();
+                                final ctx = Get.context;
+                                if (ctx != null) social.openSheet(ctx);
+                              },
+                              child: const Text('Connect accounts'),
+                            ),
+                          ],
                         ),
                       );
                     }

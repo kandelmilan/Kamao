@@ -89,9 +89,9 @@ class HomeExtrasRepositoryImpl implements HomeExtrasRepository {
       return Left(ServerFailure(e.toString()));
     }
   }
-
+ @override
   Future<Either<Failure, List<FavouriteCampaignEntity>>> getFavouriteCampaigns({
-    @override int take = 24,
+    int take = 24,
   }) async {
     try {
       final campaigns = await _remoteDataSource.getFavouriteCampaigns(

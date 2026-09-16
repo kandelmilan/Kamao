@@ -6,6 +6,7 @@ import 'package:kamao/app/bindings/initial_bindings/storage_binding.dart';
 import 'package:kamao/app/bindings/initial_bindings/tenant_dependency_binding.dart';
 import 'package:kamao/src/auth/presentation/bindings/profile_binding.dart';
 import 'package:kamao/src/home/presentation/bindings/marketplace_binding.dart';
+import 'package:kamao/src/social_connections/presentation/bindings/social_connections_binding.dart';
 import 'package:kamao/src/wallet/presentation/bindings%20/wallet_bindings.dart';
 
 class InitialBinding extends Bindings {
@@ -16,6 +17,7 @@ class InitialBinding extends Bindings {
     AuthDependencyBinding().dependencies();
     TenantDependencyBinding().dependencies();
     SessionBinding().dependencies();
+    SocialConnectionsBinding().dependencies();
     ProfileBinding().dependencies();
     MarketplaceBinding().dependencies();
     WalletBinding().dependencies();

@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:kamao/src/social_connections/data/repositories/social_connections_repository.dart';
 import 'package:kamao/src/social_connections/domain/entities/social_connection_status.dart';
+import 'package:kamao/src/social_connections/domain/entities/social_platform_type.dart';
 
 class ConnectedSocialAccount {
   const ConnectedSocialAccount({
@@ -43,13 +44,14 @@ class SocialAccountsSheetController extends GetxController {
 
       accounts.value = statuses.entries
           .where((e) => e.value.state == SocialConnectionState.connected)
-          .map(
-            (e) => ConnectedSocialAccount(
-              platformId: e.key,
-              platformLabel: _labelFor(e.key),
+          .map((e) {
+            final platform = SocialPlatformType.tryParse(e.key);
+            return ConnectedSocialAccount(
+              platformId: platform?.apiId ?? e.key,
+              platformLabel: platform?.displayName ?? e.key,
               displayName: e.value.connectedAccountLabel ?? '@${e.key}',
-            ),
-          )
+            );
+          })
           .toList();
       debugPrint('SocialAccountsSheetController: accounts = ${accounts.value}');
     } catch (e, st) {
@@ -57,21 +59,6 @@ class SocialAccountsSheetController extends GetxController {
       error.value = 'Could not load your social accounts.';
     } finally {
       isLoading.value = false;
-    }
-  }
-
-  String _labelFor(String platformId) {
-    switch (platformId) {
-      case 'tiktok':
-        return 'Tiktok';
-      case 'instagram':
-        return 'Instagram';
-      case 'facebook':
-        return 'Facebook';
-      case 'youtube':
-        return 'YouTube';
-      default:
-        return platformId;
     }
   }
 }

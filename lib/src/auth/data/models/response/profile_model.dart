@@ -144,11 +144,13 @@ class ProfileModel {
     required this.user,
     required this.insights,
     required this.connections,
+    this.needsSocialConnect = false,
   });
 
   final ProfileUserModel user;
   final ProfileInsightsModel insights;
   final List<ProfileConnectionModel> connections;
+  final bool needsSocialConnect;
 
   factory ProfileModel.fromJson(Map<String, dynamic> json) {
     return ProfileModel(
@@ -163,6 +165,7 @@ class ProfileModel {
             (e) => ProfileConnectionModel.fromJson(e as Map<String, dynamic>),
           )
           .toList(),
+      needsSocialConnect: json['needsSocialConnect'] as bool? ?? false,
     );
   }
 
@@ -171,6 +174,7 @@ class ProfileModel {
       user: user.toEntity(),
       insights: insights.toEntity(),
       connections: connections.map((c) => c.toEntity()).toList(),
+      needsSocialConnect: needsSocialConnect,
     );
   }
 }

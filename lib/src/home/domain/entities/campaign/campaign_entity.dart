@@ -6,10 +6,10 @@ class CampaignEntity {
     required this.objective,
     required this.status,
     required this.currency,
-    required this.startDateUtc,
-    required this.endDateUtc,
-    required this.startDateLocal,
-    required this.endDateLocal,
+    this.startDateUtc,
+    this.endDateUtc,
+    this.startDateLocal,
+    this.endDateLocal,
     required this.participationMode,
     required this.performanceWindowHours,
     required this.purchaseProofRequired,
@@ -32,9 +32,9 @@ class CampaignEntity {
   final String objective;
   final String status;
   final String currency;
-  final DateTime startDateUtc;
+  final DateTime? startDateUtc;
   final DateTime? endDateUtc;
-  final DateTime startDateLocal;
+  final DateTime? startDateLocal;
   final DateTime? endDateLocal;
   final String participationMode;
   final int performanceWindowHours;

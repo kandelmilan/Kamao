@@ -4,6 +4,7 @@ import 'package:kamao/core/core.dart';
 import 'package:kamao/src/auth/auth.dart';
 import 'package:kamao/src/auth/domain/entities/response/profile_entity.dart';
 import 'package:kamao/src/auth/domain/usecases/get_creator_profile_usecase.dart';
+import 'package:kamao/src/social_connections/presentation/controllers/social_connections_controller.dart';
 
 class ProfileController extends GetxController {
   ProfileController(this._getCreatorProfileUseCase);
@@ -23,7 +24,13 @@ class ProfileController extends GetxController {
 
     result.fold(
       (failure) => error.value = failure.message,
-      (data) => profile.value = data,
+      (data) {
+        profile.value = data;
+        if (Get.isRegistered<SocialConnectionsController>()) {
+          Get.find<SocialConnectionsController>()
+              .applyNeedsSocialConnect(data.needsSocialConnect);
+        }
+      },
     );
 
     isLoading.value = false;
@@ -31,19 +38,21 @@ class ProfileController extends GetxController {
 
   Future<void> refreshProfile() => loadProfile();
 
-  String _currencySymbol(String currency) {
-    switch (currency.toUpperCase()) {
-      case 'NPR':
-        return 'Rs. ';
-      default:
-        return '$currency ';
-    }
-  }
-
-  String _money(double amount) {
+  /// Figma profile metrics use the currency code + grouped amount
+  /// (e.g. "NPR 12,450.00"), not a localized symbol.
+  String _money(double amount, {int decimals = 2}) {
     final insights = profile.value?.insights;
     if (insights == null) return '—';
-    return '${_currencySymbol(insights.currency)}${amount.toStringAsFixed(2)}';
+    final code = insights.currency.toUpperCase();
+    final fixed = amount.toStringAsFixed(decimals);
+    final parts = fixed.split('.');
+    final whole = parts[0].replaceAllMapped(
+      RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+      (m) => '${m[1]},',
+    );
+    final formatted =
+        decimals > 0 && parts.length > 1 ? '$whole.${parts[1]}' : whole;
+    return '$code $formatted';
   }
 
   String get formattedWalletBalance => profile.value == null
@@ -62,23 +71,19 @@ class ProfileController extends GetxController {
       ? '—'
       : _money(profile.value!.insights.averagePostReward);
 
-  // ---------------------------------------------------------------------
-  // Post counts for the metrics card.
-  //
-  // NOTE: ProfileEntity's insights don't expose a `totalPostCount` field
-  // in what you've shared so far, so this is derived from
-  // rewardedPostCount + postsInFlight as a reasonable stand-in. If the
-  // API/entity does (or later will) return a real total, replace this
-  // getter's body with `profile.value!.insights.totalPostCount` and
-  // delete the derivation.
-  // ---------------------------------------------------------------------
   int get totalPostCount {
     final insights = profile.value?.insights;
     if (insights == null) return 0;
-    return insights.rewardedPostCount + insights.postsInFlight;
+    return insights.postsTotal;
   }
 
-  int get rewardedPostCount => profile.value?.insights.rewardedPostCount ?? 0;
+  int get rewardedPostCount {
+    final insights = profile.value?.insights;
+    if (insights == null) return 0;
+    return insights.postsRewarded > 0
+        ? insights.postsRewarded
+        : insights.rewardedPostCount;
+  }
 
   // ---------------------------------------------------------------------
   // Identity / avatar
@@ -110,6 +115,12 @@ class ProfileController extends GetxController {
   int get connectedAccountsCount =>
       profile.value?.connections.where((c) => c.isConnected).length ?? 0;
 
+  bool get needsSocialConnect =>
+      profile.value?.needsSocialConnect ??
+      (Get.isRegistered<SocialConnectionsController>()
+          ? Get.find<SocialConnectionsController>().needsSocialConnect.value
+          : false);
+
   ProfileConnectionEntity? connectionFor(String platform) =>
       profile.value?.connectionFor(platform);
 
@@ -123,7 +134,11 @@ class ProfileController extends GetxController {
   }
 
   void openSocialAccounts() {
-    // TODO: Get.toNamed(Routes.socialAccounts);
+    final context = Get.context;
+    if (context == null) return;
+    final social = Get.find<SocialConnectionsController>();
+    social.loadConnectionStatuses();
+    social.openSheet(context);
   }
 
   void openWallet() {
@@ -159,6 +174,10 @@ class ProfileController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    if (Get.isRegistered<SocialConnectionsController>()) {
+      Get.find<SocialConnectionsController>().onConnectionsChanged =
+          refreshProfile;
+    }
     loadProfile();
   }
 }

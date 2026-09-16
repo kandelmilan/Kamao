@@ -812,9 +812,15 @@
 import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:kamao/app/app.dart';
 import 'package:kamao/core/utils/image_url_resolver.dart';
+import 'package:kamao/src/brand/domain/entities/brand_entity.dart';
+import 'package:kamao/src/brand/domain/usecase/get_featured_brands_usecase.dart';
 import 'package:kamao/src/brand/domain/usecase/get_popular_brands_usecase.dart';
+import 'package:kamao/src/brand/domain/usecase/get_recent_brands_usecase.dart';
+import 'package:kamao/src/brand/presentation/utils/brand_list_page.dart';
+import 'package:kamao/src/brand/presentation/widgets/brand_square_item.dart';
 import 'package:kamao/src/home/domain/entities/campaign/campaign_entity.dart';
 import 'package:kamao/src/home/domain/entities/campaign/favourite_campaign_entity.dart';
 import 'package:kamao/src/home/domain/entities/campaign/recent_campaign_entity.dart';
@@ -832,25 +838,19 @@ import 'package:kamao/src/home/domain/usecase/marketplace/join_campaign_usecase.
 import 'package:kamao/src/home/domain/usecase/marketplace/toggle_favourite_campaign_usecase.dart';
 import 'package:kamao/src/home/domain/usecase/marketplace/view_campaign_usecase.dart';
 import 'package:kamao/src/home/presentation/utils/campaign_list/campaign_list_page.dart';
+import 'package:kamao/src/home/presentation/utils/favourite_campaigns_list/favourite_campaigns_list_page.dart';
+import 'package:kamao/src/home/presentation/utils/recently_rewarded_list/recently_rewarded_list_page.dart';
 import 'package:kamao/src/wallet/wallet.dart';
-import 'package:kamao/src/social_connections/domain/entities/social_platform.dart';
-import 'package:kamao/src/social_connections/domain/entities/social_connection_status.dart';
-import 'package:kamao/src/social_connections/data/repositories/social_connections_repository.dart';
-import 'package:kamao/src/social_connections/services/social_deep_link_service.dart';
-import 'package:kamao/src/social_connections/widgets/social_connections_sheet.dart'
-    show SocialConnectionsHost;
-import 'package:remixicon/remixicon.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:kamao/src/social_connections/presentation/controllers/social_connections_controller.dart';
 import '../../domain/entities/home_category_entity.dart';
 
-class HomeController extends GetxController implements SocialConnectionsHost {
+class HomeController extends GetxController {
   HomeController(
     this._getWalletUseCase,
     this._getPopularCampaignsUseCase,
     this._getHomeCategoriesUseCase,
     this._getRecentlyRewardedUseCase,
     this._getAppConfigUseCase,
-    this._socialConnectionsRepository,
     this._getCampaignsUseCase,
     // this._getRecentCampaignsUseCase,
     this._getFavouriteCampaignsUseCase,
@@ -858,6 +858,9 @@ class HomeController extends GetxController implements SocialConnectionsHost {
     this._joinCampaignUseCase,
     this._toggleFavouriteCampaignUseCase,
     this._viewCampaignUseCase,
+    this._getPopularBrandsUseCase,
+    this._getFeaturedBrandsUseCase,
+    this._getRecentBrandsUseCase,
   );
 
   final GetWalletUseCase _getWalletUseCase;
@@ -865,7 +868,6 @@ class HomeController extends GetxController implements SocialConnectionsHost {
   final _getHomeCategoriesUseCase;
   final GetRecentlyRewardedUseCase _getRecentlyRewardedUseCase;
   final GetAppConfigUseCase _getAppConfigUseCase;
-  final SocialConnectionsRepository _socialConnectionsRepository;
   final GetCampaignsUseCase _getCampaignsUseCase;
   // final GetRecentCampaignsUseCase _getRecentCampaignsUseCase;
   final GetFavouriteCampaignsUseCase _getFavouriteCampaignsUseCase;
@@ -873,6 +875,9 @@ class HomeController extends GetxController implements SocialConnectionsHost {
   final JoinCampaignUseCase _joinCampaignUseCase;
   final ToggleFavouriteCampaignUseCase _toggleFavouriteCampaignUseCase;
   final ViewCampaignUseCase _viewCampaignUseCase;
+  final GetPopularBrandsUseCase _getPopularBrandsUseCase;
+  final GetFeaturedBrandsUseCase _getFeaturedBrandsUseCase;
+  final GetRecentBrandsUseCase _getRecentBrandsUseCase;
 
   // ---------------------------------------------------------------
   // Recently rewarded — GET /creator/home/recently-rewarded
@@ -897,109 +902,35 @@ class HomeController extends GetxController implements SocialConnectionsHost {
   final RxDouble weeklyGrowthPercent = 12.4.obs;
   final RxInt unreadNotifications = 1.obs;
 
+  // ---------------------------------------------------------------
+  // Brands — popular / featured / recent APIs
+  // ---------------------------------------------------------------
+  final RxList<BrandEntity> popularBrands = <BrandEntity>[].obs;
+  final RxBool isPopularBrandsLoading = false.obs;
+  final RxnString popularBrandsError = RxnString();
+
+  final RxList<BrandEntity> featuredBrands = <BrandEntity>[].obs;
+  final RxBool isFeaturedBrandsLoading = false.obs;
+  final RxnString featuredBrandsError = RxnString();
+
+  final RxList<BrandEntity> recentBrands = <BrandEntity>[].obs;
+  final RxBool isRecentBrandsLoading = false.obs;
+  final RxnString recentBrandsError = RxnString();
+
+  /// In-page home search — filters brands / favourites / rewarded on Home.
+  final RxString searchQuery = ''.obs;
+
   final RxList<String> brandCategories = <String>[].obs;
   final RxBool isAppConfigLoading = false.obs;
   final RxnString appConfigError = RxnString();
-  @override
-  final List<SocialPlatform> socialPlatforms = const [
-    SocialPlatform(
-      id: 'youtube',
-      name: 'YouTube',
-      icon: RemixIcons.youtube_fill,
-      iconColor: Colors.white,
-      backgroundColor: Color(0xFFE02020),
-      notConnectedLabel: 'Optional — public stats use the tenant API key',
-    ),
-    SocialPlatform(
-      id: 'facebook',
-      name: 'Facebook',
-      icon: RemixIcons.facebook_fill,
-      iconColor: Colors.white,
-      backgroundColor: Color(0xFF1877F2),
-    ),
-    SocialPlatform(
-      id: 'instagram',
-      name: 'Instagram',
-      icon: RemixIcons.instagram_fill,
-      iconColor: Colors.white,
-      backgroundGradient: [
-        Color(0xFFFED576),
-        Color(0xFFF47133),
-        Color(0xFFBC3081),
-        Color(0xFF4F5BD5),
-      ],
-    ),
-    SocialPlatform(
-      id: 'tiktok',
-      name: 'TikTok',
-      icon: RemixIcons.tiktok_fill,
-      iconColor: Colors.white,
-      backgroundColor: Color(0xFF010101),
-    ),
-  ];
 
-  @override
-  final RxMap<String, SocialConnectionStatus> socialConnections =
-      <String, SocialConnectionStatus>{
-        'youtube': SocialConnectionStatus.initial,
-        'facebook': SocialConnectionStatus.initial,
-        'instagram': SocialConnectionStatus.initial,
-        'tiktok': SocialConnectionStatus.initial,
-      }.obs;
-  final _deepLinkService = Get.find<SocialDeepLinkService>();
-  String? _pendingPlatformId;
+  bool get needsSocialConnect =>
+      Get.isRegistered<SocialConnectionsController>() &&
+      Get.find<SocialConnectionsController>().needsSocialConnect.value;
 
-  @override
-  Future<void> connectPlatform(String platformId) async {
-    socialConnections[platformId] = const SocialConnectionStatus(
-      state: SocialConnectionState.connecting,
-    );
-    _pendingPlatformId = platformId;
-
-    try {
-      final authUrl = await _socialConnectionsRepository.startConnect(
-        platformId,
-      );
-      final launched = await launchUrl(
-        Uri.parse(authUrl),
-        mode: LaunchMode.externalApplication,
-      );
-      if (!launched) {
-        _pendingPlatformId = null;
-        socialConnections[platformId] = const SocialConnectionStatus(
-          state: SocialConnectionState.error,
-          errorMessage: "Couldn't open the browser",
-        );
-      }
-    } catch (e) {
-      _pendingPlatformId = null;
-      socialConnections[platformId] = SocialConnectionStatus(
-        state: SocialConnectionState.error,
-        errorMessage: '$e',
-      );
-    }
-  }
-
-  Future<void> _handleSocialDeepLink(Uri uri) async {
-    final platformId = uri.queryParameters['platform']?.toLowerCase();
-    if (platformId == null) return;
-
-    final ok = uri.queryParameters['ok'];
-    if (ok == '1') {
-      socialConnections[platformId] = const SocialConnectionStatus(
-        state: SocialConnectionState.connected,
-      );
-      Get.snackbar('Connected', '$platformId connected successfully');
-      loadSocialConnectionStatuses();
-    } else {
-      socialConnections[platformId] = SocialConnectionStatus(
-        state: SocialConnectionState.error,
-        errorMessage:
-            uri.queryParameters['message'] ??
-            uri.queryParameters['error'] ??
-            'Connection failed',
-      );
-    }
+  void openSocialConnections(BuildContext context) {
+    if (!Get.isRegistered<SocialConnectionsController>()) return;
+    Get.find<SocialConnectionsController>().openSheet(context);
   }
 
   // ---------------------------------------------------------------
@@ -1079,6 +1010,13 @@ class HomeController extends GetxController implements SocialConnectionsHost {
     return name.split(' ').first;
   }
 
+  String get timeOfDayGreeting {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return 'Good morning,';
+    if (hour < 17) return 'Good afternoon,';
+    return 'Good evening,';
+  }
+
   // ---------------------------------------------------------------
   // Wallet helpers
   // ---------------------------------------------------------------
@@ -1086,7 +1024,7 @@ class HomeController extends GetxController implements SocialConnectionsHost {
   String _currencySymbol(String currency) {
     switch (currency.toUpperCase()) {
       case 'NPR':
-        return 'Rs. ';
+        return 'रू ';
       default:
         return '$currency ';
     }
@@ -1095,7 +1033,215 @@ class HomeController extends GetxController implements SocialConnectionsHost {
   String get formattedBalance {
     final w = wallet.value;
     if (w == null) return '—';
-    return '${_currencySymbol(w.currency)}${w.balance.toStringAsFixed(2)}';
+    return '${_currencySymbol(w.currency)}${_formatAmount(w.balance)}';
+  }
+
+  /// Compact chip label (no decimals), e.g. "रू 21,500".
+  String get balanceChipLabel {
+    final w = wallet.value;
+    if (w == null) return '—';
+    return '${_currencySymbol(w.currency).trim()} ${_formatAmount(w.balance, decimals: 0)}';
+  }
+
+  String get walletCardBalanceLabel {
+    final w = wallet.value;
+    if (w == null) return '—';
+    return '${_currencySymbol(w.currency)}${_formatAmount(w.balance)}';
+  }
+
+  /// Weekly growth amount for the wallet badge.
+  /// TODO: replace with API-backed weekly earnings when available.
+  final RxDouble weeklyGrowthAmount = 1850.0.obs;
+
+  /// Weekly growth amount for the wallet badge.
+  String get weeklyGrowthAmountLabel {
+    return '+रू ${_formatAmount(weeklyGrowthAmount.value, decimals: 0)}';
+  }
+
+  String _formatAmount(num value, {int decimals = 2}) {
+    final pattern = decimals == 0 ? '#,##0' : '#,##0.${'0' * decimals}';
+    return NumberFormat(pattern).format(value);
+  }
+
+  /// Brands recently viewed — GET /creator/brands/recent.
+  Future<void> loadRecentBrands({int take = 12}) async {
+    isRecentBrandsLoading.value = true;
+    recentBrandsError.value = null;
+    final result = await _getRecentBrandsUseCase(TakeParams(take: take));
+    result.fold(
+      (failure) => recentBrandsError.value = failure.message,
+      (list) => recentBrands.assignAll(list),
+    );
+    isRecentBrandsLoading.value = false;
+  }
+
+  Future<void> loadPopularBrands({int take = 12}) async {
+    isPopularBrandsLoading.value = true;
+    popularBrandsError.value = null;
+    final result = await _getPopularBrandsUseCase(TakeParams(take: take));
+    result.fold(
+      (failure) => popularBrandsError.value = failure.message,
+      (list) => popularBrands.assignAll(list),
+    );
+    isPopularBrandsLoading.value = false;
+  }
+
+  Future<void> loadFeaturedBrands({int take = 12}) async {
+    isFeaturedBrandsLoading.value = true;
+    featuredBrandsError.value = null;
+    final result = await _getFeaturedBrandsUseCase(TakeParams(take: take));
+    result.fold(
+      (failure) => featuredBrandsError.value = failure.message,
+      (list) => featuredBrands.assignAll(list),
+    );
+    isFeaturedBrandsLoading.value = false;
+  }
+
+  Future<void> loadAllBrandRails() async {
+    await Future.wait([
+      loadPopularBrands(),
+      loadFeaturedBrands(),
+      loadRecentBrands(),
+    ]);
+  }
+
+  void openWallet() {
+    Get.toNamed(AppRoutes.wallet);
+  }
+
+  void onSearchChanged(String value) {
+    searchQuery.value = value;
+  }
+
+  void clearSearch() {
+    searchQuery.value = '';
+  }
+
+  bool get isSearching => searchQuery.value.trim().isNotEmpty;
+
+  bool get hasActiveHomeFilter =>
+      isSearching || selectedCategory.value != null;
+
+  List<BrandEntity> get filteredPopularBrands =>
+      _filterBrands(popularBrands);
+
+  List<BrandEntity> get filteredRecentBrands => _filterBrands(recentBrands);
+
+  List<BrandEntity> get filteredFeaturedBrands =>
+      _filterBrands(featuredBrands);
+
+  List<FavouriteCampaignEntity> get filteredFavouriteCampaigns =>
+      _filterFavouriteCampaigns(favouriteCampaigns);
+
+  List<RewardedPostEntity> get filteredRecentlyRewarded {
+    final base = displayableRecentlyRewarded;
+    final q = searchQuery.value.trim().toLowerCase();
+    final category = selectedCategory.value?.trim().toLowerCase();
+
+    // Rewarded posts have no category field — hide under category filter.
+    if (category != null && category.isNotEmpty) return const [];
+
+    if (q.isEmpty) return base;
+    return base
+        .where(
+          (p) =>
+              p.brandName.toLowerCase().contains(q) ||
+              p.campaignName.toLowerCase().contains(q) ||
+              (p.caption ?? '').toLowerCase().contains(q),
+        )
+        .toList();
+  }
+
+  bool get hasFilteredHomeResults =>
+      filteredPopularBrands.isNotEmpty ||
+      filteredRecentBrands.isNotEmpty ||
+      filteredFeaturedBrands.isNotEmpty ||
+      filteredFavouriteCampaigns.isNotEmpty ||
+      filteredRecentlyRewarded.isNotEmpty;
+
+  List<BrandEntity> _filterBrands(List<BrandEntity> source) {
+    final q = searchQuery.value.trim().toLowerCase();
+    final category = selectedCategory.value?.trim().toLowerCase();
+
+    return source.where((b) {
+      if (category != null && category.isNotEmpty) {
+        final brandCategory = (b.categoryName ?? '').trim().toLowerCase();
+        if (brandCategory != category) return false;
+      }
+      if (q.isEmpty) return true;
+      return b.name.toLowerCase().contains(q) ||
+          (b.categoryName ?? '').toLowerCase().contains(q) ||
+          (b.bio ?? '').toLowerCase().contains(q);
+    }).toList();
+  }
+
+  List<FavouriteCampaignEntity> _filterFavouriteCampaigns(
+    List<FavouriteCampaignEntity> source,
+  ) {
+    final q = searchQuery.value.trim().toLowerCase();
+    final category = selectedCategory.value?.trim().toLowerCase();
+
+    return source.where((item) {
+      final c = item.campaign;
+      if (category != null && category.isNotEmpty) {
+        final campaignCategory = (c.brandCategory ?? '').trim().toLowerCase();
+        if (campaignCategory != category) return false;
+      }
+      if (q.isEmpty) return true;
+      return c.name.toLowerCase().contains(q) ||
+          c.brandName.toLowerCase().contains(q) ||
+          c.objective.toLowerCase().contains(q) ||
+          (c.brandCategory ?? '').toLowerCase().contains(q);
+    }).toList();
+  }
+
+  void openBrand(BrandEntity brand) => openBrandDetail(brand.id);
+
+  void seeAllPopularBrands() {
+    _openBrandList(
+      title: 'Popular Brands',
+      fetcher: ({required int take}) =>
+          _getPopularBrandsUseCase(TakeParams(take: take)),
+    );
+  }
+
+  void seeAllRecentBrands() {
+    _openBrandList(
+      title: 'Recent Brands',
+      fetcher: ({required int take}) =>
+          _getRecentBrandsUseCase(TakeParams(take: take)),
+    );
+  }
+
+  void seeAllFeaturedBrands() {
+    _openBrandList(
+      title: 'Featured Brands',
+      fetcher: ({required int take}) =>
+          _getFeaturedBrandsUseCase(TakeParams(take: take)),
+    );
+  }
+
+  void seeAllFavouriteCampaigns() {
+    Get.to(
+      () => FavouriteCampaignsListPage(
+        fetcher: ({required int take}) =>
+            _getFavouriteCampaignsUseCase(TakeParams(take: take)),
+        onCampaignTap: openCampaign,
+      ),
+    );
+  }
+
+  void _openBrandList({
+    required String title,
+    required BrandListFetcher fetcher,
+  }) {
+    Get.to(
+      () => BrandListPage(
+        title: title,
+        fetcher: fetcher,
+        onBrandTap: openBrand,
+      ),
+    );
   }
 
   Future<void> loadWallet() async {
@@ -1117,14 +1263,6 @@ class HomeController extends GetxController implements SocialConnectionsHost {
     isBalanceVisible.value = !isBalanceVisible.value;
   }
 
-  /// Design wants the raw currency code ("NPR 12,450.00"), not the
-  /// "Rs." symbol substitution used by [formattedBalance] elsewhere.
-  String get walletCardBalanceLabel {
-    final w = wallet.value;
-    if (w == null) return '—';
-    return '${w.currency.toUpperCase()} ${w.balance.toStringAsFixed(2)}';
-  }
-
   /// TODO(wallet-card): the API's withdrawalHint confirms a withdrawal
   /// debits the wallet balance the moment it's *requested*, not once
   /// processed — so `wallet.balance` already reflects anything
@@ -1142,17 +1280,6 @@ class HomeController extends GetxController implements SocialConnectionsHost {
   /// wired into [formattedWithdrawable] (see that getter's comment).
   List<WalletWithdrawalEntity> get pendingWithdrawals =>
       walletSummary.value?.pendingWithdrawals ?? const [];
-
-  Future<void> loadSocialConnectionStatuses() async {
-    try {
-      final statuses = await _socialConnectionsRepository
-          .fetchAllConnectionStatuses();
-      socialConnections.addAll(statuses);
-      debugPrint('[SocialConnections] loaded: $statuses');
-    } catch (e) {
-      debugPrint('[SocialConnections] fetchAllConnectionStatuses FAILED: $e');
-    }
-  }
 
   // ---------------------------------------------------------------
   // Home categories
@@ -1172,12 +1299,35 @@ class HomeController extends GetxController implements SocialConnectionsHost {
     isHomeCategoriesLoading.value = false;
   }
 
-  List<String> get allCategoryNames =>
-      {...homeCategories.map((c) => c.name), ...brandCategories}.toList();
+  List<String> get allCategoryNames {
+    final seen = <String>{};
+    final names = <String>[];
+    for (final name in [
+      ...homeCategories.map((c) => c.name.trim()),
+      ...brandCategories.map((c) => c.trim()),
+    ]) {
+      if (name.isEmpty) continue;
+      final key = name.toLowerCase();
+      if (seen.add(key)) names.add(name);
+    }
+    return names;
+  }
+
+  /// Exclusive chip selection on Home — one active, rest unselected.
+  /// Tap the active category again (or All) to clear.
   void selectCategory(String? categoryName) {
-    if (selectedCategory.value == categoryName) return;
-    selectedCategory.value = categoryName;
-    loadCampaigns();
+    final next = categoryName?.trim();
+    if (next == null || next.isEmpty) {
+      selectedCategory.value = null;
+      return;
+    }
+    final current = selectedCategory.value?.trim();
+    if (current != null &&
+        current.toLowerCase() == next.toLowerCase()) {
+      selectedCategory.value = null;
+      return;
+    }
+    selectedCategory.value = next;
   }
 
   // ---------------------------------------------------------------
@@ -1444,7 +1594,10 @@ class HomeController extends GetxController implements SocialConnectionsHost {
       loadPopularCampaigns(),
       loadFavouriteCampaigns(),
       loadMarketplaceRecent(),
+      loadAllBrandRails(),
       _authController.getMe(),
+      if (Get.isRegistered<SocialConnectionsController>())
+        Get.find<SocialConnectionsController>().loadConnectionStatuses(),
     ]);
   }
 
@@ -1453,12 +1606,7 @@ class HomeController extends GetxController implements SocialConnectionsHost {
   }
 
   void withdraw() {
-    Get.snackbar(
-      'Withdrawals',
-      'Withdrawal requests aren\'t available in the app yet. '
-          'Please contact support.',
-      duration: const Duration(seconds: 5),
-    );
+    Get.toNamed(AppRoutes.withdraw);
   }
 
   /// Opens the campaign detail screen and, in the background, records
@@ -1501,43 +1649,36 @@ class HomeController extends GetxController implements SocialConnectionsHost {
   }
 
   void openRewardedPost(RewardedPostEntity post) {
-    // TODO: open post.contentUrl (e.g. url_launcher) or a detail view.
+    Get.toNamed(AppRoutes.campaignDetail, arguments: post.campaignId);
   }
 
   void viewAllRecentlyRewarded() {
-    // TODO: Get.toNamed(AppRoutes.recentlyRewarded);
+    Get.to(
+      () => RecentlyRewardedListPage(
+        fetcher: ({required int take}) =>
+            _getRecentlyRewardedUseCase(TakeParams(take: take)),
+        onPostTap: openRewardedPost,
+      ),
+    );
   }
 
   @override
   void onInit() {
     super.onInit();
     loadAppConfig();
-    final pendingLink = _deepLinkService.consumePendingLink();
-    if (pendingLink != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _handleSocialDeepLink(pendingLink);
-      });
-    }
-    _deepLinkService.listen(_handleSocialDeepLink);
 
     if (_authController.isLoggedIn) {
       loadWallet();
       loadHomeCategories();
       loadRecentlyRewarded();
-      loadSocialConnectionStatuses();
+      if (Get.isRegistered<SocialConnectionsController>()) {
+        Get.find<SocialConnectionsController>().loadConnectionStatuses();
+      }
       loadCampaigns();
       loadPopularCampaigns();
       loadFavouriteCampaigns();
       loadMarketplaceRecent();
+      loadAllBrandRails();
     }
-  }
-
-  @override
-  void onClose() {
-    // Do NOT call _deepLinkService.dispose() here — it's a permanent
-    // singleton owned by main.dart. Disposing it here would break the
-    // flow for any future HomeController (e.g. after logout → login
-    // again), since it can never be re-created.
-    super.onClose();
   }
 }

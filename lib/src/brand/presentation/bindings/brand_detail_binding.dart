@@ -1,6 +1,8 @@
 import 'package:get/get.dart';
 import 'package:kamao/core/core.dart';
+import 'package:kamao/src/brand/domain/usecase/favourite_brand_usecase.dart';
 import 'package:kamao/src/brand/domain/usecase/get_brand_detail_usecase.dart';
+import 'package:kamao/src/brand/domain/usecase/view_brand_usecase.dart';
 import '../../data/datasources/brand_remote_data_source.dart';
 import '../../data/repositories/brand_repository_impl.dart';
 import '../controllers/brand_detail_controller.dart';
@@ -16,8 +18,16 @@ class BrandDetailBinding extends Bindings {
 
     final dataSource = BrandRemoteDataSourceImpl(apiService);
     final repository = BrandRepositoryImpl(dataSource);
-    final useCase = GetBrandDetailUseCase(repository);
 
-    Get.put(BrandDetailController(useCase, brandId: brandId), tag: brandId);
+    Get.put(
+      BrandDetailController(
+        GetBrandDetailUseCase(repository),
+        ViewBrandUseCase(repository),
+        FavouriteBrandUseCase(repository),
+        UnfavouriteBrandUseCase(repository),
+        brandId: brandId,
+      ),
+      tag: brandId,
+    );
   }
 }

@@ -33,6 +33,7 @@ class BrandProfileEntity {
     required this.postsPer12Months,
     required this.currency,
     required this.liveCampaignCount,
+    this.isFavourite = false,
   });
 
   final String id;
@@ -61,6 +62,7 @@ class BrandProfileEntity {
   final int postsPer12Months;
   final String currency;
   final int liveCampaignCount;
+  final bool isFavourite;
 
   /// Full, directly-loadable logo URL — joins [logoUrl] with
   /// AppConstants.assetBaseUrl, same convention as BrandEntity.
@@ -93,4 +95,34 @@ class BrandProfileEntity {
     if (youTubeHandle != null && youTubeHandle!.isNotEmpty) 'YouTube',
     if (facebookHandle != null && facebookHandle!.isNotEmpty) 'Facebook',
   ];
+
+  BrandProfileEntity copyWith({bool? isFavourite}) {
+    return BrandProfileEntity(
+      id: id,
+      code: code,
+      name: name,
+      description: description,
+      logoUrl: logoUrl,
+      coverImageUrl: coverImageUrl,
+      aliases: aliases,
+      bio: bio,
+      about: about,
+      categoryName: categoryName,
+      websiteUrl: websiteUrl,
+      instagramHandle: instagramHandle,
+      tikTokHandle: tikTokHandle,
+      youTubeHandle: youTubeHandle,
+      facebookHandle: facebookHandle,
+      postTip1: postTip1,
+      postTip2: postTip2,
+      postTip3: postTip3,
+      maxRewardAmount: maxRewardAmount,
+      receiptRequired: receiptRequired,
+      postsPer7Days: postsPer7Days,
+      postsPer12Months: postsPer12Months,
+      currency: currency,
+      liveCampaignCount: liveCampaignCount,
+      isFavourite: isFavourite ?? this.isFavourite,
+    );
+  }
 }

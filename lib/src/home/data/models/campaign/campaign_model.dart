@@ -29,21 +29,20 @@ class CampaignModel extends CampaignEntity {
   });
 
   factory CampaignModel.fromJson(Map<String, dynamic> json) {
+    final startLocal = _parseDate(json['startDateLocal']);
+    final startUtc = _parseDate(json['startDateUtc']) ?? startLocal;
+
     return CampaignModel(
-      id: json['id'] as String,
-      code: json['code'] as String,
-      name: json['name'] as String,
+      id: json['id'] as String? ?? '',
+      code: json['code'] as String? ?? '',
+      name: json['name'] as String? ?? '',
       objective: json['objective'] as String? ?? '',
       status: json['status'] as String? ?? '',
       currency: json['currency'] as String? ?? '',
-      startDateUtc: DateTime.parse(json['startDateUtc'] as String),
-      endDateUtc: json['endDateUtc'] != null
-          ? DateTime.parse(json['endDateUtc'] as String)
-          : null,
-      startDateLocal: DateTime.parse(json['startDateLocal'] as String),
-      endDateLocal: json['endDateLocal'] != null
-          ? DateTime.parse(json['endDateLocal'] as String)
-          : null,
+      startDateUtc: startUtc,
+      endDateUtc: _parseDate(json['endDateUtc']),
+      startDateLocal: startLocal,
+      endDateLocal: _parseDate(json['endDateLocal']),
       participationMode: json['participationMode'] as String? ?? '',
       performanceWindowHours:
           (json['performanceWindowHours'] as num?)?.toInt() ?? 0,
@@ -61,5 +60,11 @@ class CampaignModel extends CampaignEntity {
       isFavourite: json['isFavourite'] as bool? ?? false,
       earnRangeLabel: json['earnRangeLabel'] as String? ?? '',
     );
+  }
+
+  static DateTime? _parseDate(dynamic value) {
+    if (value == null) return null;
+    if (value is String && value.isEmpty) return null;
+    return DateTime.tryParse(value.toString());
   }
 }

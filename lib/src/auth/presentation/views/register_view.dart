@@ -1,27 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:kamao/src/tenant/tenant.dart';
+import 'package:kamao/app/app.dart';
 import '../controllers/auth_controller.dart';
 import '../widgets/app_logo.dart';
 
-// Register screen — matches Figma "Campaign App" register reference.
-// Same local-palette convention as login_view.dart, so the two screens
-// look identical.
+/// Register — Figma Campaign App 711:985 (green brand system).
 class _Palette {
   _Palette._();
 
-  static const purple = Color(0xFF4B0070);
-  static const heading = Color(0xFF4A434D);
+  static const brand = AppColors.onboardingGreen;
+  static const heading = AppColors.onboardingTitle;
   static const subtitle = Color(0xFF7B7B7B);
-  static const gradientLilac = Color(0xFFF1D9FF);
+  static const label = AppColors.heading;
+  static const gradientTop = AppColors.onboardingBgTop;
 }
 
 class RegisterView extends GetView<AuthController> {
-  RegisterView({super.key});
+  const RegisterView({super.key});
 
-  TenantController get tenantController => Get.find<TenantController>();
-
-  static const _brandColor = _Palette.purple;
+  static const _brandColor = _Palette.brand;
 
   InputDecoration _buildFieldDecoration({
     required String hint,
@@ -60,80 +57,11 @@ class RegisterView extends GetView<AuthController> {
     return Text(
       label,
       style: const TextStyle(
-        color: _Palette.heading,
+        color: _Palette.label,
         fontWeight: FontWeight.w700,
         fontSize: 12,
-        // Same tracking as login_view.dart's field labels.
         letterSpacing: 0.6,
       ),
-    );
-  }
-
-  Widget _phonePrefix() {
-    return Padding(
-      padding: const EdgeInsets.only(left: 18, right: 10),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text(
-            '+977',
-            style: TextStyle(
-              color: _Palette.purple,
-              fontWeight: FontWeight.w700,
-              fontSize: 15,
-            ),
-          ),
-          const SizedBox(width: 10),
-          Container(width: 1, height: 20, color: Colors.grey.shade300),
-        ],
-      ),
-    );
-  }
-
-  // ---------------------------------------------------------------------
-  // Organization dropdown — same as login_view.dart, backed by
-  // TenantController and controller.selectedTenantCode.
-  // ---------------------------------------------------------------------
-  Widget _buildOrganizationField(BuildContext context) {
-    final tenants = tenantController.tenants;
-    final isTenantLoading = tenantController.isLoading.value;
-    final selectedCode = controller.selectedTenantCode.value;
-
-    final currentValue = tenants.any((t) => t.code == selectedCode)
-        ? selectedCode
-        : null;
-
-    return DropdownButtonFormField<String>(
-      initialValue: currentValue,
-      isExpanded: true,
-      icon: isTenantLoading
-          ? const Padding(
-              padding: EdgeInsets.all(4),
-              child: SizedBox(
-                height: 16,
-                width: 16,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
-            )
-          : const Icon(Icons.keyboard_arrow_down),
-      style: const TextStyle(
-        fontSize: 15,
-        color: _Palette.heading,
-        fontWeight: FontWeight.w400,
-      ),
-      dropdownColor: Colors.white,
-      borderRadius: BorderRadius.circular(16),
-      hint: const Text('Select organization'),
-      decoration: _buildFieldDecoration(hint: 'Select organization'),
-      items: [
-        for (final tenant in tenants)
-          DropdownMenuItem(value: tenant.code, child: Text(tenant.name)),
-      ],
-      onChanged: isTenantLoading
-          ? null
-          : (value) {
-              if (value != null) controller.selectedTenantCode.value = value;
-            },
     );
   }
 
@@ -155,7 +83,7 @@ class RegisterView extends GetView<AuthController> {
           border: Border.all(color: const Color(0xFFFCA5A5), width: 1),
           boxShadow: [
             BoxShadow(
-              color: Colors.red.withOpacity(0.06),
+              color: Colors.red.withValues(alpha: 0.06),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -207,21 +135,17 @@ class RegisterView extends GetView<AuthController> {
           final scale = (screenHeight / 812).clamp(0.75, 1.0);
 
           return DecoratedBox(
-            // Same lilac → white gradient as login_view.dart.
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [_Palette.gradientLilac, Colors.white],
+                colors: [_Palette.gradientTop, Colors.white],
                 stops: [0.0, 0.4],
               ),
             ),
             child: SingleChildScrollView(
               physics: const ClampingScrollPhysics(),
               child: ConstrainedBox(
-                // Same centering approach as login_view.dart: scrolls
-                // normally once content (or the keyboard) needs more
-                // room than the screen provides.
                 constraints: BoxConstraints(minHeight: constraints.maxHeight),
                 child: IntrinsicHeight(
                   child: Padding(
@@ -236,8 +160,7 @@ class RegisterView extends GetView<AuthController> {
                         crossAxisAlignment: CrossAxisAlignment.center,
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const AppLogo(size: 96),
-
+                          const AppLogo(),
                           Text(
                             'Create Account',
                             textAlign: TextAlign.center,
@@ -249,8 +172,6 @@ class RegisterView extends GetView<AuthController> {
                             ),
                           ),
                           SizedBox(height: 8 * scale),
-                          // FittedBox + maxLines: 1 guarantees this never
-                          // wraps to a second line, same as login_view.dart.
                           SizedBox(
                             width: double.infinity,
                             child: FittedBox(
@@ -269,14 +190,6 @@ class RegisterView extends GetView<AuthController> {
                             ),
                           ),
                           SizedBox(height: 32 * scale),
-
-                          // Align(
-                          //   alignment: Alignment.centerLeft,
-                          //   child: _fieldLabel('ORGANIZATION'),
-                          // ),
-                          // SizedBox(height: 8 * scale),
-                          // _buildOrganizationField(context),
-                          // SizedBox(height: 18 * scale),
                           Align(
                             alignment: Alignment.centerLeft,
                             child: _fieldLabel('FULL NAME'),
@@ -289,7 +202,6 @@ class RegisterView extends GetView<AuthController> {
                             decoration: _buildFieldDecoration(hint: 'John Doe'),
                           ),
                           SizedBox(height: 18 * scale),
-
                           Align(
                             alignment: Alignment.centerLeft,
                             child: _fieldLabel('EMAIL ADDRESS'),
@@ -302,22 +214,34 @@ class RegisterView extends GetView<AuthController> {
                               hint: 'john.doe@example.com',
                             ),
                           ),
-                          SizedBox(height: 18 * scale),
-
+                          // SizedBox(height: 18 * scale),
                           // Align(
                           //   alignment: Alignment.centerLeft,
                           //   child: _fieldLabel('PHONE NUMBER'),
                           // ),
                           // SizedBox(height: 8 * scale),
                           // TextField(
-                          //   // controller: controller.phoneController,
+                          //   controller: controller.phoneController,
                           //   keyboardType: TextInputType.phone,
                           //   decoration: _buildFieldDecoration(
-                          //     hint: '98XXXXXXXX',
-                          //     prefixIcon: _phonePrefix(),
+                          //     hint: '9XXXXXXXXX',
+                          //     prefixIcon: Padding(
+                          //       padding: const EdgeInsets.only(
+                          //         left: 18,
+                          //         right: 10,
+                          //       ),
+                          //       child: Text(
+                          //         '+977',
+                          //         style: TextStyle(
+                          //           color: Colors.grey.shade700,
+                          //           fontWeight: FontWeight.w600,
+                          //           fontSize: 15,
+                          //         ),
+                          //       ),
+                          //     ),
                           //   ),
                           // ),
-                          // SizedBox(height: 18 * scale),
+                          SizedBox(height: 18 * scale),
                           Align(
                             alignment: Alignment.centerLeft,
                             child: _fieldLabel('PASSWORD'),
@@ -328,7 +252,7 @@ class RegisterView extends GetView<AuthController> {
                             obscureText:
                                 controller.obscureRegisterPassword.value,
                             decoration: _buildFieldDecoration(
-                              hint: 'Create a password',
+                              hint: '••••••',
                               suffixIcon: IconButton(
                                 icon: Icon(
                                   controller.obscureRegisterPassword.value
@@ -342,7 +266,6 @@ class RegisterView extends GetView<AuthController> {
                             ),
                           ),
                           SizedBox(height: 18 * scale),
-
                           Align(
                             alignment: Alignment.centerLeft,
                             child: _fieldLabel('CONFIRM PASSWORD'),
@@ -353,7 +276,7 @@ class RegisterView extends GetView<AuthController> {
                             obscureText:
                                 controller.obscureConfirmPassword.value,
                             decoration: _buildFieldDecoration(
-                              hint: 'Re-enter your password',
+                              hint: '••••••',
                               suffixIcon: IconButton(
                                 icon: Icon(
                                   controller.obscureConfirmPassword.value
@@ -366,12 +289,10 @@ class RegisterView extends GetView<AuthController> {
                               ),
                             ),
                           ),
-
                           _errorMessage(
                             controller.registerErrorMessage.value,
                             scale,
                           ),
-
                           SizedBox(height: 28 * scale),
                           SizedBox(
                             width: double.infinity,
@@ -419,8 +340,8 @@ class RegisterView extends GetView<AuthController> {
                                   fontWeight: FontWeight.w500,
                                   color: Colors.grey.shade600,
                                 ),
-                                children: [
-                                  const TextSpan(
+                                children: const [
+                                  TextSpan(
                                     text: 'Already Have an Account ? ',
                                   ),
                                   TextSpan(

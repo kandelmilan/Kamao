@@ -30,6 +30,12 @@ class AppTheme {
           ),
         ),
       ),
+      listTileTheme: const ListTileThemeData(
+        tileColor: AppColors.white,
+        selectedTileColor: AppColors.white,
+        textColor: AppColors.heading,
+        iconColor: AppColors.heading,
+      ),
     );
   }
 }

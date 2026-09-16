@@ -46,11 +46,14 @@ class CampaignDetailController extends GetxController {
     isLoading.value = false;
   }
 
-  Future<void> join({String? platformId}) async {
+  Future<bool> join({String? platformId}) async {
     final current = campaign.value;
-    if (current == null || current.alreadyJoined || isJoining.value) return;
+    if (current == null || current.alreadyJoined || isJoining.value) {
+      return current?.alreadyJoined ?? false;
+    }
 
     isJoining.value = true;
+    var success = false;
 
     final result = await _joinCampaignUseCase(JoinCampaignParams(campaignId));
 
@@ -60,10 +63,12 @@ class CampaignDetailController extends GetxController {
       if (joined) {
         campaign.value = current.copyWith(alreadyJoined: true);
         _syncHomeJoinedState();
+        success = true;
       }
     });
 
     isJoining.value = false;
+    return success;
   }
 
   Future<void> toggleFavourite() async {

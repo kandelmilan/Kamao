@@ -22,19 +22,69 @@ enum WithdrawalStatus {
   pending,
   paid,
   rejected,
+  processing,
   unknown;
 
   static WithdrawalStatus fromApi(String value) {
-    switch (value) {
-      case 'Pending':
-        return WithdrawalStatus.pending;
-      case 'Paid':
+    // Keep in sync with withdrawal_entity.dart — same aliases.
+    final raw = value.trim().toLowerCase();
+    if (raw.isEmpty) return WithdrawalStatus.pending;
+
+    switch (raw) {
+      case 'paid':
+      case 'success':
+      case 'successful':
+      case 'completed':
+      case 'complete':
+      case 'done':
         return WithdrawalStatus.paid;
-      case 'Rejected':
+      case 'pending':
+      case 'requested':
+      case 'submitted':
+      case 'queued':
+      case 'open':
+      case 'new':
+      case 'created':
+      case 'awaiting':
+      case 'approved':
+        return WithdrawalStatus.pending;
+      case 'processing':
+      case 'inprogress':
+      case 'in_progress':
+      case 'in-progress':
+        return WithdrawalStatus.processing;
+      case 'rejected':
+      case 'failed':
+      case 'failure':
+      case 'cancelled':
+      case 'canceled':
+      case 'declined':
         return WithdrawalStatus.rejected;
-      default:
-        return WithdrawalStatus.unknown;
     }
+
+    if (raw.contains('paid') ||
+        raw.contains('success') ||
+        raw.contains('complete')) {
+      return WithdrawalStatus.paid;
+    }
+    if (raw.contains('reject') ||
+        raw.contains('fail') ||
+        raw.contains('cancel') ||
+        raw.contains('decline')) {
+      return WithdrawalStatus.rejected;
+    }
+    if (raw.contains('process')) {
+      return WithdrawalStatus.processing;
+    }
+    if (raw.contains('pend') ||
+        raw.contains('request') ||
+        raw.contains('submit') ||
+        raw.contains('queue') ||
+        raw.contains('approv')) {
+      return WithdrawalStatus.pending;
+    }
+
+    return WithdrawalStatus.pending;
   }
 }
 

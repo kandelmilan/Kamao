@@ -1,22 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:kamao/app/app.dart';
 import 'package:kamao/src/auth/auth.dart';
 
-// Forgot-password screen — brought in line with the new login_view.dart /
-// register_view.dart design (same local-palette convention, same gradient,
-// same logo widget and field styling).
+/// Reset password — Figma Campaign App 711:1070 (green brand system).
 class _Palette {
   _Palette._();
 
-  static const purple = Color(0xFF4B0070);
-  static const heading = Color(0xFF353037);
-  static const gradientLilac = Color(0xFFF1D9FF);
+  static const brand = AppColors.onboardingGreen;
+  static const heading = AppColors.heading;
+  static const subtitle = Color(0xFF7B7B7B);
+  static const gradientTop = AppColors.onboardingBgTop;
 }
 
 class ForgotPasswordView extends GetView<AuthController> {
   const ForgotPasswordView({super.key});
 
-  static const _brandColor = _Palette.purple;
+  static const _brandColor = _Palette.brand;
 
   InputDecoration _buildFieldDecoration({
     required String hint,
@@ -67,22 +67,17 @@ class ForgotPasswordView extends GetView<AuthController> {
           final scale = (screenHeight / 812).clamp(0.75, 1.0);
 
           return DecoratedBox(
-            // Same lilac → white gradient as login_view.dart /
-            // register_view.dart.
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [_Palette.gradientLilac, Colors.white],
+                colors: [_Palette.gradientTop, Colors.white],
                 stops: [0.0, 0.4],
               ),
             ),
             child: SingleChildScrollView(
               physics: const ClampingScrollPhysics(),
               child: ConstrainedBox(
-                // Centers the form vertically on tall screens, while
-                // still scrolling normally if content (or the
-                // keyboard) needs more room than the screen provides.
                 constraints: BoxConstraints(minHeight: constraints.maxHeight),
                 child: IntrinsicHeight(
                   child: Padding(
@@ -97,7 +92,7 @@ class ForgotPasswordView extends GetView<AuthController> {
                         crossAxisAlignment: CrossAxisAlignment.center,
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const AppLogo(size: 96),
+                          const AppLogo(),
                           SizedBox(height: 20 * scale),
                           Text(
                             'Reset Password',
@@ -110,16 +105,15 @@ class ForgotPasswordView extends GetView<AuthController> {
                           ),
                           SizedBox(height: 8 * scale),
                           Text(
-                            "We'll send instructions if an account exists for that mail",
+                            "We'll send instructions if an account exists for that email.",
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              color: Colors.grey.shade600,
+                              color: _Palette.subtitle,
                               fontSize: 14 * scale,
                               height: 1.3,
                             ),
                           ),
                           SizedBox(height: 20 * scale),
-
                           Align(
                             alignment: Alignment.centerLeft,
                             child: _fieldLabel('EMAIL ADDRESS'),
@@ -129,7 +123,7 @@ class ForgotPasswordView extends GetView<AuthController> {
                             controller: controller.emailController,
                             keyboardType: TextInputType.emailAddress,
                             decoration: _buildFieldDecoration(
-                              hint: 'yourcompany@gmail.com',
+                              hint: 'john.doe@example.com',
                             ),
                           ),
                           SizedBox(height: 28 * scale),
@@ -148,7 +142,7 @@ class ForgotPasswordView extends GetView<AuthController> {
                                 foregroundColor: Colors.white,
                                 elevation: 0,
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(30),
+                                  borderRadius: BorderRadius.circular(16),
                                 ),
                               ),
                               child: controller.isLoading.value
@@ -175,7 +169,7 @@ class ForgotPasswordView extends GetView<AuthController> {
                             child: Text.rich(
                               TextSpan(
                                 children: [
-                                  WidgetSpan(
+                                  const WidgetSpan(
                                     child: Icon(
                                       Icons.arrow_back_ios,
                                       size: 14,

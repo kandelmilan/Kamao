@@ -1,12 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:kamao/src/home/domain/entities/campaign/campaign_detail_entity.dart';
 
-/// Renders the "What you need to do" card: one row per checklist item,
-/// each with a check icon, an uppercase label, and its value.
-///
-/// Built entirely from [items] (see [CampaignDetailEntity.checklistItems]),
-/// so it stays in sync with whatever directives a campaign has — no
-/// hardcoded fields, no page-level changes needed for new directive types.
+/// “What you need to do” — Figma todo-card (#E6F0E4).
 class CampaignChecklistCard extends StatelessWidget {
   const CampaignChecklistCard({super.key, required this.items});
 
@@ -17,16 +12,16 @@ class CampaignChecklistCard extends StatelessWidget {
     if (items.isEmpty) return const SizedBox.shrink();
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: const Color(0xFFE6F0E4),
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+            color: Color(0x0A1A153B),
+            blurRadius: 16,
+            offset: Offset(0, 4),
           ),
         ],
       ),
@@ -46,7 +41,7 @@ class CampaignChecklistCard extends StatelessWidget {
           const SizedBox(height: 18),
           for (var i = 0; i < items.length; i++)
             Padding(
-              padding: EdgeInsets.only(bottom: i == items.length - 1 ? 0 : 20),
+              padding: EdgeInsets.only(bottom: i == items.length - 1 ? 0 : 18),
               child: _ChecklistRow(item: items[i]),
             ),
         ],
@@ -69,12 +64,17 @@ class _ChecklistRow extends StatelessWidget {
           width: 24,
           height: 24,
           decoration: const BoxDecoration(
-            color: Color(0xFFE6FBF3),
+            color: Color(0xFFDAE9D7),
             shape: BoxShape.circle,
           ),
-          child: const Icon(Icons.check, color: Color(0xFF10B981), size: 14),
+          alignment: Alignment.center,
+          child: const Icon(
+            Icons.check_rounded,
+            size: 14,
+            color: Color(0xFF426340),
+          ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 18),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

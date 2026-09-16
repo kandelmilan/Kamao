@@ -14,6 +14,7 @@ class BrandModel extends BrandEntity {
     required super.currency,
     required super.liveCampaignCount,
     required super.rewardedPostCount,
+    super.isFavourite,
   });
 
   factory BrandModel.fromJson(Map<String, dynamic> json) {
@@ -30,6 +31,7 @@ class BrandModel extends BrandEntity {
       currency: json['currency'] as String? ?? '',
       liveCampaignCount: (json['liveCampaignCount'] as num?)?.toInt() ?? 0,
       rewardedPostCount: (json['rewardedPostCount'] as num?)?.toInt() ?? 0,
+      isFavourite: json['isFavourite'] as bool? ?? false,
     );
   }
 }

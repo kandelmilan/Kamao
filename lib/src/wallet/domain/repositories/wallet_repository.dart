@@ -8,4 +8,13 @@ abstract class WalletRepository {
   Future<Either<Failure, WalletSummaryEntity>> getWallet();
   Future<Either<Failure, List<WithdrawalEntity>>> getWithdrawals();
   Future<Either<Failure, PayoutMethodEntity>> getPayoutMethod();
+
+  Future<Either<Failure, String>> createWithdrawal({
+    required double amount,
+    required String destinationType,
+    required String accountName,
+    required String accountNumber,
+    required String currency,
+    String? bankName,
+  });
 }

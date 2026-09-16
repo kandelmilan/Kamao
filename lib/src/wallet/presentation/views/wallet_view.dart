@@ -1080,13 +1080,12 @@ import '../controllers/wallet_controller.dart';
 import '../widgets/wallet_activity_widgets.dart';
 
 // ═════════════════════════════════════════════════════════════
-// Palette — same lilac-to-white backdrop gradient used on
-// FeaturedCampaignsPage, kept local to this feature.
+// Palette — soft green backdrop (Campaign App / Figma 678:5496).
 // ═════════════════════════════════════════════════════════════
 class _Palette {
   const _Palette._();
 
-  static const gradientLilac = Color(0xFFF1D9FF);
+  static const gradientTop = AppColors.onboardingBgTop;
 }
 
 class WalletView extends GetView<WalletController> {
@@ -1106,7 +1105,6 @@ class WalletView extends GetView<WalletController> {
           // top 260px, so without this the rest falls through to
           // whatever's behind WalletView, which is black on its own.
           const Positioned.fill(child: ColoredBox(color: Colors.white)),
-          // Backdrop gradient — matches FeaturedCampaignsPage.
           Positioned(
             top: 0,
             left: 0,
@@ -1117,7 +1115,7 @@ class WalletView extends GetView<WalletController> {
                 gradient: const LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [_Palette.gradientLilac, Colors.white],
+                  colors: [_Palette.gradientTop, Colors.white],
                   stops: [0.0, 0.85],
                 ),
               ),
@@ -1179,221 +1177,311 @@ class _WalletHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.fromLTRB(20, 16, 20, 12),
-      child: Text(
-        'Wallet',
-        style: TextStyle(
-          fontFamily: 'Roboto',
-          fontSize: 28,
-          fontWeight: FontWeight.w700,
-          color: AppColors.heading,
-        ),
+    final canPop = Navigator.of(context).canPop();
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 8, 12, 12),
+      child: Row(
+        children: [
+          if (canPop)
+            IconButton(
+              onPressed: () => Get.back(),
+              icon: const Icon(
+                RemixIcons.arrow_left_s_line,
+                size: 28,
+                color: AppColors.heading,
+              ),
+            )
+          else
+            const SizedBox(width: 12),
+          const Expanded(
+            child: Text(
+              'Wallet',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: 'Roboto',
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: AppColors.heading,
+              ),
+            ),
+          ),
+          // Keeps title optically centered with the back button.
+          SizedBox(width: canPop ? 48 : 12),
+        ],
       ),
     );
   }
 }
 
+/// Balance hero — same green card system as home `_WalletCard`
+/// (Figma 660:2074), adapted for the wallet page (Figma 678:5496).
 class _BalanceCard extends StatelessWidget {
   const _BalanceCard({required this.controller});
 
   final WalletController controller;
 
+  static const _designW = 372.0;
+  static const _designH = 179.0;
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      constraints: const BoxConstraints(minHeight: 190),
-      padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(19),
-        border: Border.all(color: AppColors.white, width: 1),
-        gradient: const LinearGradient(
-          begin: Alignment(-0.22, -2.2),
-          end: Alignment.bottomLeft,
-          colors: [Colors.white, Colors.white, Color(0xFFEFD4FF)],
-          stops: [0.0, 0.4, 1.0],
-        ),
-        boxShadow: const [
-          BoxShadow(
-            color: AppColors.shadow,
-            blurRadius: 8,
-            offset: Offset(0, 8),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final w = constraints.maxWidth;
+        final s = w / _designW;
+        final h = _designH * s;
+
+        return Container(
+          height: h,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20 * s),
+            border: Border.all(color: AppColors.walletBorder),
+            gradient: const LinearGradient(
+              begin: Alignment(-0.85, -0.4),
+              end: Alignment(0.9, 0.6),
+              colors: [
+                AppColors.walletGradientStart,
+                AppColors.walletGradientEnd,
+              ],
+            ),
           ),
-        ],
-      ),
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Positioned(
-            top: 8,
-            right: 16,
-            child: Opacity(
-              opacity: 0.37,
-              child: SvgPicture.asset(
-                AppImages.walletBackground,
-                width: 119,
-                height: 136,
-                fit: BoxFit.contain,
+          clipBehavior: Clip.hardEdge,
+          child: Stack(
+            children: [
+              Positioned(
+                left: 199 * s,
+                top: -16 * s,
+                width: 162.045 * s,
+                height: 212.077 * s,
+                child: SvgPicture.asset(
+                  AppImages.walletCardLeafLarge,
+                  fit: BoxFit.fill,
+                ),
               ),
-            ),
-          ),
-          Positioned(
-            top: 48,
-            right: -4,
-            child: SvgPicture.asset(
-              AppImages.wallet,
-              width: 70,
-              height: 50,
-              fit: BoxFit.contain,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(right: 90),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
+              Positioned(
+                left: 321 * s,
+                top: 117 * s,
+                width: 60 * s,
+                height: 73 * s,
+                child: SvgPicture.asset(
+                  AppImages.walletCardLeafBr,
+                  fit: BoxFit.fill,
+                ),
+              ),
+              Positioned(
+                left: 358.04 * s,
+                top: 10.75 * s,
+                width: 66.924 * s,
+                height: 61.779 * s,
+                child: Transform.rotate(
+                  angle: -70.48 * 3.1415926535 / 180,
+                  child: SvgPicture.asset(
+                    AppImages.walletCardLeafTr,
+                    width: 46.18 * s,
+                    height: 54.635 * s,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 188 * s,
+                top: 68 * s,
+                width: 114 * s,
+                height: 87 * s,
+                child: Image.asset(
+                  AppImages.walletCoins,
+                  fit: BoxFit.contain,
+                  alignment: Alignment.bottomCenter,
+                ),
+              ),
+              Positioned(
+                left: 18 * s,
+                top: 18 * s,
+                right: 120 * s,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'AVAILABLE BALANCE',
-                      style: AppTextStyles.label.copyWith(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.6,
-                        color: const Color(0xFF3F3F46),
+                      'YOUR WALLET',
+                      style: TextStyle(
+                        fontFamily: 'Roboto',
+                        fontSize: 10 * s,
+                        fontWeight: FontWeight.w500,
+                        letterSpacing: 0.5,
+                        height: 15 / 10,
+                        color: AppColors.walletLabel,
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    GestureDetector(
-                      onTap: controller.toggleBalanceVisibility,
-                      child: Obx(
-                        () => Icon(
-                          controller.isBalanceHidden.value
-                              ? RemixIcons.eye_off_line
-                              : RemixIcons.eye_line,
-                          size: 18,
-                          color: const Color(0xFF3F3F46),
+                    SizedBox(height: 2 * s),
+                    Obx(() {
+                      if (controller.isLoading.value &&
+                          controller.summary.value == null) {
+                        return SizedBox(
+                          height: 28 * s,
+                          width: 28 * s,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            color: AppColors.walletBalance,
+                          ),
+                        );
+                      }
+                      return Text(
+                        controller.formattedAvailableBalance,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontFamily: 'Roboto',
+                          fontSize: 28 * s,
+                          fontWeight: FontWeight.w600,
+                          height: 42 / 28,
+                          letterSpacing: -0.7,
+                          color: AppColors.walletBalance,
                         ),
+                      );
+                    }),
+                    Text(
+                      'Available balance',
+                      style: TextStyle(
+                        fontFamily: 'Roboto',
+                        fontSize: 11 * s,
+                        fontWeight: FontWeight.w500,
+                        height: 16.5 / 11,
+                        color: AppColors.walletLabel,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 6),
-                Obx(() {
-                  if (controller.isLoading.value &&
-                      controller.summary.value == null) {
-                    return const SizedBox(
-                      height: 32,
-                      width: 32,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2.5,
-                        color: AppColors.accentDark,
-                      ),
-                    );
-                  }
-                  return Text(
-                    controller.formattedAvailableBalance,
-                    style: const TextStyle(
-                      fontFamily: 'Roboto',
-                      fontSize: 28,
-                      fontWeight: FontWeight.w700,
-                      height: 1.0,
-                      letterSpacing: 0,
-                      color: Color(0xFF4B0070),
-                    ),
-                  );
-                }),
-                const SizedBox(height: 12),
-                Obx(
-                  () => Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
+              ),
+              Positioned(
+                left: 267 * s,
+                top: 19 * s,
+                child: Obx(
+                  () => _WeeklyGrowthBadge(
+                    label: controller.weeklyGrowthAmountLabel,
+                    scale: s,
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 19 * s,
+                bottom: 34 * s,
+                child: InkWell(
+                  onTap: controller.onWithdrawTap,
+                  borderRadius: BorderRadius.circular(999),
+                  child: Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 16 * s,
+                      vertical: 8 * s,
                     ),
                     decoration: BoxDecoration(
-                      color: const Color(0x42E8F6ED),
-                      borderRadius: BorderRadius.circular(4),
-                      border: Border.all(
-                        color: Colors.white.withOpacity(0.6),
-                        width: 1,
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          RemixIcons.wallet_3_fill,
-                          size: 13,
-                          color: Color(0xFF16A34A),
-                        ),
-                        const SizedBox(width: 8),
-                        Flexible(
-                          child: Text(
-                            'Withdrawable : '
-                            '${controller.formattedWithdrawableBalance}',
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontFamily: 'Roboto',
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              height: 1.0,
-                              letterSpacing: 0,
-                              color: Color(0xFF16A34A),
-                            ),
-                          ),
+                      color: AppColors.walletButton,
+                      borderRadius: BorderRadius.circular(999),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.1),
+                          blurRadius: 6 * s,
+                          offset: Offset(0, 4 * s),
                         ),
                       ],
                     ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: 110,
-                  height: 31,
-                  child: ElevatedButton(
-                    onPressed: controller.onWithdrawTap,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: const Color(0xFF4B0070),
-                      elevation: 0,
-                      shadowColor: Colors.transparent,
-                      padding: EdgeInsets.zero,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Text(
+                        Text(
                           'Withdraw',
                           style: TextStyle(
                             fontFamily: 'Roboto',
-                            fontSize: 13,
+                            fontSize: 12 * s,
                             fontWeight: FontWeight.w500,
-                            height: 1.0,
-                            letterSpacing: 0.65,
-                            color: Color(0xFF4B0070),
+                            height: 16 / 12,
+                            color: AppColors.white,
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        Transform.rotate(
-                          angle: 1.5708,
-                          child: const Icon(
-                            RemixIcons.logout_box_line,
-                            size: 16,
-                            color: Color(0xFF4B0070),
-                          ),
+                        SizedBox(width: 6 * s),
+                        SvgPicture.asset(
+                          AppImages.walletViewArrow,
+                          width: 12 * s,
+                          height: 12 * s,
                         ),
                       ],
                     ),
                   ),
                 ),
-              ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _WeeklyGrowthBadge extends StatelessWidget {
+  const _WeeklyGrowthBadge({required this.label, this.scale = 1});
+
+  final String label;
+  final double scale;
+
+  @override
+  Widget build(BuildContext context) {
+    final s = scale;
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 11 * s, vertical: 7 * s),
+      decoration: BoxDecoration(
+        color: const Color(0xD9FFFFFF),
+        borderRadius: BorderRadius.circular(12 * s),
+        border: Border.all(color: const Color(0xE6FFFFFF)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 2 * s,
+            offset: Offset(0, 1 * s),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 16 * s,
+            height: 16 * s,
+            decoration: const BoxDecoration(
+              color: Color(0xFFDAE9D7),
+              shape: BoxShape.circle,
             ),
+            alignment: Alignment.center,
+            child: SvgPicture.asset(
+              AppImages.walletGrowthArrow,
+              width: 10 * s,
+              height: 10 * s,
+            ),
+          ),
+          SizedBox(width: 6 * s),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontFamily: 'Roboto',
+                  fontSize: 10 * s,
+                  fontWeight: FontWeight.w500,
+                  height: 12.5 / 10,
+                  color: AppColors.heading,
+                ),
+              ),
+              Text(
+                'this week',
+                style: TextStyle(
+                  fontFamily: 'Roboto',
+                  fontSize: 9 * s,
+                  fontWeight: FontWeight.w500,
+                  height: 11.25 / 9,
+                  color: const Color(0xFF6E6971),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -1405,9 +1493,8 @@ class _BalanceCard extends StatelessWidget {
 /// [WalletSummaryEntity.withdrawalHint] when available, and falls back
 /// to a generic encouragement message when the API doesn't send one.
 class _HintBanner extends StatelessWidget {
-  const _HintBanner({this.title, this.body});
+  const _HintBanner({this.body});
 
-  final String? title;
   final String? body;
 
   static const String _defaultTitle = 'EARNINGS LOOK GOOD!';
@@ -1417,9 +1504,6 @@ class _HintBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final resolvedTitle = (title != null && title!.trim().isNotEmpty)
-        ? title!
-        : _defaultTitle;
     final resolvedBody = (body != null && body!.trim().isNotEmpty)
         ? body!
         : _defaultBody;
@@ -1438,13 +1522,13 @@ class _HintBanner extends StatelessWidget {
             width: 32,
             height: 32,
             decoration: BoxDecoration(
-              color: const Color(0xFF16A34A),
+              color: AppColors.onboardingGreen,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: const [
+              boxShadow: [
                 BoxShadow(
-                  color: Color(0x3310B981),
+                  color: AppColors.onboardingGreen.withValues(alpha: 0.2),
                   blurRadius: 2,
-                  offset: Offset(0, 1),
+                  offset: const Offset(0, 1),
                 ),
               ],
             ),
@@ -1460,26 +1544,26 @@ class _HintBanner extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  resolvedTitle,
-                  style: const TextStyle(
+                const Text(
+                  _defaultTitle,
+                  style: TextStyle(
                     fontFamily: 'Roboto',
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
                     height: 16 / 12,
                     letterSpacing: 0.3,
-                    color: Color(0xFF16A34A),
+                    color: AppColors.onboardingGreen,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   resolvedBody,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: 'Roboto',
                     fontSize: 10,
                     fontWeight: FontWeight.w400,
                     height: 16.5 / 10,
-                    color: Color(0xFF16A34A),
+                    color: AppColors.onboardingGreen.withValues(alpha: 0.9),
                   ),
                 ),
               ],
@@ -1508,7 +1592,7 @@ class _ActivitySectionHeader extends StatelessWidget {
             fontSize: 18,
             fontWeight: FontWeight.w700,
             height: 24 / 18,
-            color: Color(0xFF353037),
+            color: AppColors.heading,
           ),
         ),
         InkWell(
@@ -1522,13 +1606,13 @@ class _ActivitySectionHeader extends StatelessWidget {
                   fontFamily: 'Roboto',
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF4B0070),
+                  color: AppColors.onboardingGreen,
                 ),
               ),
               Icon(
                 RemixIcons.arrow_right_s_line,
                 size: 16,
-                color: Color(0xFF4B0070),
+                color: AppColors.onboardingGreen,
               ),
             ],
           ),

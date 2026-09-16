@@ -30,6 +30,22 @@ class AppColors {
   // ── Status ────────────────────────────────────────────────────────
   static const Color success = Color(0xFF94D5AC);
 
+  // ── Home (Figma 659:2023) — soft green wallet / brand rails ─────
+  static const Color homeBg = Color(0xFFFAFAF9);
+  static const Color walletGradientStart = Color(0xFFDDE8D6);
+  static const Color walletGradientEnd = Color(0xFFFAFEEE);
+  static const Color walletBorder = Color(0xFFE6F0E4);
+  static const Color walletLabel = Color(0xFF495747);
+  static const Color walletBalance = Color(0xFF273B26);
+  static const Color walletButton = Color(0xFF162616);
+  static const Color walletChipBg = Color(0xFFF4FAE8);
+  static const Color walletChipBorder = Color(0xFFE6F0E4);
+  static const Color seeAllGreen = Color(0xFF426340);
+  static const Color chipSelected = Color(0xFF29252A);
+  static const Color notificationDot = Color(0xFF557F52);
+  static const Color searchBorder = Color(0xFFEDECED);
+  static const Color brandName = Color(0xFF433D46);
+
   // ── Surfaces ─────────────────────────────────────────────────────
   static const Color background = Color(0xFFF6F4F7);
   static const Color white = Color(0xFFFFFFFF);
@@ -45,15 +61,24 @@ class AppColors {
   static const Color glassBorder = Color(0x386F338D);
   static const Color shadow = Color(0x264B0070);
 
-  // ── Onboarding screen ───────────────────────────────────────────────
-  static const Color onboardingBgTop = Color(0xFFF2FFAF);
-  static const Color onboardingBgMid = Color(0xFFF7FFCC);
+  // ── Onboarding (Figma 711:1104 / 711:1117 / 711:1222) ───────────────
+  static const Color onboardingGreen = Color(0xFF426340);
+  static const Color onboardingTitle = Color(0xFF29252A);
+  static const Color onboardingSubtitle = Color(0xFF433D46);
+  static const Color onboardingBadgeDot = Color(0xFF353037);
+  static const Color onboardingBgTop = Color(0xFFF7FBEE);
   static const Color onboardingBgBottom = Color(0xFFFFFFFF);
-  static const Color onboardingInk = Color(0xFF121212);
-  static const Color onboardingSubtleGrey = Color(0xFF8A8F98);
-  static const Color onboardingCardGrey = Color(0xFFF4F4F4);
-  static const Color onboardingBorderGrey = Color(0xFFE3E3E6);
-  static const Color onboardingLime = Color(0xFFE6F694);
+  static const Color onboardingWaveDome = Color(0xFFC9E0C5);
+  static const Color onboardingWaveDiagonal = Color(0xFFDAE9D7);
+  static const Color onboardingWaveEarn = Color(0xFFDAE9D7);
+  static const Color onboardingCardLabel = Color(0xFF6C6C80);
+  static const Color onboardingCardValue = Color(0xFF1E1E2F);
+  static const Color onboardingCardBorder = Color(0xFFE8E0FF);
+  static const Color onboardingGrowthBg = Color(0xFFDCFCE7);
+  static const Color onboardingGrowthText = Color(0xFF16A34A);
+  static const Color onboardingWeekBg = Color(0xFFE8F6ED);
+  static const Color onboardingBarTop = Color(0xFF95BC93);
+  static const Color onboardingBarBottom = Color(0xFFDAE9D7);
 
   // ── Featured brands section ────────────────────────────────────
   // Figma node 32:3530 "Featured" chip fill is Foundation/accent

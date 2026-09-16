@@ -6,4 +6,14 @@ class BrandDetailEntity {
 
   final BrandProfileEntity brand;
   final List<CampaignEntity> campaigns;
+
+  BrandDetailEntity copyWith({
+    BrandProfileEntity? brand,
+    List<CampaignEntity>? campaigns,
+  }) {
+    return BrandDetailEntity(
+      brand: brand ?? this.brand,
+      campaigns: campaigns ?? this.campaigns,
+    );
+  }
 }

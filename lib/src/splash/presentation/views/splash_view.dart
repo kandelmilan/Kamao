@@ -1,13 +1,16 @@
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:kamao/app/app.dart';
 import 'package:kamao/core/core.dart';
 import 'package:remixicon/remixicon.dart';
 import '../controllers/splash_controller.dart';
 
+/// Splash — Figma Campaign App node 722:1055
+/// Green brand system (matches onboarding 711:*).
 class SplashView extends GetView<SplashController> {
   const SplashView({super.key});
 
@@ -34,29 +37,33 @@ class _SplashBodyState extends State<_SplashBody> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
-    const figmaSize = Size(412, 917);
-    final sx = size.width / figmaSize.width;
-    final sy = size.height / figmaSize.height;
+    const figmaW = 412.0;
+    const figmaH = 917.0;
+    final sx = size.width / figmaW;
+    final sy = size.height / figmaH;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.onboardingBgBottom,
       body: Stack(
         fit: StackFit.expand,
         clipBehavior: Clip.none,
         children: [
-          // ── Gradient (lilac → white) ──────────────────────────────
+          // Soft green → white gradient (same family as onboarding)
           const DecoratedBox(
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [_SplashPalette.gradientLilac, Colors.white],
+                colors: [
+                  AppColors.onboardingBgTop,
+                  AppColors.onboardingBgBottom,
+                ],
                 stops: [0.0, 0.43],
               ),
             ),
           ),
 
-          // ── Bottom-right wave ─────────────────────────────────────
+          // Bottom-right soft green wave
           Positioned(
             right: -100 * sx,
             bottom: -140 * sy,
@@ -64,103 +71,63 @@ class _SplashBodyState extends State<_SplashBody> {
             height: 540 * sy,
             child: CustomPaint(
               size: Size(520 * sx, 520 * sy),
-              painter: _WavePainter(),
+              painter: const _WavePainter(),
             ),
           ),
 
-          // ── Center content ────────────────────────────────────────
+          // Center brand content
           Positioned(
             left: 0,
             right: 0,
             top: 220 * sy,
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Container(
-                  width: 132,
-                  height: 132,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(28),
-                    boxShadow: [
-                      BoxShadow(
-                        color: _SplashPalette.purple500.withOpacity(0.1),
-                        blurRadius: 24,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(28),
-                    child: Image.asset(AppImages.appLogo, fit: BoxFit.contain),
-                  ),
-                ),
-
-                // "kamao"
-                Text(
-                  'Kamao',
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.roboto(
-                    color: _SplashPalette.purple500,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 54,
-                    height: 1.0,
-                    letterSpacing: 54 * -0.015,
-                  ),
-                ),
-
+                const AppLogo.splash(),
                 const SizedBox(height: 8),
-
-                // "Tip. Support. Grow Together."
                 Text.rich(
                   TextSpan(
                     style: GoogleFonts.roboto(
-                      color: _SplashPalette.violet600,
+                      color: AppColors.onboardingSubtitle,
                       fontWeight: FontWeight.w500,
                       fontSize: 15,
                       height: 1.0,
                       letterSpacing: 15 * 0.005,
                     ),
-                    children: [
-                      const TextSpan(text: 'Tip'),
+                    children: const [
+                      TextSpan(text: 'Tip'),
                       TextSpan(
                         text: '.',
-                        style: TextStyle(color: _SplashPalette.iconCoral),
+                        style: TextStyle(color: AppColors.accent),
                       ),
-                      const TextSpan(text: ' Support'),
+                      TextSpan(text: ' Support'),
                       TextSpan(
                         text: '.',
-                        style: TextStyle(color: _SplashPalette.iconCoral),
+                        style: TextStyle(color: AppColors.accent),
                       ),
-                      const TextSpan(text: ' Grow Together'),
+                      TextSpan(text: ' Grow Together'),
                       TextSpan(
                         text: '.',
-                        style: TextStyle(color: _SplashPalette.iconCoral),
+                        style: TextStyle(color: AppColors.accent),
                       ),
                     ],
                   ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 35),
-
-                // Feature chips + dashed line
-                // Figma: width 291, height 48, left 75, top 486, dashed #C7B0D3
+                // Feature chips + dashed connector
                 SizedBox(
                   width: 291,
                   height: 48,
                   child: Stack(
                     alignment: Alignment.center,
                     children: [
-                      // dashed connector
                       SizedBox(
-                        width:
-                            251, // leaves room for the 48px chips on each side
+                        width: 251,
                         height: 1,
                         child: CustomPaint(
-                          painter: _DashedLinePainter(
-                            color: const Color(
-                              0xFFC7B0D3,
-                            ), // exact Figma stroke
+                          painter: const _DashedLinePainter(
+                            color: AppColors.onboardingWaveDome,
                           ),
                         ),
                       ),
@@ -184,18 +151,16 @@ class _SplashBodyState extends State<_SplashBody> {
   }
 }
 
-// ─────────────────────────────────────────────────────────────
-// Wave
-// ─────────────────────────────────────────────────────────────
 class _WavePainter extends CustomPainter {
+  const _WavePainter();
+
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = const Color(0xFFFFD1D1)
+      ..color = AppColors.onboardingWaveDiagonal
       ..style = PaintingStyle.fill
       ..isAntiAlias = true;
 
-    // Big outer circle sitting in the bottom-right corner
     final outer = Path()
       ..addOval(
         Rect.fromCircle(
@@ -204,8 +169,6 @@ class _WavePainter extends CustomPainter {
         ),
       );
 
-    // Large inner circle that bites from the top-left
-    // → creates the soft crescent edge
     final inner = Path()
       ..addOval(
         Rect.fromCircle(
@@ -224,9 +187,6 @@ class _WavePainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
-// ─────────────────────────────────────────────────────────────
-// Feature chip — light outer + purple badge + coral icon
-// ─────────────────────────────────────────────────────────────
 class _FeatureChip extends StatelessWidget {
   const _FeatureChip({required this.icon});
 
@@ -239,7 +199,7 @@ class _FeatureChip extends StatelessWidget {
       height: 48,
       alignment: Alignment.center,
       decoration: const BoxDecoration(
-        color: Color(0xFFE8DFED), // soft outer ring
+        color: AppColors.onboardingWaveDome,
         shape: BoxShape.circle,
       ),
       child: Container(
@@ -247,32 +207,27 @@ class _FeatureChip extends StatelessWidget {
         height: 28,
         alignment: Alignment.center,
         decoration: const BoxDecoration(
-          color: _SplashPalette.purple500,
+          color: AppColors.onboardingGreen,
           shape: BoxShape.circle,
         ),
-        child: Icon(icon, size: 14, color: _SplashPalette.iconCoral),
+        child: Icon(icon, size: 14, color: Colors.white),
       ),
     );
   }
 }
 
 class _DashedLinePainter extends CustomPainter {
-  const _DashedLinePainter({
-    required this.color,
-    this.dashLength = 5,
-    this.spaceLength = 4,
-  });
+  const _DashedLinePainter({required this.color});
 
   final Color color;
-  final double dashLength;
-  final double spaceLength;
 
   @override
   void paint(Canvas canvas, Size size) {
+    const dashLength = 5.0;
+    const spaceLength = 4.0;
     final paint = Paint()
       ..color = color
-      ..strokeWidth =
-          1.0 // border-width: 1px
+      ..strokeWidth = 1.0
       ..isAntiAlias = true;
 
     double x = 0;
@@ -289,16 +244,4 @@ class _DashedLinePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
-// ─────────────────────────────────────────────────────────────
-// Palette
-// ─────────────────────────────────────────────────────────────
-class _SplashPalette {
-  const _SplashPalette._();
-
-  static const purple500 = Color(0xFF4B0070);
-  static const violet600 = Color(0xFF433D46);
-  static const iconCoral = Color(0xFFFC7276);
-  static const gradientLilac = Color(0xFFF1D9FF);
 }

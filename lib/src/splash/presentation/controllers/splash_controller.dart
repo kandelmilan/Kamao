@@ -31,13 +31,17 @@ class SplashController extends GetxController {
       final destination = results.first as String;
       Get.offAllNamed(destination);
     } catch (e) {
-      print("Splash error: $e");
-      Get.offAllNamed(AppRoutes.onboarding);
+      AppLogger.error('Splash error: $e', tag: 'SPLASH');
+      // Prefer login over onboarding on unexpected errors — first-launch
+      // is already handled inside _resolveDestination.
+      Get.offAllNamed(AppRoutes.login);
     }
   }
 
-  /// Figures out where to go, without actually navigating — kept separate
-  /// so it can run alongside the minimum-display timer above.
+  /// Routing:
+  /// 1. First launch → onboarding
+  /// 2. No auth token → login
+  /// 3. Valid token → main nav (home)
   Future<String> _resolveDestination() async {
     final storage = Get.find<AuthStorageService>();
 
@@ -46,8 +50,9 @@ class SplashController extends GetxController {
       return AppRoutes.onboarding;
     }
 
-    final hasValidSession = await storage.hasValidSession();
-    if (!hasValidSession) {
+    final accessToken = await storage.getAccessToken();
+    final hasToken = accessToken != null && accessToken.isNotEmpty;
+    if (!hasToken) {
       await storage.clearAuthData();
       return AppRoutes.login;
     }
@@ -60,7 +65,13 @@ class SplashController extends GetxController {
     }
 
     inactivityService.initialize();
-    await userController.getMe().timeout(const Duration(seconds: 15));
+    try {
+      await userController.getMe().timeout(const Duration(seconds: 15));
+    } catch (e) {
+      // Token exists but profile fetch failed — still enter the app;
+      // API interceptor will handle auth failures on subsequent calls.
+      AppLogger.error('Splash getMe failed: $e', tag: 'SPLASH');
+    }
 
     return AppRoutes.mainNav;
   }

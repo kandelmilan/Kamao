@@ -409,13 +409,17 @@ class ProfilePage extends StatelessWidget {
                       controller: scrollController,
                       itemCount: permissions.length,
                       itemBuilder: (context, index) {
-                        return ListTile(
-                          leading: const Icon(
-                            Icons.verified_user,
-                            color: Colors.green,
+                        return Material(
+                          color: Colors.white,
+                          child: ListTile(
+                            tileColor: Colors.white,
+                            leading: const Icon(
+                              Icons.verified_user,
+                              color: Colors.green,
+                            ),
+                            title: Text(permissions[index]),
+                            dense: true,
                           ),
-                          title: Text(permissions[index]),
-                          dense: true,
                         );
                       },
                     ),

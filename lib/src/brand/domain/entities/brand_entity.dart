@@ -14,14 +14,14 @@ class BrandEntity {
     required this.currency,
     required this.liveCampaignCount,
     required this.rewardedPostCount,
+    this.isFavourite = false,
   });
 
   final String id;
   final String code;
   final String name;
 
-  /// Relative path from the API (e.g. "/uploads/commerce/brands/xyz.png"),
-  /// not a full URL — use [logoImageUrl] to render it.
+  /// Relative path from the API — use [logoImageUrl] to render it.
   final String? logoUrl;
   final String? coverImageUrl;
   final String? categoryName;
@@ -31,12 +31,8 @@ class BrandEntity {
   final String currency;
   final int liveCampaignCount;
   final int rewardedPostCount;
+  final bool isFavourite;
 
-  /// Full, directly-loadable logo URL. Joins [logoUrl] with
-  /// AppConstants.assetBaseUrl (the bare host — NOT the /api/v1 API
-  /// base the rest of the app calls through). Add that constant if it
-  /// doesn't exist yet, or point this at whatever constant you already
-  /// use for uploaded-asset hosts.
   String? get logoImageUrl {
     final path = logoUrl;
     if (path == null || path.isEmpty) return null;
@@ -49,5 +45,23 @@ class BrandEntity {
     if (path == null || path.isEmpty) return null;
     if (path.startsWith('http')) return path;
     return '${AppConstants.assetBaseUrl}$path';
+  }
+
+  BrandEntity copyWith({bool? isFavourite}) {
+    return BrandEntity(
+      id: id,
+      code: code,
+      name: name,
+      logoUrl: logoUrl,
+      coverImageUrl: coverImageUrl,
+      categoryName: categoryName,
+      bio: bio,
+      maxRewardAmount: maxRewardAmount,
+      receiptRequired: receiptRequired,
+      currency: currency,
+      liveCampaignCount: liveCampaignCount,
+      rewardedPostCount: rewardedPostCount,
+      isFavourite: isFavourite ?? this.isFavourite,
+    );
   }
 }

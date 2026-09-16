@@ -64,11 +64,16 @@ class ProfileEntity {
     required this.user,
     required this.insights,
     required this.connections,
+    this.needsSocialConnect = false,
   });
 
   final ProfileUserEntity user;
   final ProfileInsightsEntity insights;
   final List<ProfileConnectionEntity> connections;
+
+  /// From `data.needsSocialConnect` — true when the creator should
+  /// connect Instagram / Facebook / TikTok before posting.
+  final bool needsSocialConnect;
 
   /// Case-insensitive lookup, e.g. connectionFor('facebook').
   ProfileConnectionEntity? connectionFor(String platform) {

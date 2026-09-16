@@ -8,23 +8,23 @@ import 'package:remixicon/remixicon.dart';
 import '../controllers/marketplace_controller.dart';
 
 // ═════════════════════════════════════════════════════════════
-// Palette — matched to Figma node 371:2252
+// Palette — aligned with AppColors / Brands / Home mint theme
 // ═════════════════════════════════════════════════════════════
 class _Palette {
   const _Palette._();
 
-  static const gradientLilac = Color(0xFFEFD4FF);
-  static const pageBg = Color(0xFFF9F9F9);
-  static const titleText = Color(0xFF353037);
-  static const searchBorder = Color(0xFFEDECED);
-  static const searchHint = Color(0xFF7B7B7B);
-  static const cardBorder = Color(0xFFEAECF0);
-  static const subtitleText = Color(0xFF7B7B7B);
-  static const avatarLabelText = Color(0xFF433D46);
-  static const arrowPurple = Color(0xFF4B0070);
-  static const iconBg = Color(0xFFF9F6FB);
-  static const onSurface = Color(0xFF1D1B20);
-  static const shimmerBase = Color(0xFFE7E2EC);
+  static const pageBg = AppColors.homeBg;
+  static const gradientMint = AppColors.walletChipBg;
+  static const titleText = AppColors.heading;
+  static const searchBorder = AppColors.searchBorder;
+  static const searchHint = AppColors.filterChipInactiveText;
+  static const cardBorder = AppColors.chipUnselectedBorder;
+  static const subtitleText = AppColors.filterChipInactiveText;
+  static const avatarLabelText = AppColors.brandName;
+  static const seeAll = AppColors.seeAllGreen;
+  static const iconBg = AppColors.walletChipBg;
+  static const onSurface = AppColors.ink;
+  static const shimmerBase = AppColors.brandLogoBg;
 }
 
 // ═════════════════════════════════════════════════════════════
@@ -49,7 +49,7 @@ class MarketplacePage extends GetView<MarketplaceController> {
                 gradient: const LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [_Palette.gradientLilac, _Palette.pageBg],
+                  colors: [_Palette.gradientMint, _Palette.pageBg],
                   stops: [0.0, 0.85],
                 ),
               ),
@@ -327,8 +327,7 @@ class _SearchSection extends StatelessWidget {
 }
 
 // ═════════════════════════════════════════════════════════════
-// Section header — title (Roboto 700 18/24, #353037) + "See All"
-// (Roboto 500 13px, #4B0070)
+// Section header — title (Roboto 700 18/24) + "See All" (seeAllGreen)
 // ═════════════════════════════════════════════════════════════
 class _SectionHeader extends StatelessWidget {
   const _SectionHeader({
@@ -367,7 +366,7 @@ class _SectionHeader extends StatelessWidget {
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
                   height: 18 / 13,
-                  color: _Palette.arrowPurple,
+                  color: _Palette.seeAll,
                 ),
               ),
             ),
@@ -565,7 +564,7 @@ class _InitialAvatar extends StatelessWidget {
           style: GoogleFonts.roboto(
             fontSize: 18,
             fontWeight: FontWeight.w700,
-            color: _Palette.arrowPurple,
+            color: AppColors.primary,
           ),
         ),
       ),
@@ -611,8 +610,8 @@ class _CategoryCard extends StatelessWidget {
 }
 
 // ═════════════════════════════════════════════════════════════
-// Category row — icon 40x40 circle #F9F6FB, gap 16,
-// label Roboto 700 16/20 #353037, chevron 20x20 #4B0070
+// Category row — icon 40x40 circle mint bg, gap 16,
+// label Roboto 700 16/20, chevron muted grey
 // ═════════════════════════════════════════════════════════════
 class _CategoryRow extends StatelessWidget {
   const _CategoryRow({required this.label, this.onTap});
@@ -638,7 +637,7 @@ class _CategoryRow extends StatelessWidget {
               child: Icon(
                 _categoryIcon(label),
                 size: 20,
-                color: _Palette.arrowPurple,
+                color: AppColors.primary,
               ),
             ),
             const SizedBox(width: 16),
@@ -658,7 +657,7 @@ class _CategoryRow extends StatelessWidget {
             const Icon(
               Icons.chevron_right,
               size: 20,
-              color: _Palette.arrowPurple,
+              color: AppColors.bodyGrey,
             ),
           ],
         ),
@@ -796,7 +795,7 @@ class _ErrorInline extends StatelessWidget {
               style: GoogleFonts.roboto(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: _Palette.arrowPurple,
+                color: _Palette.seeAll,
               ),
             ),
           ),

@@ -280,9 +280,9 @@ class _WithdrawalRow extends StatelessWidget {
         );
       case WithdrawalStatus.unknown:
         return const _StatusColors(
-          amount: Color(0xFF6F6875),
-          pillBg: Color(0xFFF0F0F0),
-          pillFg: Color(0xFF6F6875),
+          amount: Color(0xFFCA8A04),
+          pillBg: Color(0xFFFFF3DA),
+          pillFg: Color(0xFFCA8A04),
         );
     }
   }
@@ -386,7 +386,7 @@ class _DestinationIcon extends StatelessWidget {
       return _LogoCircle(assetPath: AppImages.khalti);
     }
 
-    // Bank transfer / anything else — plain solid circle, per design.
+    // Banking / bank transfer / anything else.
     return Container(
       width: _size,
       height: _size,

@@ -6,8 +6,6 @@ import 'package:kamao/src/wallet/domain/entities/response/payout_method_entity.d
 import 'package:kamao/src/wallet/domain/entities/response/withdrawal_entity.dart';
 import 'package:kamao/src/wallet/domain/usecases/get_payout_method_usecase.dart';
 import 'package:kamao/src/wallet/domain/usecases/get_withdrawals_usecase.dart';
-import 'package:kamao/src/wallet/presentation/bindings%20/wallet_bindings.dart';
-import 'package:kamao/src/wallet/presentation/views/wallet_transactions_view.dart';
 // `wallet.dart` re-exports wallet_entity.dart, which declares its own
 // `WithdrawalStatus` — a separate, narrower enum than the one in
 // withdrawal_entity.dart (no `processing` case). Hiding it here avoids
@@ -93,7 +91,7 @@ class WalletController extends GetxController {
       isBalanceHidden.value = !isBalanceHidden.value;
 
   void onWithdrawTap() {
-    // TODO: open the withdraw bottom sheet / flow once it's built.
+    Get.toNamed(AppRoutes.withdraw);
   }
 
   void onSeeAllActivity() {
@@ -110,6 +108,14 @@ class WalletController extends GetxController {
     if (wallet == null) return '—';
     if (isBalanceHidden.value) return '••••••';
     return '${wallet.currency} ${_amount.format(wallet.balance)}';
+  }
+
+  /// Weekly growth amount for the wallet badge.
+  /// TODO: replace with API-backed weekly earnings when available.
+  final RxDouble weeklyGrowthAmount = 1850.0.obs;
+
+  String get weeklyGrowthAmountLabel {
+    return '+रू ${NumberFormat('#,##0').format(weeklyGrowthAmount.value)}';
   }
 
   /// Per [WalletSummaryEntity.pendingWithdrawals]'s own documentation,
@@ -149,8 +155,13 @@ class WalletController extends GetxController {
 
   String formatAmount(double amount) => _amount.format(amount.abs());
 
-  /// "BankTransfer" -> "BANK TRANSFER"
+  /// Normalize to one of: Khalti / eSewa / Banking.
   String destinationLabel(String destinationType) {
+    final lower = destinationType.trim().toLowerCase();
+    if (lower.contains('khalti')) return 'KHALTI';
+    if (lower.contains('esewa')) return 'ESEWA';
+    if (lower.contains('bank')) return 'BANKING';
+    if (lower.isEmpty) return 'BANKING';
     final spaced = destinationType.replaceAllMapped(
       RegExp('(?<=[a-z])(?=[A-Z])'),
       (m) => ' ',
@@ -169,7 +180,7 @@ class WalletController extends GetxController {
       case WithdrawalStatus.rejected:
         return 'Rejected';
       case WithdrawalStatus.unknown:
-        return 'Unknown';
+        return 'Pending';
     }
   }
 

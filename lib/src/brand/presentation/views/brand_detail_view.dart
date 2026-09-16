@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:kamao/app/app.dart';
-import 'package:kamao/core/core.dart';
 import 'package:kamao/core/utils/image_url_resolver.dart';
 import 'package:kamao/src/home/domain/entities/campaign/campaign_entity.dart';
 import 'package:remixicon/remixicon.dart';
-import '../../domain/entities/brand_detail_entity.dart';
 import '../../domain/entities/brand_profile_entity.dart';
 import '../controllers/brand_detail_controller.dart';
 
+/// Brand detail — Figma node 678:3707.
 class BrandDetailView extends StatelessWidget {
   const BrandDetailView({super.key, required this.brandId});
 
@@ -20,768 +19,615 @@ class BrandDetailView extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SafeArea(
-        bottom: false,
-        child: Obx(() {
-          final detail = controller.brandDetail.value;
+      body: Obx(() {
+        final detail = controller.brandDetail.value;
 
-          if (controller.isLoading.value && detail == null) {
-            return const Center(child: CircularProgressIndicator());
-          }
+        if (controller.isLoading.value && detail == null) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-          if (controller.error.value != null && detail == null) {
-            return Center(
+        if (controller.error.value != null && detail == null) {
+          return SafeArea(
+            child: Center(
               child: TextButton(
                 onPressed: controller.loadBrandDetail,
                 child: const Text("Couldn't load brand — tap to retry"),
               ),
-            );
-          }
-
-          if (detail == null) return const SizedBox.shrink();
-
-          return Column(
-            children: [
-              _BrandHeader(brand: detail.brand),
-              Expanded(
-                child: Container(
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.vertical(
-                      top: Radius.circular(24),
-                    ),
-                  ),
-                  child: RefreshIndicator(
-                    onRefresh: controller.refresh,
-                    child: ListView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
-                      children: [
-                        if ((detail.brand.about ?? detail.brand.bio) != null)
-                          _AboutCard(brand: detail.brand),
-                        const SizedBox(height: 14),
-                        _StatsRow(brand: detail.brand),
-                        if (detail.brand.postTips.isNotEmpty) ...[
-                          const SizedBox(height: 14),
-                          _PostTipsCard(tips: detail.brand.postTips),
-                        ],
-                        if (detail.brand.postsPer7Days > 0 ||
-                            detail.brand.postsPer12Months > 0) ...[
-                          const SizedBox(height: 14),
-                          _PostLimitsCard(brand: detail.brand),
-                        ],
-                        if (_hasLinks(detail.brand)) ...[
-                          const SizedBox(height: 14),
-                          _LinksCard(brand: detail.brand),
-                        ],
-                        const SizedBox(height: 20),
-                        Text(
-                          'Live Campaigns',
-                          style: const TextStyle(
-                            fontFamily: 'Roboto',
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.cardTitle,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        ...detail.campaigns.map(
-                          (c) => Padding(
-                            padding: const EdgeInsets.only(bottom: 10),
-                            child: _CampaignRow(
-                              campaign: c,
-                              onTap: () => controller.openCampaign(c),
-                            ),
-                          ),
-                        ),
-                        if (detail.campaigns.isEmpty)
-                          const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 24),
-                            child: Center(
-                              child: Text(
-                                'No live campaigns right now.',
-                                style: TextStyle(
-                                  fontFamily: 'Roboto',
-                                  fontSize: 13,
-                                  color: AppColors.bodyGrey,
-                                ),
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
+            ),
           );
-        }),
-      ),
-    );
-  }
+        }
 
-  bool _hasLinks(BrandProfileEntity brand) {
-    return (brand.websiteUrl != null && brand.websiteUrl!.isNotEmpty) ||
-        brand.connectedPlatforms.isNotEmpty;
-  }
-}
+        if (detail == null) return const SizedBox.shrink();
 
-/// Gradient header — back/share/bookmark row, brand identity, the
-/// green "Earn upto / Receipt required" line, and "Post on" chips
-/// for whichever platforms the brand has handles for.
-class _BrandHeader extends StatelessWidget {
-  const _BrandHeader({required this.brand});
-
-  final BrandProfileEntity brand;
-
-  @override
-  Widget build(BuildContext context) {
-    final logoUrl = resolveImageUrl(brand.logoUrl);
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF4B0070), Color(0xFF2E0046)],
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _CircleIconButton(
-                icon: RemixIcons.arrow_left_line,
-                onTap: () => Get.back(),
-              ),
-              Row(
-                children: [
-                  _CircleIconButton(icon: RemixIcons.share_line, onTap: () {}),
-                  const SizedBox(width: 8),
-                  _CircleIconButton(
-                    icon: RemixIcons.bookmark_line,
-                    onTap: () {},
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(14),
+        return RefreshIndicator(
+          onRefresh: controller.refresh,
+          child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              SliverToBoxAdapter(
+                child: _CoverHeader(
+                  brand: detail.brand,
+                  brandId: brandId,
                 ),
-                alignment: Alignment.center,
-                child: logoUrl == null
-                    ? const Icon(
-                        RemixIcons.store_2_line,
-                        size: 22,
-                        color: Color(0xFF4B0070),
-                      )
-                    : ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: Image.network(
-                          logoUrl,
-                          width: 40,
-                          height: 40,
-                          fit: BoxFit.contain,
-                          errorBuilder: (context, error, stackTrace) =>
-                              const Icon(
-                                RemixIcons.store_2_line,
-                                size: 22,
-                                color: Color(0xFF4B0070),
-                              ),
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 52, 20, 0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        detail.brand.name,
+                        style: const TextStyle(
+                          fontFamily: 'Roboto',
+                          fontSize: 26,
+                          fontWeight: FontWeight.w500,
+                          height: 32 / 26,
+                          color: AppColors.brandName,
                         ),
                       ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      brand.name,
-                      style: const TextStyle(
-                        fontFamily: 'Roboto',
-                        fontSize: 24,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
-                    ),
-                    if (brand.categoryName != null) ...[
-                      const SizedBox(height: 2),
+                      const SizedBox(height: 8),
                       Text(
-                        brand.categoryName!,
-                        style: TextStyle(
+                        detail.brand.about ??
+                            detail.brand.bio ??
+                            detail.brand.description ??
+                            '',
+                        style: const TextStyle(
                           fontFamily: 'Roboto',
                           fontSize: 14,
-                          color: Colors.white.withOpacity(0.75),
+                          fontWeight: FontWeight.w400,
+                          height: 1.35,
+                          color: AppColors.brandName,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      const Text(
+                        'Active Campaigns',
+                        style: TextStyle(
+                          fontFamily: 'Roboto',
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF353037),
                         ),
                       ),
                     ],
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              const Icon(
-                RemixIcons.money_dollar_circle_line,
-                size: 15,
-                color: Color(0xFF4ADE80),
-              ),
-              const SizedBox(width: 4),
-              Text(
-                'Earn upto ${brand.currency} ${brand.maxRewardAmount.toStringAsFixed(0)}',
-                style: const TextStyle(
-                  fontFamily: 'Roboto',
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  color: Color(0xFF4ADE80),
-                ),
-              ),
-              if (brand.receiptRequired) ...[
-                const SizedBox(width: 8),
-                const Text(
-                  '•',
-                  style: TextStyle(color: Colors.white, fontSize: 13),
-                ),
-                const SizedBox(width: 8),
-                const Text(
-                  'Receipt required',
-                  style: TextStyle(
-                    fontFamily: 'Roboto',
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: Color(0xFF4ADE80),
                   ),
                 ),
-              ],
+              ),
+              SliverToBoxAdapter(
+                child: Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.only(top: 12),
+                  padding: const EdgeInsets.fromLTRB(20, 24, 20, 28),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF4FAE8),
+                    border: Border.all(color: const Color(0xFFE6F0E4)),
+                  ),
+                  child: detail.campaigns.isEmpty
+                      ? const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 32),
+                          child: Center(
+                            child: Text(
+                              'No active campaigns right now.',
+                              style: TextStyle(
+                                fontFamily: 'Roboto',
+                                fontSize: 13,
+                                color: AppColors.bodyGrey,
+                              ),
+                            ),
+                          ),
+                        )
+                      : _CampaignsGrid(
+                          campaigns: detail.campaigns,
+                          brand: detail.brand,
+                          onTap: controller.openCampaign,
+                        ),
+                ),
+              ),
             ],
           ),
-          if (brand.connectedPlatforms.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Row(
+        );
+      }),
+    );
+  }
+}
+
+class _CoverHeader extends StatelessWidget {
+  const _CoverHeader({required this.brand, required this.brandId});
+
+  final BrandProfileEntity brand;
+  final String brandId;
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = Get.find<BrandDetailController>(tag: brandId);
+    final cover = resolveImageUrl(brand.coverImageUrl);
+    final logo = resolveImageUrl(brand.logoUrl);
+    final topPad = MediaQuery.paddingOf(context).top;
+
+    return SizedBox(
+      height: 203 + topPad,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Positioned.fill(
+            child: cover == null
+                ? Container(
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [Color(0xFFDDE8D6), Color(0xFFF4FAE8)],
+                      ),
+                    ),
+                  )
+                : Image.network(
+                    cover,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) =>
+                        Container(color: const Color(0xFFF4FAE8)),
+                  ),
+          ),
+          Positioned(
+            top: topPad + 12,
+            left: 20,
+            right: 20,
+            child: Row(
               children: [
-                const Text(
-                  'Post on : ',
-                  style: TextStyle(
-                    fontFamily: 'Roboto',
-                    fontSize: 13,
-                    color: Colors.white,
+                Material(
+                  color: const Color(0xFFF9FFFE),
+                  elevation: 1,
+                  shadowColor: const Color(0x0D000000),
+                  shape: const CircleBorder(
+                    side: BorderSide(color: Colors.white),
+                  ),
+                  child: InkWell(
+                    customBorder: const CircleBorder(),
+                    onTap: () => Get.back(),
+                    child: const SizedBox(
+                      width: 40,
+                      height: 40,
+                      child: Icon(
+                        RemixIcons.arrow_left_s_line,
+                        size: 22,
+                        color: Color(0xFF353037),
+                      ),
+                    ),
                   ),
                 ),
-                const SizedBox(width: 4),
-                Wrap(
-                  spacing: 6,
-                  children: brand.connectedPlatforms
-                      .map((p) => _PlatformChip(platform: p))
-                      .toList(),
-                ),
+                const Spacer(),
+                Obx(() {
+                  final isFav =
+                      controller.brandDetail.value?.brand.isFavourite ??
+                      brand.isFavourite;
+                  final busy = controller.isTogglingFavourite.value;
+                  return Material(
+                    color: const Color(0xFFF9FFFE),
+                    elevation: 1,
+                    shadowColor: const Color(0x0D000000),
+                    shape: const CircleBorder(
+                      side: BorderSide(color: Colors.white),
+                    ),
+                    child: InkWell(
+                      customBorder: const CircleBorder(),
+                      onTap: busy ? null : controller.toggleFavourite,
+                      child: SizedBox(
+                        width: 40,
+                        height: 40,
+                        child: busy
+                            ? const Padding(
+                                padding: EdgeInsets.all(10),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : Icon(
+                                isFav
+                                    ? RemixIcons.heart_fill
+                                    : RemixIcons.heart_line,
+                                size: 20,
+                                color: isFav
+                                    ? const Color(0xFFE11D48)
+                                    : const Color(0xFF353037),
+                              ),
+                      ),
+                    ),
+                  );
+                }),
               ],
             ),
-          ],
+          ),
+          Positioned(
+            left: 20,
+            bottom: -39.5,
+            child: Container(
+              width: 79,
+              height: 79,
+              padding: const EdgeInsets.all(5),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.25),
+                    blurRadius: 7.5,
+                    offset: const Offset(0, -2.5),
+                  ),
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.1),
+                    blurRadius: 14.8,
+                    offset: const Offset(0, 9.9),
+                  ),
+                ],
+              ),
+              child: ClipOval(
+                child: logo == null
+                    ? const ColoredBox(
+                        color: Color(0xFFF3F4F6),
+                        child: Icon(
+                          RemixIcons.store_2_line,
+                          size: 28,
+                          color: AppColors.heading,
+                        ),
+                      )
+                    : Image.network(
+                        logo,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => const ColoredBox(
+                          color: Color(0xFFF3F4F6),
+                          child: Icon(
+                            RemixIcons.store_2_line,
+                            size: 28,
+                            color: AppColors.heading,
+                          ),
+                        ),
+                      ),
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
 }
 
-class _CircleIconButton extends StatelessWidget {
-  const _CircleIconButton({required this.icon, required this.onTap});
+class _CampaignsGrid extends StatelessWidget {
+  const _CampaignsGrid({
+    required this.campaigns,
+    required this.brand,
+    required this.onTap,
+  });
 
-  final IconData icon;
+  final List<CampaignEntity> campaigns;
+  final BrandProfileEntity brand;
+  final void Function(CampaignEntity) onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final gap = 16.0;
+        final cardWidth = (constraints.maxWidth - gap) / 2;
+        return Wrap(
+          spacing: gap,
+          runSpacing: gap,
+          children: campaigns
+              .map(
+                (c) => SizedBox(
+                  width: cardWidth,
+                  child: _ActiveCampaignCard(
+                    campaign: c,
+                    brand: brand,
+                    onTap: () => onTap(c),
+                  ),
+                ),
+              )
+              .toList(),
+        );
+      },
+    );
+  }
+}
+
+class _ActiveCampaignCard extends StatelessWidget {
+  const _ActiveCampaignCard({
+    required this.campaign,
+    required this.brand,
+    required this.onTap,
+  });
+
+  final CampaignEntity campaign;
+  final BrandProfileEntity brand;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
+    final cover = resolveImageUrl(campaign.brandCoverUrl ?? brand.coverImageUrl);
+    final logo = resolveImageUrl(campaign.brandLogoUrl ?? brand.logoUrl);
+    final category = campaign.brandCategory ?? brand.categoryName;
+
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(16),
       child: Container(
-        width: 36,
-        height: 36,
         decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: Colors.white.withOpacity(0.16),
-        ),
-        alignment: Alignment.center,
-        child: Icon(icon, size: 17, color: Colors.white),
-      ),
-    );
-  }
-}
-
-class _PlatformChip extends StatelessWidget {
-  const _PlatformChip({required this.platform});
-
-  final String platform;
-
-  IconData get _icon {
-    switch (platform.toLowerCase()) {
-      case 'instagram':
-        return RemixIcons.instagram_fill;
-      case 'tiktok':
-        return RemixIcons.tiktok_fill;
-      case 'youtube':
-        return RemixIcons.youtube_fill;
-      case 'facebook':
-        return RemixIcons.facebook_fill;
-      default:
-        return RemixIcons.links_line;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.16),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(_icon, size: 12, color: Colors.white),
-          const SizedBox(width: 4),
-          Text(
-            platform,
-            style: const TextStyle(
-              fontFamily: 'Roboto',
-              fontSize: 11.5,
-              color: Colors.white,
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x1A000000),
+              blurRadius: 8,
+              offset: Offset(0, 2),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _CardShell extends StatelessWidget {
-  const _CardShell({required this.title, required this.child});
-
-  final String title;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFEDECED)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontFamily: 'Roboto',
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: AppColors.cardTitle,
-            ),
-          ),
-          const SizedBox(height: 12),
-          child,
-        ],
-      ),
-    );
-  }
-}
-
-class _AboutCard extends StatelessWidget {
-  const _AboutCard({required this.brand});
-
-  final BrandProfileEntity brand;
-
-  @override
-  Widget build(BuildContext context) {
-    return _CardShell(
-      title: 'About ${brand.name}',
-      child: Text(
-        brand.about ?? brand.bio ?? '',
-        style: const TextStyle(
-          fontFamily: 'Roboto',
-          fontSize: 13.5,
-          height: 1.5,
-          color: Color(0xFF3F3F46),
+          ],
         ),
-      ),
-    );
-  }
-}
-
-class _StatsRow extends StatelessWidget {
-  const _StatsRow({required this.brand});
-
-  final BrandProfileEntity brand;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: _StatChip(
-            icon: RemixIcons.fire_fill,
-            label: 'Live Campaigns',
-            value: '${brand.liveCampaignCount}',
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _StatChip(
-            icon: RemixIcons.trophy_fill,
-            label: 'Max Reward',
-            value:
-                '${brand.currency} ${brand.maxRewardAmount.toStringAsFixed(0)}',
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _StatChip extends StatelessWidget {
-  const _StatChip({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
-
-  final IconData icon;
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF7F5FA),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, size: 16, color: const Color(0xFF4B0070)),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: const TextStyle(
-              fontFamily: 'Roboto',
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
-              color: AppColors.heading,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: const TextStyle(
-              fontFamily: 'Roboto',
-              fontSize: 11.5,
-              color: AppColors.bodyGrey,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _PostTipsCard extends StatelessWidget {
-  const _PostTipsCard({required this.tips});
-
-  final List<String> tips;
-
-  @override
-  Widget build(BuildContext context) {
-    return _CardShell(
-      title: 'Post Tips',
-      child: Column(
-        children: tips
-            .map(
-              (tip) => Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: 20,
-                      height: 20,
-                      margin: const EdgeInsets.only(top: 1),
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Color(0xFFE7F9EF),
-                      ),
-                      alignment: Alignment.center,
-                      child: const Icon(
-                        RemixIcons.check_line,
-                        size: 12,
-                        color: Color(0xFF16A34A),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        tip,
-                        style: const TextStyle(
-                          fontFamily: 'Roboto',
-                          fontSize: 13.5,
-                          color: Color(0xFF3F3F46),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              height: 90,
+              width: double.infinity,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Positioned.fill(
+                    child: cover == null
+                        ? Container(color: const Color(0xFFFFF7ED))
+                        : Image.network(
+                            cover,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) =>
+                                Container(color: const Color(0xFFFFF7ED)),
+                          ),
+                  ),
+                  if (campaign.isFavourite)
+                    Positioned(
+                      top: 6,
+                      right: 6,
+                      child: Container(
+                        padding: const EdgeInsets.fromLTRB(6, 2, 6, 2.25),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                            color: const Color(0xFFF7FAF6),
+                            width: 0.5,
+                          ),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Color(0x40000000),
+                              blurRadius: 2,
+                              offset: Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: const Text(
+                          'Popular',
+                          style: TextStyle(
+                            fontFamily: 'Roboto',
+                            fontSize: 9,
+                            fontWeight: FontWeight.w500,
+                            height: 11.25 / 9,
+                            color: Color(0xFF426340),
+                          ),
                         ),
                       ),
                     ),
-                  ],
-                ),
+                  Positioned(
+                    left: 6,
+                    bottom: -18,
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      padding: const EdgeInsets.all(2.5),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.25),
+                            blurRadius: 3.8,
+                            offset: const Offset(0, -1.25),
+                          ),
+                        ],
+                      ),
+                      child: ClipOval(
+                        child: logo == null
+                            ? const Icon(RemixIcons.store_2_line, size: 16)
+                            : Image.network(logo, fit: BoxFit.cover),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            )
-            .toList(),
-      ),
-    );
-  }
-}
-
-class _PostLimitsCard extends StatelessWidget {
-  const _PostLimitsCard({required this.brand});
-
-  final BrandProfileEntity brand;
-
-  @override
-  Widget build(BuildContext context) {
-    return _CardShell(
-      title: 'Post Limits',
-      child: Row(
-        children: [
-          Expanded(
-            child: _LimitBox(
-              label: '7 - DAY PERIOD',
-              value: 'Upto ${brand.postsPer7Days} posts',
             ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: _LimitBox(
-              label: '12 - MONTH PERIOD',
-              value: 'Upto ${brand.postsPer12Months} posts',
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _LimitBox extends StatelessWidget {
-  const _LimitBox({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFEDECED)),
-      ),
-      child: Column(
-        children: [
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontFamily: 'Roboto',
-              fontSize: 10.5,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.4,
-              color: AppColors.bodyGrey,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            value,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontFamily: 'Roboto',
-              fontSize: 13.5,
-              fontWeight: FontWeight.w700,
-              color: AppColors.heading,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _LinksCard extends StatelessWidget {
-  const _LinksCard({required this.brand});
-
-  final BrandProfileEntity brand;
-
-  @override
-  Widget build(BuildContext context) {
-    return _CardShell(
-      title: 'About',
-      child: Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: [
-          if (brand.websiteUrl != null && brand.websiteUrl!.isNotEmpty)
-            _LinkChip(icon: RemixIcons.global_line, label: brand.websiteUrl!),
-          if (brand.instagramHandle != null &&
-              brand.instagramHandle!.isNotEmpty)
-            _LinkChip(
-              icon: RemixIcons.instagram_fill,
-              label: '@${brand.instagramHandle}',
-            ),
-          if (brand.tikTokHandle != null && brand.tikTokHandle!.isNotEmpty)
-            _LinkChip(
-              icon: RemixIcons.tiktok_fill,
-              label: '@${brand.tikTokHandle}',
-            ),
-          if (brand.youTubeHandle != null && brand.youTubeHandle!.isNotEmpty)
-            _LinkChip(
-              icon: RemixIcons.youtube_fill,
-              label: brand.youTubeHandle!,
-            ),
-          if (brand.facebookHandle != null && brand.facebookHandle!.isNotEmpty)
-            _LinkChip(
-              icon: RemixIcons.facebook_fill,
-              label: brand.facebookHandle!,
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class _LinkChip extends StatelessWidget {
-  const _LinkChip({required this.icon, required this.label});
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFEDECED)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 13, color: AppColors.heading),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: const TextStyle(
-              fontFamily: 'Roboto',
-              fontSize: 12,
-              color: AppColors.heading,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Row for a single live campaign under the brand.
-///
-/// NOTE: `name`, `status`, and `earnRangeLabel` are assumed to exist
-/// on your `CampaignEntity` (matching the JSON keys from this
-/// endpoint) — adjust the property names below if your entity calls
-/// them something else.
-class _CampaignRow extends StatelessWidget {
-  const _CampaignRow({required this.campaign, required this.onTap});
-
-  final CampaignEntity campaign;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFFEDECED)),
-        ),
-        child: Row(
-          children: [
-            Expanded(
+            const SizedBox(height: 22),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(10, 0, 10, 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    campaign.name,
+                    campaign.brandName.isNotEmpty
+                        ? campaign.brandName
+                        : campaign.name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontFamily: 'Roboto',
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.cardTitle,
+                      height: 16 / 14,
+                      color: AppColors.brandName,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 2),
+                  if (category != null && category.isNotEmpty)
+                    Text(
+                      category,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontFamily: 'Roboto',
+                        fontSize: 10,
+                        fontWeight: FontWeight.w500,
+                        height: 1.5,
+                        color: Color(0xFF6E6971),
+                      ),
+                    ),
                   Text(
-                    campaign.earnRangeLabel,
+                    campaign.objective.isNotEmpty
+                        ? campaign.objective
+                        : campaign.earnRangeLabel,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontFamily: 'Roboto',
-                      fontSize: 12,
-                      color: AppColors.bodyGrey,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500,
+                      height: 1.5,
+                      color: Color(0xFF6E6971),
                     ),
                   ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _SocialBubbles(platforms: brand.connectedPlatforms),
+                      ),
+                      Container(
+                        width: 20,
+                        height: 20,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: const Color(0xFFEDECED),
+                            width: 0.5,
+                          ),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Color(0x08000000),
+                              blurRadius: 3,
+                              offset: Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          RemixIcons.arrow_right_s_line,
+                          size: 12,
+                          color: Color(0xFF6E6971),
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
-              ),
-            ),
-            const SizedBox(width: 10),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: const Color(0x42E8F6ED),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: const Text(
-                'LIVE',
-                style: TextStyle(
-                  fontFamily: 'Roboto',
-                  fontSize: 10.5,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF16A34A),
-                ),
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _SocialBubbles extends StatelessWidget {
+  const _SocialBubbles({required this.platforms});
+
+  final List<String> platforms;
+
+  @override
+  Widget build(BuildContext context) {
+    final shown = platforms.take(3).toList();
+    if (shown.isEmpty) {
+      return Row(
+        children: const [
+          _Bubble(
+            color: Color(0x14FF007F),
+            icon: RemixIcons.instagram_fill,
+            iconColor: Color(0xFFE1306C),
+          ),
+          SizedBox(width: 5),
+          _Bubble(
+            color: Color(0x14000000),
+            icon: RemixIcons.tiktok_fill,
+            iconColor: Colors.black,
+          ),
+          SizedBox(width: 5),
+          _Bubble(
+            color: Color(0xFFE9EFFD),
+            icon: RemixIcons.facebook_fill,
+            iconColor: Color(0xFF1877F2),
+          ),
+        ],
+      );
+    }
+    return Row(
+      children: [
+        for (var i = 0; i < shown.length; i++) ...[
+          if (i > 0) const SizedBox(width: 5),
+          _bubbleFor(shown[i]),
+        ],
+      ],
+    );
+  }
+
+  Widget _bubbleFor(String platform) {
+    switch (platform.toLowerCase()) {
+      case 'instagram':
+        return const _Bubble(
+          color: Color(0x14FF007F),
+          icon: RemixIcons.instagram_fill,
+          iconColor: Color(0xFFE1306C),
+        );
+      case 'tiktok':
+        return const _Bubble(
+          color: Color(0x14000000),
+          icon: RemixIcons.tiktok_fill,
+          iconColor: Colors.black,
+        );
+      case 'youtube':
+        return const _Bubble(
+          color: Color(0x14E02020),
+          icon: RemixIcons.youtube_fill,
+          iconColor: Color(0xFFE02020),
+        );
+      case 'facebook':
+        return const _Bubble(
+          color: Color(0xFFE9EFFD),
+          icon: RemixIcons.facebook_fill,
+          iconColor: Color(0xFF1877F2),
+        );
+      default:
+        return const _Bubble(
+          color: Color(0xFFF3F4F6),
+          icon: RemixIcons.links_line,
+          iconColor: Color(0xFF6E6971),
+        );
+    }
+  }
+}
+
+class _Bubble extends StatelessWidget {
+  const _Bubble({
+    required this.color,
+    required this.icon,
+    required this.iconColor,
+  });
+
+  final Color color;
+  final IconData icon;
+  final Color iconColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 20,
+      height: 20,
+      decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(10)),
+      alignment: Alignment.center,
+      child: Icon(icon, size: 11, color: iconColor),
     );
   }
 }

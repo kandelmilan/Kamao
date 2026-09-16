@@ -4,34 +4,31 @@ import 'package:kamao/app/app.dart';
 import 'package:kamao/src/auth/presentation/controllers/profile_controller.dart';
 import 'package:remixicon/remixicon.dart';
 
-/// ---------------------------------------------------------------------
-/// Design tokens that aren't already part of AppColors. Pulled straight
-/// from the spec — if AppColors grows matching entries later, swap these
-/// out for AppColors.xxx to keep a single source of truth.
-/// ---------------------------------------------------------------------
+/// Profile tab — Figma Campaign App node 725:4267.
+/// Soft green header + floating metrics card + settings groups.
 class ProfileView extends StatelessWidget {
   const ProfileView({super.key});
 
-  static const _headerGradientStart = Color(0xFF6F338D);
-  static const _headerGradientEnd = Color(0xFF3E0163);
+  static const _headerBg = Color(0xFFF5FAEA);
+  static const _headerCurve = Color(0xFFF7FBEE);
 
-  static const _usernameText = Color(0xE5E9D5FF); // #E9D5FF @ 90% (E5)
-  static const _dotOverlay = Color(0xB2D8B4FE); // #D8B4FE @ 70% (B2)
-  static const _creatorBadgeBg = Color(0x33D8B4FE);
-  static const _creatorBadgeText = Color(0xFFF3E8FF);
+  static const _usernameText = Color(0xFF6E6971);
+  static const _dot = Color(0xFFB6BDAD);
 
-  static const _metricValue = Color(0xFF4B0070);
+  static const _metricValue = Color(0xFF426340);
   static const _metricLabel = Color(0xFF6E6971);
-  static const _metricDivider = Color(0xFFEFD4FF);
+  static const _metricDivider = Color(0xFFEDECED);
 
-  static const _cardBorder = Color(0xFFF1F5F9);
+  static const _cardBorder = Color(0xFFF2F5F9);
   static const _cardShadow1 = Color(0x08000000);
-  static const _cardShadow2 = Color(0x0D270337);
+  static const _cardShadow2 = Color(0x0A273B26);
 
-  static const _rowIconBg = Color(0xFFFCF7FF);
-  static const _rowIconColor = Color(0xFF4B0070);
+  static const _rowIconBg = Color(0xFFE8F0E5);
+  static const _rowIconColor = Color(0xFF4C5749);
   static const _rowTitle = Color(0xFF4A434D);
   static const _rowSubtitle = Color(0xFF6E6971);
+
+  static const _editBadge = Color(0xFF4C5749);
 
   static const _logoutRed = Color(0xFFE11D48);
   static const _logoutChevron = Color(0xFFF48FA1);
@@ -43,11 +40,7 @@ class ProfileView extends StatelessWidget {
     return Material(
       type: MaterialType.transparency,
       child: Container(
-        color: AppColors.background,
-        // No SafeArea here — the header gradient needs to run all the
-        // way behind the status bar. Safe-area insets are applied
-        // individually below: inside the header (top) and around the
-        // scrollable content beneath it (bottom).
+        color: AppColors.homeBg,
         child: RefreshIndicator(
           onRefresh: controller.refreshProfile,
           child: Obx(() {
@@ -111,7 +104,7 @@ class ProfileView extends StatelessWidget {
     );
   }
 
-  // ---------- Header (purple radial-gradient frame) + floating metrics ----------
+  // ---------- Header (soft green) + floating metrics ----------
 
   Widget _headerWithMetrics(
     BuildContext context,
@@ -125,16 +118,16 @@ class ProfileView extends StatelessWidget {
       children: [
         Container(
           width: double.infinity,
-          padding: EdgeInsets.only(top: topInset + 32, bottom: 56),
+          padding: EdgeInsets.only(top: topInset + 28, bottom: 56),
           decoration: const BoxDecoration(
             borderRadius: BorderRadius.only(
-              bottomLeft: Radius.circular(24),
-              bottomRight: Radius.circular(24),
+              bottomLeft: Radius.circular(28),
+              bottomRight: Radius.circular(28),
             ),
-            gradient: RadialGradient(
-              center: Alignment(-0.59, 0.23),
-              radius: 1.05,
-              colors: [_headerGradientStart, _headerGradientEnd],
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [_headerCurve, _headerBg],
             ),
           ),
           child: Column(
@@ -146,10 +139,10 @@ class ProfileView extends StatelessWidget {
                 style: const TextStyle(
                   fontFamily: 'Roboto',
                   fontSize: 24,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.w600,
                   letterSpacing: -0.6,
                   height: 32 / 24,
-                  color: Colors.white,
+                  color: AppColors.cardTitle,
                 ),
               ),
               const SizedBox(height: 4),
@@ -157,8 +150,6 @@ class ProfileView extends StatelessWidget {
             ],
           ),
         ),
-
-        // Floating metrics card, overlapping the header's bottom edge
         Positioned(
           left: 20,
           right: 20,
@@ -181,8 +172,15 @@ class ProfileView extends StatelessWidget {
             height: 96,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 2),
-              color: const Color(0xFFEDE6F1),
+              border: Border.all(color: AppColors.white, width: 3),
+              color: const Color(0xFFE8F0E5),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.06),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
               image: controller.hasAvatar
                   ? DecorationImage(
                       image: NetworkImage(controller.avatarUrl),
@@ -191,9 +189,6 @@ class ProfileView extends StatelessWidget {
                   : null,
             ),
             alignment: Alignment.center,
-            // No profile photo available yet (see
-            // ProfileController.hasAvatar) — fall back to a simple
-            // initial/icon placeholder instead of a broken image.
             child: !controller.hasAvatar
                 ? Text(
                     user.fullName.isNotEmpty
@@ -205,7 +200,7 @@ class ProfileView extends StatelessWidget {
                       fontFamily: 'Roboto',
                       fontSize: 32,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.primary,
+                      color: _rowIconColor,
                     ),
                   )
                 : null,
@@ -218,12 +213,10 @@ class ProfileView extends StatelessWidget {
               child: Container(
                 width: 28,
                 height: 28,
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Color(0xFFF59E0B),
-                  border: Border.fromBorderSide(
-                    BorderSide(color: Colors.white, width: 2),
-                  ),
+                  color: _editBadge,
+                  border: Border.all(color: AppColors.white, width: 2),
                 ),
                 alignment: Alignment.center,
                 child: const Icon(
@@ -259,25 +252,18 @@ class ProfileView extends StatelessWidget {
           height: 4,
           decoration: const BoxDecoration(
             shape: BoxShape.circle,
-            color: _dotOverlay,
+            color: _dot,
           ),
         ),
         const SizedBox(width: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 4),
-          // decoration: BoxDecoration(
-          //   color: _creatorBadgeBg,
-          //   borderRadius: BorderRadius.circular(20),
-          // ),
-          child: Text(
-            controller.roleLabel,
-            style: const TextStyle(
-              fontFamily: 'Roboto',
-              fontSize: 12,
-              letterSpacing: 0.3,
-              height: 16 / 12,
-              color: _creatorBadgeText,
-            ),
+        Text(
+          controller.roleLabel,
+          style: const TextStyle(
+            fontFamily: 'Roboto',
+            fontSize: 12,
+            letterSpacing: 0.3,
+            height: 16 / 12,
+            color: _usernameText,
           ),
         ),
       ],
@@ -286,27 +272,23 @@ class ProfileView extends StatelessWidget {
 
   Widget _metricsCard(ProfileController controller) {
     return Container(
-      padding: const EdgeInsets.all(1), // gradient border thickness
+      padding: const EdgeInsets.all(1),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(26),
-        gradient: const LinearGradient(
-          begin: Alignment(-0.53, -0.93), // ~159.33deg
-          end: Alignment(0.53, 0.93),
-          colors: [Colors.white, Color(0xFFEFD4FF)],
-          stops: [0.0722, 0.749],
-        ),
+        border: Border.all(color: const Color(0xFFE6F0E4)),
+        color: AppColors.white,
         boxShadow: const [
           BoxShadow(
-            color: AppColors.shadow,
-            blurRadius: 8,
-            offset: Offset(0, 8),
+            color: Color(0x14000000),
+            blurRadius: 12,
+            offset: Offset(0, 6),
           ),
         ],
       ),
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.white,
           borderRadius: BorderRadius.circular(25),
         ),
         child: Column(
@@ -328,7 +310,7 @@ class ProfileView extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 28),
             Row(
               children: [
                 Expanded(
@@ -358,6 +340,7 @@ class ProfileView extends StatelessWidget {
       children: [
         Text(
           value,
+          textAlign: TextAlign.center,
           style: const TextStyle(
             fontFamily: 'Roboto',
             fontSize: 16,
@@ -368,11 +351,12 @@ class ProfileView extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           label,
+          textAlign: TextAlign.center,
           style: const TextStyle(
             fontFamily: 'Roboto',
             fontSize: 12,
             fontWeight: FontWeight.w500,
-            letterSpacing: 0.5,
+            letterSpacing: 0.2,
             color: _metricLabel,
           ),
         ),
@@ -391,14 +375,16 @@ class ProfileView extends StatelessWidget {
           _settingsRow(
             icon: RemixIcons.links_line,
             title: 'Social Accounts',
-            subtitle: '$connectedCount connected',
+            subtitle: controller.needsSocialConnect
+                ? 'Connect Instagram, Facebook or TikTok'
+                : '$connectedCount connected',
             onTap: controller.openSocialAccounts,
           ),
           Container(height: 1, color: _cardBorder),
           _settingsRow(
             icon: RemixIcons.wallet_3_fill,
             title: 'Wallet',
-            subtitle: controller.formattedWalletBalance,
+            subtitle: '${controller.formattedWalletBalance} available',
             onTap: controller.openWallet,
           ),
         ],
@@ -407,7 +393,6 @@ class ProfileView extends StatelessWidget {
   }
 
   // ---------- Group 2 — Edit Profile / Change Password / Settings ----------
-  // (Logout lives on its own, below — see _logoutButton.)
 
   Widget _settingsCard(ProfileController controller) {
     return _card(
@@ -420,7 +405,7 @@ class ProfileView extends StatelessWidget {
           ),
           Container(height: 1, color: _cardBorder),
           _settingsRow(
-            icon: RemixIcons.key_2_line,
+            icon: RemixIcons.lock_password_line,
             title: 'Change Password',
             onTap: controller.openChangePassword,
           ),
@@ -435,7 +420,7 @@ class ProfileView extends StatelessWidget {
     );
   }
 
-  // ---------- Logout — standalone row card + confirmation dialog ----------
+  // ---------- Logout ----------
 
   Widget _logoutButton(BuildContext context, ProfileController controller) {
     return _card(
@@ -443,6 +428,7 @@ class ProfileView extends StatelessWidget {
         icon: RemixIcons.logout_circle_r_line,
         title: 'Logout',
         titleColor: _logoutRed,
+        iconColor: _logoutRed,
         chevronColor: _logoutChevron,
         onTap: () => _showLogoutConfirmation(context, controller),
       ),
@@ -466,8 +452,8 @@ class ProfileView extends StatelessWidget {
           ),
           TextButton(
             onPressed: () {
-              Navigator.pop(context); // Close dialog
-              controller.logout(); // Controller owns the actual logout flow
+              Navigator.pop(context);
+              controller.logout();
             },
             style: TextButton.styleFrom(foregroundColor: _logoutRed),
             child: const Text('Log out'),
@@ -482,7 +468,7 @@ class ProfileView extends StatelessWidget {
   Widget _card({required Widget child}) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.white,
         borderRadius: BorderRadius.circular(22),
         border: Border.all(color: _cardBorder, width: 1),
         boxShadow: const [
@@ -494,8 +480,6 @@ class ProfileView extends StatelessWidget {
     );
   }
 
-  /// Shared row used by both cards: icon chip, title (+ optional
-  /// subtitle), trailing chevron.
   Widget _settingsRow({
     required IconData icon,
     required String title,
@@ -507,6 +491,7 @@ class ProfileView extends StatelessWidget {
   }) {
     return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(22),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Row(
@@ -515,8 +500,10 @@ class ProfileView extends StatelessWidget {
               width: 28,
               height: 28,
               decoration: BoxDecoration(
-                color: _rowIconBg,
-                borderRadius: BorderRadius.circular(4),
+                color: titleColor == _logoutRed
+                    ? const Color(0x14E11D48)
+                    : _rowIconBg,
+                borderRadius: BorderRadius.circular(8),
               ),
               alignment: Alignment.center,
               child: Icon(icon, size: 16, color: iconColor),

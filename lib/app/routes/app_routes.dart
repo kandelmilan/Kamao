@@ -10,7 +10,10 @@ abstract class AppRoutes {
   static const profile = '/profile';
   static const mainNav = '/main-nav';
   static const campaignDetail = '/campaign-detail';
+  static const submitPost = '/submit-post';
   static const marketplace = '/marketplace';
+  static const brands = '/brands';
   static const wallet = '/wallet';
   static const walletdetails = '/wallet-details';
+  static const withdraw = '/wallet/withdraw';
 }

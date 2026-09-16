@@ -26,13 +26,14 @@ class BrandProfileModel extends BrandProfileEntity {
     required super.postsPer12Months,
     required super.currency,
     required super.liveCampaignCount,
+    super.isFavourite,
   });
 
   factory BrandProfileModel.fromJson(Map<String, dynamic> json) {
     return BrandProfileModel(
-      id: json['id'] as String,
-      code: json['code'] as String,
-      name: json['name'] as String,
+      id: json['id'] as String? ?? '',
+      code: json['code'] as String? ?? '',
+      name: json['name'] as String? ?? '',
       description: json['description'] as String?,
       logoUrl: json['logoUrl'] as String?,
       coverImageUrl: json['coverImageUrl'] as String?,
@@ -54,6 +55,7 @@ class BrandProfileModel extends BrandProfileEntity {
       postsPer12Months: (json['postsPer12Months'] as num?)?.toInt() ?? 0,
       currency: json['currency'] as String? ?? 'NPR',
       liveCampaignCount: (json['liveCampaignCount'] as num?)?.toInt() ?? 0,
+      isFavourite: json['isFavourite'] as bool? ?? false,
     );
   }
 }

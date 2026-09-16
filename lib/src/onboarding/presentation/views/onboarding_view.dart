@@ -2,9 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:kamao/app/app.dart';
 import 'package:kamao/core/core.dart';
 import 'package:remixicon/remixicon.dart';
 import '../controllers/onboarding_controller.dart';
+
+/// Figma Android Compact frame used for all onboarding screens.
+const _figmaW = 412.0;
+const _figmaH = 917.0;
 
 class OnboardingView extends GetView<OnboardingController> {
   const OnboardingView({super.key});
@@ -12,31 +17,20 @@ class OnboardingView extends GetView<OnboardingController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.onboardingBgBottom,
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // ── Pages ──────────────────────────────────────────────
           PageView.builder(
             controller: controller.pageController,
             itemCount: _pages.length,
             onPageChanged: controller.onPageChanged,
-            itemBuilder: (_, i) => _OnboardingPage(data: _pages[i], index: i),
+            itemBuilder: (_, i) => _OnboardingPage(data: _pages[i]),
           ),
-
-          Positioned(
-            left: 0,
-            right: 0,
-            top: 0,
-            bottom: 0,
+          Positioned.fill(
             child: Obx(() {
               final page = controller.currentPage.value;
-              return _BottomBar(
-                waveColor: _pages[page].waveColor,
-                waveStyle: _pages[page].waveStyle,
-                onSkip: controller.skip,
-                onNext: controller.next,
-              );
+              return _BottomBar(data: _pages[page]);
             }),
           ),
         ],
@@ -46,167 +40,81 @@ class OnboardingView extends GetView<OnboardingController> {
 }
 
 // ─────────────────────────────────────────────────────────────
-// Bottom bar — wave + Skip / Next, positioned to match Figma exactly
+// Bottom bar — wave + Skip / Next
 // ─────────────────────────────────────────────────────────────
 class _BottomBar extends StatelessWidget {
-  const _BottomBar({
-    required this.waveColor,
-    required this.waveStyle,
-    required this.onSkip,
-    required this.onNext,
-  });
+  const _BottomBar({required this.data});
 
-  final Color waveColor;
-  final _WaveStyle waveStyle;
-  final VoidCallback onSkip;
-  final VoidCallback onNext;
+  final _OnboardingPageData data;
 
-  // @override
-  // Widget build(BuildContext context) {
-  //   return Stack(
-  //     clipBehavior:
-  //         Clip.none, // let the wave bleed past its own box, matching Figma
-  //     children: [
-  //       // ── Wave ──────────────────────────────────────────
-  //       // Figma: width 460, height 173, top 787, left -16
-  //       Positioned(
-  //         left: -16,
-  //         // top: waveStyle == _WaveStyle.diagonal ? null : 787,
-  //         top: 756,
-  //         bottom: waveStyle == _WaveStyle.diagonal ? 0 : null,
-  //         // width: 460,
-  //         // height: waveStyle == _WaveStyle.diagonal ? 420 : 173,s
-  //         child: IgnorePointer(
-  //           // Touches pass straight through to the PageView underneath,
-  //           // so swiping anywhere over the wave still changes pages.
-  //           child: CustomPaint(
-  //             painter: _WaveCurvePainter(color: waveColor, style: waveStyle),
-  //             size: Size(460, waveStyle == _WaveStyle.diagonal ? 420 : 173),
-  //           ),
-  //         ),
-  //       ),
-
-  //       // ── Skip + Next ───────────────────────────────────
-  //       // Figma: width 372, height 42, justify-content: space-between,
-  //       // top 771, left 20
-  //       Positioned(
-  //         left: 20,
-  //         top: 771,
-  //         width: 372,
-  //         height: 42,
-  //         child: Row(
-  //           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  //           children: [
-  //             GestureDetector(
-  //               onTap: onSkip,
-  //               behavior: HitTestBehavior.opaque,
-  //               child: Text(
-  //                 'Skip',
-  //                 style: GoogleFonts.roboto(
-  //                   fontSize: 16,
-  //                   fontWeight: FontWeight.w500,
-  //                   color: const Color(0xFF4B0070),
-  //                 ),
-  //               ),
-  //             ),
-  //             GestureDetector(
-  //               onTap: onNext,
-  //               child: Container(
-  //                 width: 42,
-  //                 height: 42,
-  //                 decoration: BoxDecoration(
-  //                   color: const Color(0xFF4B0070),
-  //                   shape: BoxShape.circle,
-  //                   boxShadow: const [
-  //                     BoxShadow(
-  //                       color: Color(0x334B0070),
-  //                       blurRadius: 10,
-  //                       offset: Offset(0, 4),
-  //                     ),
-  //                   ],
-  //                 ),
-  //                 child: const Icon(
-  //                   RemixIcons.arrow_right_line,
-  //                   color: Colors.white,
-  //                   size: 20,
-  //                 ),
-  //               ),
-  //             ),
-  //           ],
-  //         ),
-  //       ),
-  //     ],
-  //   );
-  // }
+  @override
   Widget build(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
-    const figmaSize = Size(412, 917);
-    final sx = size.width / figmaSize.width;
-    final sy = size.height / figmaSize.height;
+    final sx = size.width / _figmaW;
+    final sy = size.height / _figmaH;
 
     return Stack(
       clipBehavior: Clip.none,
       children: [
-        // ── Wave ──────────────────────────────────────────
-        if (waveStyle == _WaveStyle.dome)
+        if (data.waveStyle == _WaveStyle.dome)
           Positioned(
-            left: -16,
-            top: 756,
+            left: data.waveLeft * sx,
+            top: data.waveTop * sy,
+            width: 460 * sx,
+            height: 173 * sy,
             child: IgnorePointer(
-              child: CustomPaint(
-                painter: _WaveCurvePainter(color: waveColor, style: waveStyle),
-                size: const Size(460, 173),
+              child: SvgPicture.asset(
+                data.waveAsset,
+                fit: BoxFit.fill,
               ),
             ),
           )
         else
-          // Page 2 — same circle-difference wave as the splash screen,
-          // just recolored and reused here.
+          // Figma 711:1123 — transform baked into wave_diagonal.svg
           Positioned(
-            right: -100 * sx,
-            bottom: -140 * sy,
-            width: 480 * sx,
-            height: 540 * sy,
+            left: -28 * sx,
+            top: 478.61 * sy,
+            width: 677.557 * sx,
+            height: 665.139 * sy,
             child: IgnorePointer(
-              child: CustomPaint(
-                size: Size(480 * sx, 540 * sy),
-                painter: _DiagonalWavePainter(color: waveColor),
+              child: SvgPicture.asset(
+                data.waveAsset,
+                fit: BoxFit.fill,
+                allowDrawingOutsideViewBox: true,
               ),
             ),
           ),
-
-        // ── Skip + Next ─────────────────────────────────── (unchanged)
         Positioned(
-          left: 20,
-          top: 771,
-          width: 372,
+          left: 20 * sx,
+          top: data.actionsTop * sy,
+          width: 372 * sx,
           height: 42,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               GestureDetector(
-                onTap: onSkip,
+                onTap: Get.find<OnboardingController>().skip,
                 behavior: HitTestBehavior.opaque,
                 child: Text(
                   'Skip',
                   style: GoogleFonts.roboto(
-                    fontSize: 16,
+                    fontSize: 20,
                     fontWeight: FontWeight.w500,
-                    color: const Color(0xFF4B0070),
+                    color: AppColors.onboardingGreen,
                   ),
                 ),
               ),
               GestureDetector(
-                onTap: onNext,
+                onTap: Get.find<OnboardingController>().next,
                 child: Container(
                   width: 42,
                   height: 42,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF4B0070),
+                  decoration: const BoxDecoration(
+                    color: AppColors.onboardingGreen,
                     shape: BoxShape.circle,
-                    boxShadow: const [
+                    boxShadow: [
                       BoxShadow(
-                        color: Color(0x334B0070),
+                        color: Color(0x33426340),
                         blurRadius: 10,
                         offset: Offset(0, 4),
                       ),
@@ -227,591 +135,485 @@ class _BottomBar extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────
-// Diagonal wave — page 2. Same circle-difference technique as the
-// splash screen's _WavePainter (splash_view.dart), reused here with
-// a color parameter.
-// ─────────────────────────────────────────────────────────────
-class _DiagonalWavePainter extends CustomPainter {
-  const _DiagonalWavePainter({required this.color});
-
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.fill
-      ..isAntiAlias = true;
-
-    final outer = Path()
-      ..addOval(
-        Rect.fromCircle(
-          center: Offset(size.width * 0.90, size.height * 0.90), //0.70
-          radius: size.width * 0.94,
-        ),
-      );
-
-    final inner = Path()
-      ..addOval(
-        Rect.fromCircle(
-          center: Offset(size.width * -0.08, size.height * -0.13),
-          radius: size.width * 0.94,
-        ),
-      );
-
-    canvas.drawPath(
-      Path.combine(PathOperation.difference, outer, inner),
-      paint,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant _DiagonalWavePainter old) => old.color != color;
-}
-// ─────────────────────────────────────────────────────────────
-// Page data
-// ─────────────────────────────────────────────────────────────
-
-// Only two wave shapes: "dome" is shared by page 1 & page 3 (identical
-// curve, different color), "diagonal" is unique to page 2.
 enum _WaveStyle { dome, diagonal }
+
+enum _PageKind { post, influence, earn }
 
 class _OnboardingPageData {
   const _OnboardingPageData({
+    required this.kind,
     required this.badge,
     required this.title,
     required this.subtitle,
-    required this.illustration,
-    required this.waveColor,
+    required this.waveAsset,
     required this.waveStyle,
-    this.bgColor,
-    this.bgGradient,
-  }) : assert(
-         bgColor != null || bgGradient != null,
-         'Provide either bgColor or bgGradient',
-       );
+    required this.actionsTop,
+    required this.waveLeft,
+    required this.waveTop,
+  });
 
+  final _PageKind kind;
   final String badge;
   final InlineSpan title;
   final String subtitle;
-  final Widget illustration;
-  final Color waveColor;
+  final String waveAsset;
   final _WaveStyle waveStyle;
-  final Color? bgColor;
-  final Gradient? bgGradient;
+  final double actionsTop;
+  final double waveLeft;
+  final double waveTop;
 }
 
+TextStyle get _badgeStyle => GoogleFonts.roboto(
+      fontSize: 28,
+      fontWeight: FontWeight.w700,
+      height: 1.0,
+      color: AppColors.onboardingGreen,
+    );
+
+TextStyle get _titleBase => GoogleFonts.roboto(
+      fontSize: 28,
+      fontWeight: FontWeight.w500,
+      height: 1.2,
+      color: AppColors.onboardingTitle,
+    );
+
+TextStyle get _titleEmphasis => GoogleFonts.roboto(
+      fontSize: 28,
+      fontWeight: FontWeight.w700,
+      height: 1.2,
+      color: AppColors.onboardingGreen,
+    );
+
 final List<_OnboardingPageData> _pages = [
-  // ── Page 1: Post ──────────────────────────────────────────
+  // ── Page 1: Post (Figma 711:1104) ──────────────────────────
   _OnboardingPageData(
+    kind: _PageKind.post,
     badge: 'Post.',
     title: TextSpan(
-      style: GoogleFonts.roboto(
-        fontSize: 28,
-        fontWeight: FontWeight.w500,
-        height: 1.2,
-        color: const Color(0xFF1A1A1A),
-      ),
+      style: _titleBase,
       children: [
         const TextSpan(text: 'Create Content . Post\nand '),
-        TextSpan(
-          text: 'Get Paid',
-          style: GoogleFonts.roboto(
-            fontSize: 28,
-            fontWeight: FontWeight.w700,
-            height: 1.2,
-            color: const Color(0xFF4B0070),
-          ),
-        ),
+        TextSpan(text: 'Get Paid', style: _titleEmphasis),
         TextSpan(
           text: '.',
-          style: GoogleFonts.roboto(
-            fontSize: 28,
-            fontWeight: FontWeight.w700,
-            height: 1.2,
-            color: const Color(0xFF4B0070),
-          ),
+          style: _titleBase.copyWith(fontWeight: FontWeight.w700),
         ),
       ],
     ),
     subtitle:
         'Turn your everyday knowledge and creativity into content people love & Earn',
-    illustration: Image.asset(
-      AppImages.onboarding1,
-      fit: BoxFit.contain,
-      width: 320,
-      height: 420,
-    ),
-    waveColor: const Color(0xFFAC8ABD),
+    waveAsset: AppImages.onboardingWaveDome,
     waveStyle: _WaveStyle.dome,
-    bgColor: const Color(0xFFFEFFFE),
+    actionsTop: 771,
+    waveLeft: -16,
+    waveTop: 787,
   ),
-  // ── Page 2: Influence ─────────────────────────────────────
+
+  // ── Page 2: Influence (Figma 711:1117) ─────────────────────
   _OnboardingPageData(
+    kind: _PageKind.influence,
     badge: 'Influence.',
     title: TextSpan(
-      style: GoogleFonts.roboto(
-        fontSize: 28,
-        fontWeight: FontWeight.w700,
-        height: 1.2,
-        color: const Color(0xFF1A1A1A),
-      ),
+      style: _titleBase,
       children: const [
         TextSpan(text: 'Share what you know.\nInspire someone.'),
       ],
     ),
     subtitle:
         'Share your ideas, skills, tips, and creativity with people who care.',
-    illustration: SizedBox(
-      width: 320,
-      height: 300,
-      child: Stack(
-        clipBehavior: Clip.hardEdge,
-        children: [
-          Align(
-            alignment: const Alignment(-0.95, 0.1),
-            child: SvgPicture.asset(
-              AppImages.onboarding21,
-              width: 235,
-              height: 260,
-              fit: BoxFit.contain,
-            ),
-          ),
-          Align(
-            alignment: const Alignment(1.2, 0.6),
-            child: SvgPicture.asset(
-              AppImages.onboarding22,
-              width: 196,
-              height: 156,
-              fit: BoxFit.contain,
-            ),
-          ),
-        ],
-      ),
-    ),
-    // illustration: SizedBox(
-    //   width: 321,
-    //   height: 233, // 76 + 156.92 (onboarding22's bottom edge)
-    //   child: Stack(
-    //     clipBehavior: Clip.none,
-    //     children: [
-    //       Positioned(
-    //         left: 58,
-    //         top: 76,
-    //         child: SvgPicture.asset(
-    //           AppImages.onboarding21,
-    //           width: 235.9395,
-    //           height: 117.6458,
-    //           fit: BoxFit.contain,
-    //         ),
-    //       ),
-    //       Positioned(
-    //         left: 125,
-    //         top: 76,
-    //         child: SvgPicture.asset(
-    //           AppImages.onboarding22,
-    //           width: 196,
-    //           height: 156.92,
-    //           fit: BoxFit.contain,
-    //         ),
-    //       ),
-    //     ],
-    //   ),
-    // ),
-    waveColor: const Color(0xFFFFD1D1),
+    waveAsset: AppImages.onboardingWaveDiagonal,
     waveStyle: _WaveStyle.diagonal,
-    bgGradient: const LinearGradient(
-      begin: Alignment.topCenter,
-      end: Alignment.bottomCenter,
-      colors: [Color(0xFFF9EDFF), Color(0xFFFFFFFF)],
-    ),
+    actionsTop: 761,
+    waveLeft: -28,
+    waveTop: 478.61,
   ),
 
-  // ── Page 3: Earn ──────────────────────────────────────────
+  // ── Page 3: Earn (Figma 711:1222) ──────────────────────────
   _OnboardingPageData(
+    kind: _PageKind.earn,
     badge: 'Earn.',
     title: TextSpan(
-      style: GoogleFonts.roboto(
-        fontSize: 28,
-        fontWeight: FontWeight.w500,
-        height: 1.2,
-        color: const Color(0xFF1A1A1A),
-      ),
-      children: [
-        const TextSpan(text: 'Influence and earn\n'),
-        TextSpan(
-          text: 'Real money',
-          style: GoogleFonts.roboto(
-            fontSize: 28,
-            fontWeight: FontWeight.w700,
-            height: 1.2,
-            color: const Color(0xFF4B0070),
-          ),
-        ),
+      style: _titleBase,
+      children: const [
+        TextSpan(text: 'Influence and earn\nReal money'),
       ],
     ),
     subtitle:
         'Share videos, ideas and helpful tips on anything you know. Your content can earn you real money.',
-    // illustration: SizedBox(
-    //   width: 400,
-    //   height: 360,
-    //   child: Stack(
-    //     clipBehavior: Clip.hardEdge,
-    //     children: [
-    //       Positioned(
-    //         left: 28,
-    //         top: 10,
-    //         child: SvgPicture.asset(
-    //           AppImages.onboarding31,
-    //           width: 197,
-    //           height: 159,
-    //           fit: BoxFit.contain,
-    //         ),
-    //       ),
-    //       Positioned(
-    //         left: 125,
-    //         top: 125,
-    //         child: SvgPicture.asset(
-    //           AppImages.onboarding32,
-    //           width: 187,
-    //           height: 222,
-    //           fit: BoxFit.contain,
-    //         ),
-    //       ),
-    //     ],
-    //   ),
-    // ),
-    illustration: SizedBox(
-      width: 440,
-      height: 340,
-      child: Stack(
-        clipBehavior: Clip.none, // avoid clipping the person's legs/feet
-        children: [
-          // Earnings card — top-left
-          Positioned(
-            left: 40,
-            top: 0,
-            child: SvgPicture.asset(
-              AppImages.onboarding31,
-              width: 197,
-              height: 159,
-              fit: BoxFit.contain,
-            ),
-          ),
-          // Person — right side, overlapping the card's bottom-right corner
-          // slightly, roughly level with where the dashed arrow points
-          Positioned(
-            left: 135,
-            top: 103,
-            child: SvgPicture.asset(
-              AppImages.onboarding32,
-              width: 187,
-              height: 222,
-              fit: BoxFit.contain,
-            ),
-          ),
-        ],
-      ),
-    ),
-    // Same wave style AND same enum value as page 1 — guarantees the
-    // exact same curve is drawn (only the color differs, matching Figma).
-    waveColor: const Color(0xFFC9A9E0),
+    waveAsset: AppImages.onboardingWaveEarn,
     waveStyle: _WaveStyle.dome,
-    bgColor: const Color(0xFFFEFFFE),
+    actionsTop: 760,
+    waveLeft: -24,
+    waveTop: 781,
   ),
 ];
 
-// final List<_OnboardingPageData> _pages = [
-//   // ── Page 1: Post ──────────────────────────────────────────
-//   _OnboardingPageData(
-//     badge: 'Post.',
-//     title: TextSpan(
-//       style: GoogleFonts.roboto(
-//         fontSize: 28,
-//         fontWeight: FontWeight.w500,
-//         height: 1.2,
-//         color: const Color(0xFF1A1A1A),
-//       ),
-//       children: [
-//         const TextSpan(text: 'Create Content . Post\nand '),
-//         TextSpan(
-//           text: 'Get Paid',
-//           style: GoogleFonts.roboto(
-//             fontSize: 28,
-//             fontWeight: FontWeight.w700,
-//             height: 1.2,
-//             color: const Color(0xFF4B0070),
-//           ),
-//         ),
-//         TextSpan(
-//           text: '.',
-//           style: GoogleFonts.roboto(
-//             fontSize: 28,
-//             fontWeight: FontWeight.w700,
-//             height: 1.2,
-//             color: const Color(0xFF4B0070),
-//           ),
-//         ),
-//       ],
-//     ),
-//     subtitle:
-//         'Turn your everyday knowledge and creativity into content people love & Earn',
-//     illustration: SvgPicture.asset(
-//       AppImages.onboarding1,
-//       fit: BoxFit.contain,
-//       width: 280,
-//       height: 280,
-//     ),
-//     waveColor: const Color(0xFFC9A9E0),
-//     waveStyle: _WaveStyle.dome,
-//   ),
-//   // ── Page 2: Influence ─────────────────────────────────────
-//   _OnboardingPageData(
-//     badge: 'Influence.',
-//     title: TextSpan(
-//       style: GoogleFonts.roboto(
-//         fontSize: 28,
-//         fontWeight: FontWeight.w700,
-//         height: 1.2,
-//         color: const Color(0xFF1A1A1A),
-//       ),
-//       children: const [
-//         TextSpan(text: 'Share what you know.\nInspire someone.'),
-//       ],
-//     ),
-//     subtitle:
-//         'Share your ideas, skills, tips, and creativity with people who care.',
-//     illustration: SizedBox(
-//       width: 320,
-//       height: 300,
-//       child: Stack(
-//         clipBehavior: Clip.hardEdge,
-//         children: [
-//           Align(
-//             alignment: const Alignment(-0.95, 0.05),
-//             child: SvgPicture.asset(
-//               AppImages.onboarding21,
-//               width: 150,
-//               height: 260,
-//               fit: BoxFit.contain,
-//             ),
-//           ),
-//           Align(
-//             alignment: const Alignment(0.7, 0.2),
-//             child: SvgPicture.asset(
-//               AppImages.onboarding22,
-//               width: 170,
-//               height: 240,
-//               fit: BoxFit.contain,
-//             ),
-//           ),
-//         ],
-//       ),
-//     ),
-//     waveColor: const Color(0xFFFFD1D1),
-//     waveStyle: _WaveStyle.diagonal,
-//   ),
-
-//   // ── Page 3: Earn ──────────────────────────────────────────
-//   _OnboardingPageData(
-//     badge: 'Earn.',
-//     title: TextSpan(
-//       style: GoogleFonts.roboto(
-//         fontSize: 28,
-//         fontWeight: FontWeight.w500,
-//         height: 1.2,
-//         color: const Color(0xFF1A1A1A),
-//       ),
-//       children: [
-//         const TextSpan(text: 'Influence and earn\n'),
-//         TextSpan(
-//           text: 'Real money',
-//           style: GoogleFonts.roboto(
-//             fontSize: 28,
-//             fontWeight: FontWeight.w700,
-//             height: 1.2,
-//             color: const Color(0xFF4B0070),
-//           ),
-//         ),
-//       ],
-//     ),
-//     subtitle:
-//         'Share videos, ideas and helpful tips on anything you know. Your content can earn you real money.',
-//     illustration: SizedBox(
-//       width: 300,
-//       height: 320,
-//       child: Stack(
-//         clipBehavior: Clip.hardEdge,
-//         children: [
-//           Positioned(
-//             left: 0,
-//             top: 0,
-//             child: SvgPicture.asset(
-//               AppImages.onboarding31,
-//               width: 260,
-//               height: 160,
-//               fit: BoxFit.contain,
-//             ),
-//           ),
-//           Positioned(
-//             right: 0,
-//             bottom: 0,
-//             child: SvgPicture.asset(
-//               AppImages.onboarding32,
-//               width: 170,
-//               height: 240,
-//               fit: BoxFit.contain,
-//             ),
-//           ),
-//         ],
-//       ),
-//     ),
-//     // Same wave style AND same enum value as page 1 — guarantees the
-//     // exact same curve is drawn (only the color differs, matching Figma).
-//     waveColor: const Color(0xFFC9A9E0),
-//     waveStyle: _WaveStyle.dome,
-//   ),
-// ];
-
-// ─────────────────────────────────────────────────────────────
-// Single page
-// ─────────────────────────────────────────────────────────────
 class _OnboardingPage extends StatelessWidget {
-  const _OnboardingPage({required this.data, required this.index});
+  const _OnboardingPage({required this.data});
 
   final _OnboardingPageData data;
-  final int index;
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.sizeOf(context);
+    final sx = size.width / _figmaW;
+    final sy = size.height / _figmaH;
+
     return DecoratedBox(
-      decoration: BoxDecoration(
-        color: data.bgGradient == null ? data.bgColor : null,
-        gradient: data.bgGradient,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          stops: [0.0, 0.23],
+          colors: [
+            AppColors.onboardingBgTop,
+            AppColors.onboardingBgBottom,
+          ],
+        ),
       ),
-      child: SafeArea(
-        bottom: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(28, 28, 28, 0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+      child: switch (data.kind) {
+        _PageKind.post => _PostPage(data: data, sx: sx, sy: sy),
+        _PageKind.influence => _InfluencePage(data: data, sx: sx, sy: sy),
+        _PageKind.earn => _EarnPage(data: data, sx: sx, sy: sy),
+      },
+    );
+  }
+}
+
+Widget _textBlock(_OnboardingPageData data, double sx, double sy) {
+  return Positioned(
+    left: 20 * sx,
+    top: 88 * sy,
+    width: 350 * sx,
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text.rich(
+          TextSpan(
+            style: _badgeStyle,
             children: [
-              // Badge
-              Text(
-                data.badge,
-                style: GoogleFonts.roboto(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w700,
-                  height: 1.0,
-                  color: const Color(0xFF4B0070),
+              TextSpan(text: data.badge.replaceAll('.', '')),
+              TextSpan(
+                text: '.',
+                style: _badgeStyle.copyWith(
+                  color: AppColors.onboardingBadgeDot,
                 ),
               ),
-              const SizedBox(height: 14),
-
-              // Title
-              Text.rich(data.title),
-              const SizedBox(height: 14),
-
-              // Subtitle
-              Text(
-                data.subtitle,
-                style: GoogleFonts.roboto(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w400,
-                  height: 1.4,
-                  color: const Color(0xFF6B6B6B),
-                ),
-              ),
-
-              // Illustration
-              Expanded(child: Center(child: data.illustration)),
-
-              // Space for bottom bar
-              const SizedBox(height: 150),
             ],
           ),
         ),
+        SizedBox(height: 20 * sy),
+        Text.rich(data.title),
+        SizedBox(height: 20 * sy),
+        Text(
+          data.subtitle,
+          style: GoogleFonts.roboto(
+            fontSize: 16,
+            fontWeight: FontWeight.w400,
+            height: 1.35,
+            color: AppColors.onboardingSubtitle,
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+/// Page 1 — illustration centered below text (Figma 711:1115 left:43 top:303)
+class _PostPage extends StatelessWidget {
+  const _PostPage({
+    required this.data,
+    required this.sx,
+    required this.sy,
+  });
+
+  final _OnboardingPageData data;
+  final double sx;
+  final double sy;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        _textBlock(data, sx, sy),
+        Positioned(
+          left: 43 * sx,
+          top: 303 * sy,
+          width: 320 * sx,
+          height: 420 * sy,
+          child: Image.asset(
+            AppImages.onboarding1,
+            fit: BoxFit.contain,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Page 2 — Figma 711:1117 absolute phone + social illustration
+class _InfluencePage extends StatelessWidget {
+  const _InfluencePage({
+    required this.data,
+    required this.sx,
+    required this.sy,
+  });
+
+  final _OnboardingPageData data;
+  final double sx;
+  final double sy;
+
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.sizeOf(context);
+
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        _textBlock(data, sx, sy),
+        // Phone — inset 32.5% / 50.95% / 37.6% / 15.78%
+        Positioned(
+          left: 0.1578 * size.width,
+          top: 0.325 * size.height,
+          width: (1 - 0.1578 - 0.5095) * size.width,
+          height: (1 - 0.325 - 0.376) * size.height,
+          child: SvgPicture.asset(
+            AppImages.onboarding21,
+            fit: BoxFit.contain,
+          ),
+        ),
+        // Social person — left:140 top:570 w:196 h:156.923
+        Positioned(
+          left: 200 * sx,
+          top: 413 * sy,
+          width: 196 * sx,
+          height: 156.923 * sy,
+          child: SvgPicture.asset(
+            AppImages.onboarding22,
+            fit: BoxFit.contain,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Page 3 — Figma 711:1222 earnings card + person
+class _EarnPage extends StatelessWidget {
+  const _EarnPage({
+    required this.data,
+    required this.sx,
+    required this.sy,
+  });
+
+  final _OnboardingPageData data;
+  final double sx;
+  final double sy;
+
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.sizeOf(context);
+
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        _textBlock(data, sx, sy),
+        // Chart card — Figma 711:1233 left:58 top:350 w:197.72 h:159
+        Positioned(
+          left: 58 * sx,
+          top: 350 * sy,
+          width: 197.72 * sx,
+          height: 159 * sy,
+          child: const _EarningsCard(),
+        ),
+        // Person — inset 52.02% / 11.99% / 23.67% / 42.48%, flipped on X
+        Positioned(
+          left: 0.4248 * size.width,
+          top: 0.5202 * size.height,
+          width: (1 - 0.4248 - 0.1199) * size.width,
+          height: (1 - 0.5202 - 0.2367) * size.height,
+          child: Transform.flip(
+            flipX: true,
+            child: SvgPicture.asset(
+              AppImages.onboarding32,
+              fit: BoxFit.contain,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Earnings chart card — Figma 711:1233
+class _EarningsCard extends StatelessWidget {
+  const _EarningsCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 6),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16.5),
+        border: Border.all(color: AppColors.onboardingCardBorder, width: 0.8),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x214C4DDC),
+            blurRadius: 20,
+            offset: Offset(0, 7),
+            spreadRadius: -3,
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Total Earnings',
+                      style: GoogleFonts.roboto(
+                        fontSize: 7.5,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.onboardingCardLabel,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'रू 12,450',
+                      style: GoogleFonts.roboto(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.onboardingGreen,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                decoration: BoxDecoration(
+                  color: AppColors.onboardingGrowthBg,
+                  borderRadius: BorderRadius.circular(6.5),
+                ),
+                child: Text(
+                  '+32%',
+                  style: GoogleFonts.roboto(
+                    fontSize: 7.5,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.onboardingGrowthText,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'This Month',
+            style: GoogleFonts.roboto(
+              fontSize: 7.5,
+              fontWeight: FontWeight.w400,
+              color: AppColors.onboardingCardLabel,
+            ),
+          ),
+          const SizedBox(height: 6),
+          const Expanded(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                _Bar(flexHeight: 0.36),
+                SizedBox(width: 7),
+                _Bar(flexHeight: 0.56),
+                SizedBox(width: 7),
+                _Bar(flexHeight: 0.76),
+                SizedBox(width: 7),
+                _Bar(flexHeight: 1.0),
+              ],
+            ),
+          ),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Followers',
+                      style: GoogleFonts.roboto(
+                        fontSize: 6.5,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.onboardingCardLabel,
+                      ),
+                    ),
+                    Text(
+                      '8.6K',
+                      style: GoogleFonts.roboto(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.onboardingCardValue,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                decoration: BoxDecoration(
+                  color: AppColors.onboardingWeekBg,
+                  borderRadius: BorderRadius.circular(6.5),
+                ),
+                child: Text(
+                  '+1.2K this week',
+                  style: GoogleFonts.roboto(
+                    fontSize: 6.5,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.onboardingGrowthText,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
 }
 
-// ─────────────────────────────────────────────────────────────
-// Wave painter — two shapes only:
-//   • dome     → identical curve for page 1 & page 3
-//   • diagonal → unique sweeping curve for page 2
-// ─────────────────────────────────────────────────────────────
-class _WaveCurvePainter extends CustomPainter {
-  const _WaveCurvePainter({required this.color, required this.style});
+class _Bar extends StatelessWidget {
+  const _Bar({required this.flexHeight});
 
-  final Color color;
-  final _WaveStyle style;
+  final double flexHeight;
 
   @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.fill
-      ..isAntiAlias = true;
-
-    if (style == _WaveStyle.diagonal) {
-      // Same technique as the splash screen's _WavePainter: a big outer
-      // circle sitting toward the bottom-right, with a second circle
-      // biting away the top-left, leaving a soft diagonal crescent —
-      // low on the left, sweeping up to a high peak on the right.
-      final outer = Path()
-        ..addOval(
-          Rect.fromCircle(
-            center: Offset(size.width * 0.62, size.height * 0.78),
-            radius: size.width * 0.8,
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: FractionallySizedBox(
+        heightFactor: flexHeight,
+        alignment: Alignment.bottomCenter,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(5),
+            gradient: const LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                AppColors.onboardingBarTop,
+                AppColors.onboardingBarBottom,
+              ],
+            ),
           ),
-        );
-
-      final inner = Path()
-        ..addOval(
-          Rect.fromCircle(
-            center: Offset(size.width * -0.12, size.height * -0.20),
-            radius: size.width * 1.15,
-          ),
-        );
-
-      canvas.drawPath(
-        Path.combine(PathOperation.difference, outer, inner),
-        paint,
-      );
-      return;
-    }
-
-    // Page 1 & Page 3 — one symmetric "valley" wave: high (more color)
-    // at both edges, dipping in the middle. Same shape every time this
-    // style is used — only `color` changes between pages.
-    final path = Path()
-      ..moveTo(0, size.height)
-      ..lineTo(0, size.height * 0.18)
-      ..cubicTo(
-        size.width * 0.15, //0.23
-        size.height * 0.65, //0.72
-        size.width * 0.35, //0.48
-        size.height * 0.9, //0.90
-        size.width * 0.7, //0.76
-        size.height * 0.8, //0.8
-      )
-      ..cubicTo(
-        size.width * 0.98, //0.9
-        size.height * 0.64, //0.74
-        size.width * 0.99, //1.3
-        size.height * 0.55, //0.55
-        size.width,
-        size.height * 0.35, //0.35
-      )
-      ..lineTo(size.width, size.height)
-      ..close();
-
-    canvas.drawPath(path, paint);
+        ),
+      ),
+    );
   }
-
-  @override
-  bool shouldRepaint(covariant _WaveCurvePainter old) =>
-      old.color != color || old.style != style;
 }

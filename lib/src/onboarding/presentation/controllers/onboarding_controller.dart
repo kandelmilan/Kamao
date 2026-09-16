@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:kamao/app/app.dart';
+import 'package:kamao/core/core.dart';
 
 class OnboardingController extends GetxController {
   final pageController = PageController();
@@ -23,8 +24,11 @@ class OnboardingController extends GetxController {
 
   void skip() => _finish();
 
-  void _finish() {
-    Get.offNamed(AppRoutes.login); // change to your next route
+  Future<void> _finish() async {
+    // Persist so splash never sends this device back to onboarding.
+    final storage = Get.find<AuthStorageService>();
+    await storage.setFirstLaunchCompleted();
+    Get.offAllNamed(AppRoutes.login);
   }
 
   @override

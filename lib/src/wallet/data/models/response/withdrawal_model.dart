@@ -28,7 +28,7 @@ class WithdrawalModel {
       accountName: json['accountName'] as String,
       accountNumber: json['accountNumber'] as String,
       bankName: json['bankName'] as String?,
-      status: json['status'] as String,
+      status: json['status']?.toString() ?? '',
       requestedAt: DateTime.parse(json['requestedAt'] as String),
       processedAt: json['processedAt'] == null
           ? null

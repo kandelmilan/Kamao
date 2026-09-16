@@ -6,7 +6,7 @@ import 'package:kamao/src/home/domain/usecase/marketplace/get_campaign_detail_us
 import 'package:kamao/src/home/domain/usecase/marketplace/join_campaign_usecase.dart';
 import 'package:kamao/src/home/domain/usecase/marketplace/toggle_favourite_campaign_usecase.dart';
 import 'package:kamao/src/home/presentation/controllers/campaign_detail_controller.dart';
-import 'package:kamao/src/social_connections/data/repositories/social_connections_repository.dart';
+import 'package:kamao/src/social_connections/presentation/bindings/social_connections_binding.dart';
 
 class CampaignDetailBinding extends Bindings {
   @override
@@ -20,18 +20,11 @@ class CampaignDetailBinding extends Bindings {
     }
     final campaignId = rawId;
 
+    SocialConnectionsBinding().dependencies();
+
     final apiService = Get.find<ApiService>();
     final remoteDataSource = MarketplaceRemoteDataSourceImpl(apiService);
     final repository = MarketplaceRepositoryImpl(remoteDataSource);
-
-    // Register once, app-wide, so SocialAccountsSheetController can
-    // Get.find() it later without this binding's help.
-    if (!Get.isRegistered<SocialConnectionsRepository>()) {
-      Get.put<SocialConnectionsRepository>(
-        SocialConnectionsRepository(apiService),
-        permanent: true,
-      );
-    }
 
     Get.put(
       CampaignDetailController(

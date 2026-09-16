@@ -5,19 +5,71 @@ enum WithdrawalStatus {
   rejected,
   unknown;
 
+  /// Maps backend status strings. New requests are often returned as
+  /// values other than exactly "Pending" (e.g. Requested / Submitted),
+  /// so we accept common aliases and fall back to [pending] for empty
+  /// values rather than showing "Unknown".
   static WithdrawalStatus fromApi(String? value) {
-    switch (value?.toLowerCase()) {
+    final raw = value?.trim().toLowerCase() ?? '';
+    if (raw.isEmpty) return WithdrawalStatus.pending;
+
+    switch (raw) {
       case 'paid':
+      case 'success':
+      case 'successful':
+      case 'completed':
+      case 'complete':
+      case 'done':
         return WithdrawalStatus.paid;
       case 'pending':
+      case 'requested':
+      case 'submitted':
+      case 'queued':
+      case 'open':
+      case 'new':
+      case 'created':
+      case 'awaiting':
+      case 'approved':
         return WithdrawalStatus.pending;
       case 'processing':
+      case 'inprogress':
+      case 'in_progress':
+      case 'in-progress':
         return WithdrawalStatus.processing;
       case 'rejected':
+      case 'failed':
+      case 'failure':
+      case 'cancelled':
+      case 'canceled':
+      case 'declined':
         return WithdrawalStatus.rejected;
-      default:
-        return WithdrawalStatus.unknown;
     }
+
+    if (raw.contains('paid') ||
+        raw.contains('success') ||
+        raw.contains('complete')) {
+      return WithdrawalStatus.paid;
+    }
+    if (raw.contains('reject') ||
+        raw.contains('fail') ||
+        raw.contains('cancel') ||
+        raw.contains('decline')) {
+      return WithdrawalStatus.rejected;
+    }
+    if (raw.contains('process')) {
+      return WithdrawalStatus.processing;
+    }
+    if (raw.contains('pend') ||
+        raw.contains('request') ||
+        raw.contains('submit') ||
+        raw.contains('queue') ||
+        raw.contains('approv')) {
+      return WithdrawalStatus.pending;
+    }
+
+    // Prefer Pending over Unknown for anything we don't recognize —
+    // newly created withdrawals are awaiting staff action.
+    return WithdrawalStatus.pending;
   }
 }
 

@@ -1,106 +1,51 @@
-// import 'package:kamao/core/core.dart';
-// import '../../domain/entities/social_connection_status.dart';
-
-// /// Talks to the social OAuth endpoints through ApiService.
-// ///
-// /// Flow: startConnect() gets an authorizeUrl and opens it in the
-// /// browser. The vendor redirects to the backend's own GET
-// /// .../callback (never seen by the app). The backend then
-// /// 302-redirects to kamao://social-connect-result?ok=1&platform=...,
-// /// which wakes the app — at that point we call
-// /// fetchAllConnectionStatuses() to get the real, current state.
-// class SocialConnectionsRepository {
-//   SocialConnectionsRepository(this._apiService);
-//   final ApiService _apiService;
-
-//   static const appRedirect = 'kamao://social-connect-result';
-
-//   /// POST /v{version}/creator/social/{platform}/start
-//   Future<String> startConnect(String platformId) async {
-//     final response = await _apiService.post(
-//       '/creator/social/$platformId/start',
-//       data: {'appRedirect': appRedirect},
-//     );
-//     final authUrl = response.data['data']['authorizeUrl'] as String?;
-//     if (authUrl == null || authUrl.isEmpty) {
-//       throw Exception('No authorizeUrl returned for $platformId');
-//     }
-//     return authUrl;
-//   }
-
-//   /// GET /v{version}/creator/social/connections
-//   /// Confirmed response shape:
-//   /// { success, data: [{ platform, externalAccountId, displayName,
-//   ///                      expiresAt, isConnected }], message,
-//   ///   correlationId }
-//   Future<Map<String, SocialConnectionStatus>>
-//   fetchAllConnectionStatuses() async {
-//     final response = await _apiService.get('/creator/social/connections');
-//     final list = response.data['data'] as List<dynamic>? ?? [];
-
-//     final result = <String, SocialConnectionStatus>{};
-//     for (final item in list) {
-//       final platformId = (item['platform'] as String).toLowerCase();
-//       final isConnected = item['isConnected'] == true;
-//       result[platformId] = isConnected
-//           ? SocialConnectionStatus(
-//               state: SocialConnectionState.connected,
-//               connectedAccountLabel: item['displayName'] as String?,
-//             )
-//           : SocialConnectionStatus.initial;
-//     }
-//     return result;
-//   }
-// }
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:kamao/core/core.dart';
 import 'package:kamao/src/social_connections/domain/entities/social_connection_status.dart';
+import 'package:kamao/src/social_connections/domain/entities/social_platform_type.dart';
 
-/// Talks to the social OAuth endpoints through ApiService.
+/// Social OAuth via ApiService.
 ///
-/// Flow: startConnect() gets an authorizeUrl and opens it in the
-/// browser. The vendor (Instagram, TikTok, Facebook, YouTube — same
-/// flow for all of them, keyed only by platformId) redirects to the
-/// backend's own GET .../callback (never seen by the app). The
-/// backend then 302-redirects to
-/// kamao://social-connect-result?ok=1&platform=..., which wakes the
-/// app — at that point we call fetchAllConnectionStatuses() to get
-/// the real, current state.
+/// Flow for every [SocialPlatformType] (instagram / facebook / tiktok):
+/// 1. [startConnect] → POST …/start `{ appRedirect }` → `authorizeUrl`
+/// 2. Open `authorizeUrl` in the browser (app never calls vendor callback)
+/// 3. Backend finishes OAuth, 302 → `kamao://social-connect-result?…`
+/// 4. App reloads with [fetchAllConnectionStatuses]
 class SocialConnectionsRepository {
   SocialConnectionsRepository(this._apiService);
   final ApiService _apiService;
 
   static const appRedirect = 'kamao://social-connect-result';
-  // static const appRedirect =
-  //     'https://aayurise.gyanbato.com/api/v1/creator/social/Tiktok/callback';
 
-  /// POST /v{version}/creator/social/{platform}/start
+  /// POST /creator/social/{platform}/start
   Future<String> startConnect(String platformId) async {
+    final platform = SocialPlatformType.tryParse(platformId);
+    final pathPlatform = platform?.apiId ?? platformId.toLowerCase();
+
     final response = await _apiService.post(
-      '/creator/social/$platformId/start',
+      ApiEndpoints.socialStart(pathPlatform),
       data: {'appRedirect': appRedirect},
     );
     final authUrl = response.data['data']['authorizeUrl'] as String?;
-    debugPrint('authUrl: $authUrl');
+    debugPrint('[SocialConnections] authorizeUrl ($pathPlatform): $authUrl');
     if (authUrl == null || authUrl.isEmpty) {
-      throw Exception('No authorizeUrl returned for $platformId');
+      throw Exception('No authorizeUrl returned for $pathPlatform');
     }
     return authUrl;
   }
 
-  /// GET /v{version}/creator/social/connections
-  /// Confirmed response shape:
-  /// { success, data: [{ platform, externalAccountId, displayName,
-  ///                      expiresAt, isConnected }], message,
-  ///   correlationId }
+  /// GET /creator/social/connections
+  ///
+  /// `{ success, data: [{ platform, externalAccountId, displayName,
+  ///    expiresAt, isConnected }], … }`
   Future<Map<String, SocialConnectionStatus>>
   fetchAllConnectionStatuses() async {
-    final response = await _apiService.get('/creator/social/connections');
+    final response = await _apiService.get(ApiEndpoints.socialConnections);
     final list = response.data['data'] as List<dynamic>? ?? [];
 
     final result = <String, SocialConnectionStatus>{};
     for (final item in list) {
-      final platformId = (item['platform'] as String).toLowerCase();
+      final platformId = (item['platform'] as String? ?? '').toLowerCase();
+      if (platformId.isEmpty) continue;
       final isConnected = item['isConnected'] == true;
       result[platformId] = isConnected
           ? SocialConnectionStatus(

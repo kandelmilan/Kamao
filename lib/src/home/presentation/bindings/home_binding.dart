@@ -1,5 +1,10 @@
 import 'package:get/get.dart';
 import 'package:kamao/core/core.dart';
+import 'package:kamao/src/brand/data/datasources/brand_remote_data_source.dart';
+import 'package:kamao/src/brand/data/repositories/brand_repository_impl.dart';
+import 'package:kamao/src/brand/domain/usecase/get_featured_brands_usecase.dart';
+import 'package:kamao/src/brand/domain/usecase/get_popular_brands_usecase.dart';
+import 'package:kamao/src/brand/domain/usecase/get_recent_brands_usecase.dart';
 import 'package:kamao/src/home/data/datasources/app_config_remote_data_source.dart';
 import 'package:kamao/src/home/data/datasources/home_extras_remote_data_source.dart';
 import 'package:kamao/src/home/data/datasources/marketplace_remote_data_source.dart';
@@ -9,7 +14,6 @@ import 'package:kamao/src/home/data/repositories/marketplace_repository_impl.dar
 import 'package:kamao/src/home/domain/usecase/campaign/get_campaigns_usecase.dart';
 import 'package:kamao/src/home/domain/usecase/campaign/get_favourite_campaigns_usecase.dart';
 import 'package:kamao/src/home/domain/usecase/campaign/get_popular_campaigns_usecase.dart';
-import 'package:kamao/src/home/domain/usecase/campaign/get_recent_campaigns_usecase.dart';
 import 'package:kamao/src/home/domain/usecase/get_app_config_usecase.dart';
 import 'package:kamao/src/home/domain/usecase/get_home_categories_usecase.dart';
 import 'package:kamao/src/home/domain/usecase/get_recently_rewarded_usecase.dart';
@@ -19,7 +23,7 @@ import 'package:kamao/src/home/domain/usecase/marketplace/toggle_favourite_campa
 import 'package:kamao/src/home/domain/usecase/marketplace/view_campaign_usecase.dart';
 import 'package:kamao/src/home/home.dart';
 import 'package:kamao/src/wallet/wallet.dart';
-import 'package:kamao/src/social_connections/data/repositories/social_connections_repository.dart';
+import 'package:kamao/src/social_connections/presentation/bindings/social_connections_binding.dart';
 
 class HomeBinding extends Bindings {
   @override
@@ -30,6 +34,8 @@ class HomeBinding extends Bindings {
     // this was the actual cause of "snackbar says connected but the
     // sheet still shows not connected." Only construct it once.
     if (Get.isRegistered<HomeController>()) return;
+
+    SocialConnectionsBinding().dependencies();
 
     final apiService = Get.find<ApiService>();
 
@@ -55,9 +61,6 @@ class HomeBinding extends Bindings {
     final getPopularCampaignsUseCase = GetPopularCampaignsUseCase(
       homeExtrasRepository,
     );
-    // final getRecentCampaignsUseCase = GetRecentCampaignsUseCase(
-    //   homeExtrasRepository,
-    // );
     final getFavouriteCampaignsUseCase = GetFavouriteCampaignsUseCase(
       homeExtrasRepository,
     );
@@ -78,13 +81,18 @@ class HomeBinding extends Bindings {
     );
     final viewCampaignUseCase = ViewCampaignUseCase(marketplaceRepository);
 
-    final socialConnectionsRepository = SocialConnectionsRepository(apiService);
-
     final appConfigRemoteDataSource = AppConfigRemoteDataSourceImpl(apiService);
     final appConfigRepository = AppConfigRepositoryImpl(
       appConfigRemoteDataSource,
     );
     final getAppConfigUseCase = GetAppConfigUseCase(appConfigRepository);
+
+    final brandRemoteDataSource = BrandRemoteDataSourceImpl(apiService);
+    final brandRepository = BrandRepositoryImpl(brandRemoteDataSource);
+    final getPopularBrandsUseCase = GetPopularBrandsUseCase(brandRepository);
+    final getFeaturedBrandsUseCase = GetFeaturedBrandsUseCase(brandRepository);
+    final getRecentBrandsUseCase = GetRecentBrandsUseCase(brandRepository);
+
     Get.put(
       HomeController(
         getWalletUseCase,
@@ -92,14 +100,15 @@ class HomeBinding extends Bindings {
         getHomeCategoriesUseCase,
         getRecentlyRewardedUseCase,
         getAppConfigUseCase,
-        socialConnectionsRepository,
         getCampaignsUseCase,
-        // getRecentCampaignsUseCase,
         getFavouriteCampaignsUseCase,
         getMarketplaceRecentUseCase,
         joinCampaignUseCase,
         toggleFavouriteCampaignUseCase,
         viewCampaignUseCase,
+        getPopularBrandsUseCase,
+        getFeaturedBrandsUseCase,
+        getRecentBrandsUseCase,
       ),
     );
   }

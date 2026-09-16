@@ -1,17 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:kamao/app/app.dart';
 import '../controllers/wallet_controller.dart';
 import '../widgets/wallet_activity_widgets.dart';
 
-// ═════════════════════════════════════════════════════════════
-// Palette — same lilac-to-white backdrop gradient used on
-// FeaturedCampaignsPage, kept local to this feature.
-// ═════════════════════════════════════════════════════════════
+// Soft green backdrop — matches wallet page (Figma 678:5496).
 class _Palette {
   const _Palette._();
 
-  static const gradientLilac = Color(0xFFF1D9FF);
-  static const titleText = Color(0xFF353037);
+  static const gradientTop = AppColors.onboardingBgTop;
+  static const titleText = AppColors.heading;
 }
 
 /// Full transaction history — same tabs and rows as the wallet home page,
@@ -68,7 +66,7 @@ class WalletTransactionsView extends GetView<WalletController> {
                   gradient: const LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [_Palette.gradientLilac, Colors.white],
+                    colors: [_Palette.gradientTop, Colors.white],
                     stops: [0.0, 0.85],
                   ),
                 ),

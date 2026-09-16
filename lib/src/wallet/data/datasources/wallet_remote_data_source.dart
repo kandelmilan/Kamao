@@ -21,6 +21,7 @@
 // }
 import 'package:dartz/dartz.dart';
 import 'package:kamao/core/core.dart';
+import 'package:kamao/src/wallet/data/models/request/create_withdrawal_request_model.dart';
 import 'package:kamao/src/wallet/data/models/response/payout_method_model.dart';
 import 'package:kamao/src/wallet/data/models/response/withdrawal_model.dart';
 import 'package:kamao/src/wallet/wallet.dart';
@@ -31,6 +32,11 @@ abstract class WalletRemoteDataSource {
   Future<Either<Failure, ApiResponse<List<WithdrawalModel>>>> getWithdrawals();
 
   Future<Either<Failure, ApiResponse<PayoutMethodModel>>> getPayoutMethod();
+
+  /// POST /creator/wallet/withdrawals — `data` is the new withdrawal id.
+  Future<Either<Failure, ApiResponse<String>>> createWithdrawal(
+    CreateWithdrawalRequestModel request,
+  );
 }
 
 class WalletRemoteDataSourceImpl implements WalletRemoteDataSource {
@@ -65,6 +71,19 @@ class WalletRemoteDataSourceImpl implements WalletRemoteDataSource {
     return ApiResponseHandler.handleResponse<PayoutMethodModel>(
       () => _apiService.get(ApiEndpoints.walletPayoutMethod),
       (data) => PayoutMethodModel.fromJson(data as Map<String, dynamic>),
+    );
+  }
+
+  @override
+  Future<Either<Failure, ApiResponse<String>>> createWithdrawal(
+    CreateWithdrawalRequestModel request,
+  ) {
+    return ApiResponseHandler.handleResponse<String>(
+      () => _apiService.post(
+        ApiEndpoints.walletWithdrawals,
+        data: request.toJson(),
+      ),
+      (data) => data is String ? data : data?.toString() ?? '',
     );
   }
 }

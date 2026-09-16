@@ -26,6 +26,8 @@ dependencies:
   app_links: ^6.3.2
   intl: ^0.19.0
   flutter_svg: ^2.3.0
+  image_picker: ^1.2.3
+  flutter_web_auth_2: ^5.1.0
 
 dev_dependencies:
   flutter_test:
@@ -36,17 +38,9 @@ dev_dependencies:
 
 flutter:
   assets:
-    - assets/images/onboarding/onboarding1.svg
-    - assets/images/onboarding/onboarding1.png
-    - assets/images/onboarding/onboarding21.svg
-    - assets/images/onboarding/onboarding22.svg
-    - assets/images/onboarding/onboarding31.svg
-    - assets/images/onboarding/onboarding32.svg
-    - assets/images/home/wallet1.svg
-    - assets/images/home/wallet_bc.svg
-    - assets/images/home/category_helper.png
-    - assets/images/home/esewa.png
-    - assets/images/home/khalti.png
+    - assets/images/onboarding/
+    - assets/images/home/
+    - assets/images/home/icons/
     - assets/images/app_logo.png
 
   uses-material-design: true
