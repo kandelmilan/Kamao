@@ -1283,9 +1283,20 @@ class _BalanceCard extends StatelessWidget {
                   ),
                 ),
               ),
-              Positioned(
-                left: 188 * s,
-                top: 68 * s,
+              // Positioned(
+              //   left: 188 * s,
+              //   top: 68 * s,
+              //   width: 114 * s,
+              //   height: 87 * s,
+              //   child: Image.asset(
+              //     AppImages.walletCoins,
+              //     fit: BoxFit.contain,
+              //     alignment: Alignment.bottomCenter,
+              //   ),
+              // ),
+               Positioned(
+                left: 172 * s,//188 * s,
+                top: 60 * s,//68 * s,
                 width: 114 * s,
                 height: 87 * s,
                 child: Image.asset(

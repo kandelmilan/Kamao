@@ -1,5 +1,7 @@
 import 'dart:io';
+import 'dart:typed_data';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -509,37 +511,6 @@ class _PostsSection extends StatelessWidget {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Your posts with $tag',
-            style: const TextStyle(
-              fontFamily: 'Roboto',
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              height: 1,
-              color: _SubmitPostTokens.sectionTitle,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text.rich(
-            TextSpan(
-              style: bodyStyle,
-              children: [
-                const TextSpan(
-                  text:
-                      'Only connected-account posts whose caption (or first '
-                      'comments) includes ',
-                ),
-                TextSpan(text: tag, style: tagStyle),
-                const TextSpan(
-                  text:
-                      ' are shown. Type the tag in the caption — Instagram '
-                      'stickers are not sent to AayuRise. Refresh a minute '
-                      'after posting.',
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 18),
           const _SectionTitle('Select Post'),
           const SizedBox(height: 12),
           if (loadingMedia)
@@ -570,13 +541,52 @@ class _PostsSection extends StatelessWidget {
                   );
                 },
               ),
+            )
+          else
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 8),
+              child: Text(
+                'No matching posts yet. Paste a URL below or refresh after posting.',
+                style: bodyStyle,
+              ),
             ),
           // URL paste: always when no posts; when posts exist, only if none selected.
           if (!loadingMedia &&
               (posts.isEmpty || controller.selectedPostId.value == null)) ...[
-            SizedBox(height: posts.isEmpty ? 0 : 16),
+            const SizedBox(height: 16),
             const _PastePostUrlField(),
           ],
+          const SizedBox(height: 18),
+          Text(
+            'Your posts with $tag',
+            style: const TextStyle(
+              fontFamily: 'Roboto',
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              height: 1,
+              color: _SubmitPostTokens.sectionTitle,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text.rich(
+            TextSpan(
+              style: bodyStyle,
+              children: [
+                const TextSpan(
+                  text:
+                      'Only connected-account posts whose caption (or first '
+                      'comments) includes ',
+                ),
+                TextSpan(text: tag, style: tagStyle),
+                const TextSpan(
+                  text:
+                      ' are shown. Type the tag in the caption — Instagram '
+                      'stickers are not sent to AayuRise. Refresh a minute '
+                      'after posting.',
+                ),
+              ],
+            ),
+          ),
         ],
       );
     });
@@ -685,38 +695,9 @@ class _PostThumb extends StatelessWidget {
     return RemixIcons.instagram_fill;
   }
 
-  Widget _thumbnail(String? thumb) {
-    if (thumb == null) {
-      return const ColoredBox(
-        color: Color(0xFFE8E8EA),
-        child: Center(
-          child: Icon(
-            RemixIcons.image_line,
-            color: _SubmitPostTokens.mutedLabel,
-          ),
-        ),
-      );
-    }
-    return Image.network(
-      thumb,
-      fit: BoxFit.cover,
-      width: double.infinity,
-      height: double.infinity,
-      errorBuilder: (_, __, ___) => const ColoredBox(
-        color: Color(0xFFE8E8EA),
-        child: Center(
-          child: Icon(
-            RemixIcons.image_line,
-            color: _SubmitPostTokens.mutedLabel,
-          ),
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    final thumb = post.thumbnailUrl;
+    final thumb = post.thumbnailImageUrl;
     final published = post.publishedAt ?? DateTime.now();
     final date = DateFormat('d MMM yyyy').format(published.toLocal());
 
@@ -751,7 +732,7 @@ class _PostThumb extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Expanded(child: _thumbnail(thumb)),
+                    Expanded(child: _MediaThumbnail(url: thumb)),
                     Container(
                       height: _footerHeight,
                       padding: const EdgeInsets.symmetric(horizontal: 6),
@@ -801,6 +782,135 @@ class _PostThumb extends StatelessWidget {
                   ),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Loads social-media CDN thumbnails with browser headers (Instagram/TikTok
+/// often block bare [Image.network] requests).
+class _MediaThumbnail extends StatefulWidget {
+  const _MediaThumbnail({required this.url});
+
+  final String? url;
+
+  @override
+  State<_MediaThumbnail> createState() => _MediaThumbnailState();
+}
+
+class _MediaThumbnailState extends State<_MediaThumbnail> {
+  static final Dio _dio = Dio(
+    BaseOptions(
+      connectTimeout: const Duration(seconds: 20),
+      receiveTimeout: const Duration(seconds: 20),
+      responseType: ResponseType.bytes,
+      headers: const {
+        'User-Agent':
+            'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) '
+            'AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 '
+            'Mobile/15E148 Safari/604.1',
+        'Accept': 'image/avif,image/webp,image/apng,image/*,*/*;q=0.8',
+      },
+      validateStatus: (code) => code != null && code >= 200 && code < 400,
+    ),
+  );
+
+  static final Map<String, Uint8List> _cache = {};
+
+  Uint8List? _bytes;
+  bool _failed = false;
+  Object? _loadToken;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  @override
+  void didUpdateWidget(covariant _MediaThumbnail oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.url != widget.url) {
+      _bytes = null;
+      _failed = false;
+      _load();
+    }
+  }
+
+  Future<void> _load() async {
+    final url = widget.url?.trim();
+    if (url == null || url.isEmpty) {
+      setState(() => _failed = true);
+      return;
+    }
+
+    final cached = _cache[url];
+    if (cached != null) {
+      setState(() {
+        _bytes = cached;
+        _failed = false;
+      });
+      return;
+    }
+
+    final token = Object();
+    _loadToken = token;
+
+    try {
+      final response = await _dio.get<List<int>>(url);
+      final raw = response.data;
+      if (raw == null || raw.isEmpty) {
+        throw StateError('empty image body');
+      }
+      final bytes = Uint8List.fromList(raw);
+      _cache[url] = bytes;
+      if (!mounted || _loadToken != token) return;
+      setState(() {
+        _bytes = bytes;
+        _failed = false;
+      });
+    } catch (_) {
+      if (!mounted || _loadToken != token) return;
+      setState(() {
+        _bytes = null;
+        _failed = true;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_bytes != null) {
+      return Image.memory(
+        _bytes!,
+        fit: BoxFit.cover,
+        width: double.infinity,
+        height: double.infinity,
+        gaplessPlayback: true,
+      );
+    }
+    if (_failed) {
+      return const ColoredBox(
+        color: Color(0xFFE8E8EA),
+        child: Center(
+          child: Icon(
+            RemixIcons.image_line,
+            color: _SubmitPostTokens.mutedLabel,
+          ),
+        ),
+      );
+    }
+    return const ColoredBox(
+      color: Color(0xFFE8E8EA),
+      child: Center(
+        child: SizedBox(
+          width: 18,
+          height: 18,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: AppColors.onboardingGreen,
           ),
         ),
       ),

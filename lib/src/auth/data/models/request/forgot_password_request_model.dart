@@ -2,7 +2,7 @@ import 'package:kamao/src/auth/auth.dart';
 
 class ForgotPasswordRequestModel {
   const ForgotPasswordRequestModel({
-    required this.tenantCode,
+    this.tenantCode = 'Demo',
     required this.email,
   });
 

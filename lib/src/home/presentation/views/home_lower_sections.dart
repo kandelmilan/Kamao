@@ -781,7 +781,6 @@ class _RecentlyRewardedSection extends StatelessWidget {
               separatorBuilder: (_, _) => const SizedBox(width: 12),
               itemBuilder: (context, index) => _RewardedPostCard(
                 post: list[index],
-                onTap: () => controller.openRewardedPost(list[index]),
               ),
             );
           }),
@@ -792,31 +791,28 @@ class _RecentlyRewardedSection extends StatelessWidget {
 }
 
 class _RewardedPostCard extends StatelessWidget {
-  const _RewardedPostCard({required this.post, required this.onTap});
+  const _RewardedPostCard({required this.post});
 
   final RewardedPostEntity post;
-  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final thumb = post.thumbnailImageUrl;
     final logo = post.brandLogoImageUrl;
 
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        width: 122,
-        height: 177,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          color: const Color(0xFFF3F4F6),
-        ),
-        clipBehavior: Clip.hardEdge,
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            if (thumb != null)
+    // Taps disabled until rewarded-post detail is wired correctly.
+    return Container(
+      width: 122,
+      height: 177,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        color: const Color(0xFFF3F4F6),
+      ),
+      clipBehavior: Clip.hardEdge,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          if (thumb != null)
               Image.network(
                 thumb,
                 fit: BoxFit.cover,
@@ -903,7 +899,6 @@ class _RewardedPostCard extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
+      );
   }
 }

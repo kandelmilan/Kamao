@@ -4,6 +4,8 @@ import 'package:get/get.dart';
 import 'package:kamao/app/app.dart';
 import 'package:kamao/core/core.dart';
 import 'package:kamao/core/utils/image_url_resolver.dart';
+import 'package:kamao/src/auth/presentation/widgets/creator_level_badge.dart';
+import 'package:kamao/src/auth/presentation/widgets/user_avatar.dart';
 import 'package:kamao/src/brand/domain/entities/brand_entity.dart';
 import 'package:kamao/src/brand/presentation/widgets/brand_square_item.dart';
 import 'package:kamao/src/home/domain/entities/campaign/favourite_campaign_entity.dart';
@@ -11,6 +13,7 @@ import 'package:kamao/src/home/domain/entities/rewarded_post_entity.dart';
 import 'package:kamao/src/social_connections/domain/entities/social_connection_status.dart';
 import 'package:kamao/src/social_connections/presentation/controllers/social_connections_controller.dart';
 import 'package:kamao/src/social_connections/widgets/social_connections_sheet.dart';
+import 'package:kamao/src/wallet/presentation/widgets/wallet_hero_card.dart';
 import 'package:remixicon/remixicon.dart';
 import '../controllers/home_controller.dart';
 part 'home_lower_sections.dart';
@@ -53,8 +56,18 @@ class HomeView extends GetView<HomeController> {
                       onClear: controller.clearSearch,
                     ),
                   ),
+                  const SizedBox(height: 24),
+                  _BrandsSection(
+                    title: 'Popular Brands',
+                    iconAsset: AppImages.iconFire,
+                    iconSize: 20,
+                    brands: () => controller.filteredPopularBrands,
+                    isLoading: () => controller.isPopularBrandsLoading.value,
+                    seeAll: controller.seeAllPopularBrands,
+                    hideWhenEmpty: true,
+                  ),
                   const SizedBox(height: 20),
-                  _CategoryChipsRow(controller: controller),
+                   _CategoryChipsRow(controller: controller),
                   Obx(() {
                     if (controller.hasActiveHomeFilter &&
                         !controller.hasFilteredHomeResults &&
@@ -79,16 +92,6 @@ class HomeView extends GetView<HomeController> {
                     }
                     return const SizedBox.shrink();
                   }),
-                  const SizedBox(height: 24),
-                  _BrandsSection(
-                    title: 'Popular Brands',
-                    iconAsset: AppImages.iconFire,
-                    iconSize: 20,
-                    brands: () => controller.filteredPopularBrands,
-                    isLoading: () => controller.isPopularBrandsLoading.value,
-                    seeAll: controller.seeAllPopularBrands,
-                    hideWhenEmpty: true,
-                  ),
                   Obx(() {
                     final list = controller.filteredFavouriteCampaigns;
                     final show =
@@ -189,11 +192,13 @@ class _HeaderSection extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
       child: Row(
         children: [
-          const _Avatar(),
+          _Avatar(controller: controller),
           const SizedBox(width: 12),
           Expanded(
             child: Obx(() {
               final name = controller.greetingName;
+              final level = controller.levelName;
+              final levelCode = controller.levelCode;
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -217,15 +222,21 @@ class _HeaderSection extends StatelessWidget {
                           style: const TextStyle(
                             fontFamily: 'Roboto',
                             fontSize: 17,
-                            fontWeight: FontWeight.w500,
+                            fontWeight: FontWeight.w600,
                             height: 25.5 / 17,
                             letterSpacing: -0.425,
                             color: AppColors.heading,
                           ),
                         ),
                       ),
-                      const SizedBox(width: 4),
-                      const Text('👋', style: TextStyle(fontSize: 14)),
+                      if (level.isNotEmpty) ...[
+                        const SizedBox(width: 6),
+                        CreatorLevelBadge(
+                          label: level,
+                          code: levelCode,
+                          onTap: controller.openCreatorLevels,
+                        ),
+                      ],
                     ],
                   ),
                   const Text(
@@ -253,32 +264,35 @@ class _HeaderSection extends StatelessWidget {
 }
 
 class _Avatar extends StatelessWidget {
-  const _Avatar();
+  const _Avatar({required this.controller});
+
+  final HomeController controller;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 44,
-      height: 44,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(color: const Color(0xCCFFFFFF), width: 1),
-        color: const Color(0xFFEDE6F1),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0D000000),
-            blurRadius: 2,
-            offset: Offset(0, 1),
-          ),
-        ],
-      ),
-      alignment: Alignment.center,
-      child: const Icon(
-        RemixIcons.user_3_fill,
-        size: 22,
-        color: AppColors.primary,
-      ),
-    );
+    return Obx(() {
+      final name = controller.greetingName;
+      return DecoratedBox(
+        decoration: const BoxDecoration(
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: Color(0x0D000000),
+              blurRadius: 2,
+              offset: Offset(0, 1),
+            ),
+          ],
+        ),
+        child: UserAvatar(
+          size: 44,
+          initial: name.isNotEmpty ? name : null,
+          borderColor: const Color(0xCCFFFFFF),
+          borderWidth: 1,
+          backgroundColor: const Color(0xFFEDE6F1),
+          fallbackIconSize: 22,
+        ),
+      );
+    });
   }
 }
 
@@ -606,6 +620,10 @@ class _WalletCard extends StatelessWidget {
     );
   }
 }
+
+
+
+
 
 // ═════════════════════════════════════════════════════════════
 // Connect Social Accounts card — matches Figma; sheet handles connect/details

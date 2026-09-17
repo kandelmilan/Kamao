@@ -1,10 +1,6 @@
 import 'package:get/get.dart';
 import 'package:kamao/core/core.dart';
-import 'package:kamao/src/auth/data/datasources/profile_remote_datasource.dart';
-import 'package:kamao/src/auth/data/repositories/profile_repository_impl.dart';
-import 'package:kamao/src/auth/domain/repositories/profile_repository.dart';
-import 'package:kamao/src/auth/domain/usecases/get_creator_profile_usecase.dart';
-import 'package:kamao/src/auth/presentation/controllers/profile_controller.dart';
+import 'package:kamao/src/auth/auth.dart';
 
 class ProfileBinding extends Bindings {
   @override
@@ -21,8 +17,20 @@ class ProfileBinding extends Bindings {
       () => GetCreatorProfileUseCase(Get.find<ProfileRepository>()),
       fenix: true,
     );
+    Get.lazyPut<UploadAvatarUseCase>(
+      () => UploadAvatarUseCase(Get.find<ProfileRepository>()),
+      fenix: true,
+    );
+    Get.lazyPut<DeleteAvatarUseCase>(
+      () => DeleteAvatarUseCase(Get.find<ProfileRepository>()),
+      fenix: true,
+    );
     Get.lazyPut<ProfileController>(
-      () => ProfileController(Get.find<GetCreatorProfileUseCase>()),
+      () => ProfileController(
+        Get.find<GetCreatorProfileUseCase>(),
+        Get.find<UploadAvatarUseCase>(),
+        Get.find<DeleteAvatarUseCase>(),
+      ),
       fenix: true,
     );
   }

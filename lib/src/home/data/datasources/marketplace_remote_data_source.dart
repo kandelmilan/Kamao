@@ -7,7 +7,8 @@ abstract class MarketplaceRemoteDataSource {
   Future<List<RecentCampaignModel>> getRecentCampaigns({int take = 12});
   Future<bool> joinCampaign(String campaignId);
   Future<CampaignDetailModel> getCampaignDetail(String campaignId);
-  Future<bool> toggleFavouriteCampaign(String campaignId);
+  Future<bool> favouriteCampaign(String campaignId);
+  Future<bool> unfavouriteCampaign(String campaignId);
   Future<bool> viewCampaign(String campaignId);
   Future<List<MarketplaceCampaignModel>> getFeaturedCampaigns({
     int take = 12,
@@ -53,9 +54,19 @@ class MarketplaceRemoteDataSourceImpl implements MarketplaceRemoteDataSource {
   }
 
   @override
-  Future<bool> toggleFavouriteCampaign(String campaignId) async {
-    final response = await _apiService.put(
+  Future<bool> favouriteCampaign(String campaignId) async {
+    final response = await _apiService.post(
       ApiEndpoints.marketplaceFavourite(campaignId),
+      data: '',
+    );
+    return response.data['data'] as bool? ?? true;
+  }
+
+  @override
+  Future<bool> unfavouriteCampaign(String campaignId) async {
+    final response = await _apiService.post(
+      ApiEndpoints.marketplaceUnfavourite(campaignId),
+      data: '',
     );
     return response.data['data'] as bool? ?? false;
   }

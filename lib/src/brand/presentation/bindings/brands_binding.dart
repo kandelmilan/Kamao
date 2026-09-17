@@ -8,10 +8,8 @@ import 'package:kamao/src/brand/domain/usecase/get_featured_brands_usecase.dart'
 import 'package:kamao/src/brand/domain/usecase/get_popular_brands_usecase.dart';
 import 'package:kamao/src/brand/domain/usecase/get_recent_brands_usecase.dart';
 import 'package:kamao/src/brand/presentation/controllers/brands_controller.dart';
-import 'package:kamao/src/home/data/datasources/app_config_remote_data_source.dart';
-import 'package:kamao/src/home/data/repositories/app_config_repository_impl.dart';
-import 'package:kamao/src/home/domain/repositories/app_config_repository.dart';
-import 'package:kamao/src/home/domain/usecase/get_app_config_usecase.dart';
+import 'package:kamao/src/home/home.dart';
+
 
 class BrandsBinding extends Bindings {
   @override

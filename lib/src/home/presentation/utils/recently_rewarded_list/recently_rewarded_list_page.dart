@@ -31,7 +31,7 @@ class RecentlyRewardedListPage extends StatefulWidget {
   const RecentlyRewardedListPage({
     super.key,
     required this.fetcher,
-    required this.onPostTap,
+    this.onPostTap,
     this.title = 'Recently Rewarded',
     this.take = 48,
     this.emptyMessage = 'No rewarded posts yet',
@@ -39,7 +39,7 @@ class RecentlyRewardedListPage extends StatefulWidget {
 
   final String title;
   final RecentlyRewardedFetcher fetcher;
-  final void Function(RewardedPostEntity post) onPostTap;
+  final void Function(RewardedPostEntity post)? onPostTap;
   final int take;
   final String emptyMessage;
 
@@ -194,7 +194,9 @@ class _RecentlyRewardedListPageState extends State<RecentlyRewardedListPage> {
               name: post.brandName,
               subtitle: _subtitleOf(post),
               logoUrl: post.brandLogoImageUrl,
-              onTap: () => widget.onPostTap(post),
+              onTap: widget.onPostTap == null
+                  ? null
+                  : () => widget.onPostTap!(post),
             );
           },
         ),
@@ -461,11 +463,12 @@ class _RewardedRow extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              const Icon(
-                Icons.chevron_right,
-                size: 20,
-                color: _Palette.chevron,
-              ),
+              if (onTap != null)
+                const Icon(
+                  Icons.chevron_right,
+                  size: 20,
+                  color: _Palette.chevron,
+                ),
             ],
           ),
         ),

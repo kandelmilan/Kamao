@@ -15,24 +15,8 @@ class WithdrawView extends GetView<WithdrawController> {
       type: MaterialType.transparency,
       child: Stack(
         children: [
-          const Positioned.fill(child: ColoredBox(color: Colors.white)),
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            height: 220,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    AppColors.onboardingBgTop,
-                    Colors.white.withValues(alpha: 0.0),
-                  ],
-                ),
-              ),
-            ),
+          const Positioned.fill(
+            child: ColoredBox(color: AppColors.homeBg),
           ),
           SafeArea(
             child: Column(
@@ -50,9 +34,9 @@ class WithdrawView extends GetView<WithdrawController> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           _AvailableCard(controller: controller),
-                          const SizedBox(height: 24),
+                          const SizedBox(height: 28),
                           const _SectionTitle(title: 'Withdrawal Request'),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 18),
                           _AmountField(controller: controller),
                           const SizedBox(height: 16),
                           _PayoutMethodField(controller: controller),
@@ -62,6 +46,7 @@ class WithdrawView extends GetView<WithdrawController> {
                             child: TextField(
                               controller: controller.accountNameController,
                               textCapitalization: TextCapitalization.words,
+                              style: _fieldTextStyle,
                               decoration: _inputDecoration(
                                 hint: 'Full name as per ID',
                               ),
@@ -78,6 +63,7 @@ class WithdrawView extends GetView<WithdrawController> {
                                 controller:
                                     controller.accountNumberController,
                                 keyboardType: TextInputType.phone,
+                                style: _fieldTextStyle,
                                 inputFormatters: [
                                   FilteringTextInputFormatter.digitsOnly,
                                   LengthLimitingTextInputFormatter(20),
@@ -102,6 +88,7 @@ class WithdrawView extends GetView<WithdrawController> {
                                   controller: controller.bankNameController,
                                   textCapitalization:
                                       TextCapitalization.characters,
+                                  style: _fieldTextStyle,
                                   decoration: _inputDecoration(
                                     hint: 'e.g. PRABHU',
                                   ),
@@ -109,14 +96,13 @@ class WithdrawView extends GetView<WithdrawController> {
                               ),
                             );
                           }),
-                          const SizedBox(height: 16),
                           Obx(() {
                             final err = controller.fieldError.value;
                             if (err == null || err.isEmpty) {
                               return const SizedBox.shrink();
                             }
                             return Padding(
-                              padding: const EdgeInsets.only(bottom: 12),
+                              padding: const EdgeInsets.only(top: 12),
                               child: Text(
                                 err,
                                 style: const TextStyle(
@@ -128,23 +114,29 @@ class WithdrawView extends GetView<WithdrawController> {
                               ),
                             );
                           }),
+                          const SizedBox(height: 16),
                           const _InfoNote(),
                           const SizedBox(height: 28),
                           Obx(() {
                             final busy = controller.isSubmitting.value;
                             return SizedBox(
-                              height: 52,
+                              width: double.infinity,
+                              height: 56,
                               child: ElevatedButton(
                                 onPressed: busy ? null : controller.submit,
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.walletButton,
+                                  backgroundColor: const Color(0xFF334D32),
                                   foregroundColor: Colors.white,
-                                  disabledBackgroundColor: AppColors
-                                      .walletButton
-                                      .withValues(alpha: 0.5),
+                                  disabledBackgroundColor: const Color(
+                                    0xFF334D32,
+                                  ).withValues(alpha: 0.5),
                                   elevation: 0,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 24,
+                                    vertical: 16,
+                                  ),
                                   shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(14),
+                                    borderRadius: BorderRadius.circular(12),
                                   ),
                                 ),
                                 child: busy
@@ -156,24 +148,16 @@ class WithdrawView extends GetView<WithdrawController> {
                                           color: Colors.white,
                                         ),
                                       )
-                                    : const Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          Text(
-                                            'Request Withdrawal',
-                                            style: TextStyle(
-                                              fontFamily: 'Roboto',
-                                              fontSize: 15,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                          SizedBox(width: 8),
-                                          Icon(
-                                            RemixIcons.arrow_right_line,
-                                            size: 18,
-                                          ),
-                                        ],
+                                    : const Text(
+                                        'Request Withdrawal',
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          fontFamily: 'Roboto',
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w500,
+                                          height: 24 / 16,
+                                          color: Colors.white,
+                                        ),
                                       ),
                               ),
                             );
@@ -191,6 +175,13 @@ class WithdrawView extends GetView<WithdrawController> {
     );
   }
 }
+
+const TextStyle _fieldTextStyle = TextStyle(
+  fontFamily: 'Roboto',
+  fontSize: 15,
+  fontWeight: FontWeight.w500,
+  color: AppColors.heading,
+);
 
 InputDecoration _inputDecoration({required String hint}) {
   return InputDecoration(
@@ -267,15 +258,8 @@ class _AvailableCard extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE6F0E4)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFEDECED)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -384,6 +368,7 @@ class _AmountField extends StatelessWidget {
           TextField(
             controller: controller.amountController,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            style: _fieldTextStyle,
             inputFormatters: [
               FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
             ],
@@ -439,7 +424,7 @@ class _PayoutMethodField extends StatelessWidget {
               icon: const Icon(
                 RemixIcons.arrow_down_s_line,
                 size: 20,
-                color: Color(0xFF6E6971),
+                color: Color(0xFF6F338D),
               ),
               borderRadius: BorderRadius.circular(12),
               selectedItemBuilder: (context) {
@@ -448,7 +433,7 @@ class _PayoutMethodField extends StatelessWidget {
                       (destination) => Align(
                         alignment: Alignment.centerLeft,
                         child: _PayoutOptionRow(
-                          logo: controller.logoFor(destination),
+                          destination: destination,
                           label: controller.destinationLabel(destination),
                         ),
                       ),
@@ -460,7 +445,7 @@ class _PayoutMethodField extends StatelessWidget {
                     (destination) => DropdownMenuItem<String>(
                       value: destination,
                       child: _PayoutOptionRow(
-                        logo: controller.logoFor(destination),
+                        destination: destination,
                         label: controller.destinationLabel(destination),
                       ),
                     ),
@@ -481,45 +466,114 @@ class _PayoutMethodField extends StatelessWidget {
 class _InfoNote extends StatelessWidget {
   const _InfoNote();
 
+  static const _bg = Color(0xFFF3F4F8);
+  static const _border = Color(0xFFCBD5E1);
+
   @override
   Widget build(BuildContext context) {
-    return const Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(RemixIcons.information_line, size: 16, color: Color(0xFF6E6971)),
-        SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            'Funds will be transferred to your selected account within '
-            '24-48 business hours. Please ensure details are correct.',
-            style: TextStyle(
-              fontFamily: 'Roboto',
-              fontSize: 12,
-              fontWeight: FontWeight.w400,
-              height: 16.5 / 12,
-              color: Color(0xFF6E6971),
-            ),
-          ),
+    return CustomPaint(
+      foregroundPainter: const _DashedRRectPainter(
+        color: _border,
+        radius: 12,
+        dash: 3,
+        gap: 2,
+      ),
+      child: Container(
+        width: double.infinity,
+        constraints: const BoxConstraints(minHeight: 96.5),
+        padding: const EdgeInsets.fromLTRB(14, 14, 14, 22),
+        decoration: BoxDecoration(
+          color: _bg,
+          borderRadius: BorderRadius.circular(12),
         ),
-      ],
+        child: const Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(
+              RemixIcons.information_line,
+              size: 16,
+              color: Color(0xFF64748B),
+            ),
+            SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Funds will be transferred to your selected account within '
+                '24-48 business hours. Please ensure details are correct.',
+                style: TextStyle(
+                  fontFamily: 'Roboto',
+                  fontSize: 12,
+                  fontWeight: FontWeight.w400,
+                  height: 16.5 / 12,
+                  color: Color(0xFF4A5568),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
 
-/// Shared logo + label row so the closed dropdown and menu items match.
-class _PayoutOptionRow extends StatelessWidget {
-  const _PayoutOptionRow({required this.label, this.logo});
+class _DashedRRectPainter extends CustomPainter {
+  const _DashedRRectPainter({
+    required this.color,
+    required this.radius,
+    this.dash = 3,
+    this.gap = 2,
+  });
 
-  final String? logo;
+  final Color color;
+  final double radius;
+  final double dash;
+  final double gap;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rrect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(0.5, 0.5, size.width - 1, size.height - 1),
+      Radius.circular(radius),
+    );
+    final path = Path()..addRRect(rrect);
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1;
+    for (final metric in path.computeMetrics()) {
+      var distance = 0.0;
+      while (distance < metric.length) {
+        final next = (distance + dash).clamp(0, metric.length).toDouble();
+        canvas.drawPath(metric.extractPath(distance, next), paint);
+        distance += dash + gap;
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _DashedRRectPainter oldDelegate) =>
+      oldDelegate.color != color ||
+      oldDelegate.radius != radius ||
+      oldDelegate.dash != dash ||
+      oldDelegate.gap != gap;
+}
+
+/// Shared icon + label row so the closed dropdown and menu items match.
+class _PayoutOptionRow extends StatelessWidget {
+  const _PayoutOptionRow({
+    required this.destination,
+    required this.label,
+  });
+
+  final String destination;
   final String label;
 
-  static const double _logoSize = 28;
+  static const double _iconSize = 28;
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        _PayoutLogo(logo: logo, size: _logoSize),
+        _PayoutMethodIcon(destination: destination, size: _iconSize),
         const SizedBox(width: 10),
         Flexible(
           child: Text(
@@ -539,51 +593,27 @@ class _PayoutOptionRow extends StatelessWidget {
   }
 }
 
-class _PayoutLogo extends StatelessWidget {
-  const _PayoutLogo({required this.size, this.logo});
+class _PayoutMethodIcon extends StatelessWidget {
+  const _PayoutMethodIcon({required this.destination, required this.size});
 
-  final String? logo;
+  final String destination;
   final double size;
 
   @override
   Widget build(BuildContext context) {
-    if (logo == null) {
-      return Container(
-        width: size,
-        height: size,
-        decoration: const BoxDecoration(
-          color: Color(0xFFE8F0E5),
-          shape: BoxShape.circle,
-        ),
-        alignment: Alignment.center,
-        child: Icon(
-          RemixIcons.bank_line,
-          size: size * 0.55,
-          color: AppColors.onboardingGreen,
-        ),
-      );
-    }
-
+    final isBank = destination.toLowerCase().contains('bank');
     return Container(
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: const Color(0xFFE8F0E5),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFEDECED)),
       ),
-      clipBehavior: Clip.antiAlias,
       alignment: Alignment.center,
-      child: Image.asset(
-        logo!,
-        width: size,
-        height: size,
-        fit: BoxFit.cover,
-        errorBuilder: (_, _, _) => Icon(
-          RemixIcons.bank_line,
-          size: size * 0.55,
-          color: AppColors.onboardingGreen,
-        ),
+      child: Icon(
+        isBank ? RemixIcons.bank_line : RemixIcons.smartphone_line,
+        size: size * 0.55,
+        color: AppColors.onboardingGreen,
       ),
     );
   }

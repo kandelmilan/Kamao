@@ -14,7 +14,8 @@ abstract class MarketplaceRepository {
   Future<Either<Failure, CampaignDetailEntity>> getCampaignDetail(
     String campaignId,
   );
-  Future<Either<Failure, bool>> toggleFavouriteCampaign(String campaignId);
+  Future<Either<Failure, bool>> favouriteCampaign(String campaignId);
+  Future<Either<Failure, bool>> unfavouriteCampaign(String campaignId);
   Future<Either<Failure, bool>> viewCampaign(String campaignId);
 
   Future<Either<Failure, List<MarketplaceCampaignEntity>>>

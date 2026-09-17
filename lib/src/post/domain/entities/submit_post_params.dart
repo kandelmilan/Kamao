@@ -1,7 +1,8 @@
-/// Multipart fields for `POST /creator/submissions/form`.
+/// Fields for creating a creator submission.
 ///
-/// [receiptPath] is omitted from the request when null — use that when the
-/// campaign does not require a receipt or the user has not picked one.
+/// When [receiptPath] is null/empty the client posts JSON to
+/// `POST /creator/submissions`. When a local receipt file is present it
+/// posts multipart to `POST /creator/submissions/form`.
 class SubmitPostParams {
   const SubmitPostParams({
     required this.campaignId,
@@ -20,6 +21,9 @@ class SubmitPostParams {
   final String caption;
   final String thumbnailUrl;
 
-  /// Local file path for the receipt image. Null = do not send `receipt`.
+  /// Local file path for the receipt image. Null/empty → JSON endpoint.
   final String? receiptPath;
+
+  bool get hasReceipt =>
+      receiptPath != null && receiptPath!.trim().isNotEmpty;
 }

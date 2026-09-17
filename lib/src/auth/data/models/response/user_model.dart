@@ -1,4 +1,3 @@
-
 import 'package:kamao/src/auth/auth.dart';
 
 class UserModel {
@@ -10,6 +9,7 @@ class UserModel {
     required this.fullName,
     required this.roleId,
     required this.permissions,
+    this.avatarUrl,
   });
 
   final String userId;
@@ -19,8 +19,10 @@ class UserModel {
   final String fullName;
   final String roleId;
   final List<String> permissions;
+  final String? avatarUrl;
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
+    final rawAvatar = json['avatarUrl']?.toString();
     return UserModel(
       userId: json['userId']?.toString() ?? '',
       tenantId: json['tenantId']?.toString() ?? '',
@@ -31,6 +33,7 @@ class UserModel {
       permissions: json['permissions'] != null
           ? List<String>.from(json['permissions'])
           : [],
+      avatarUrl: (rawAvatar == null || rawAvatar.isEmpty) ? null : rawAvatar,
     );
   }
 
@@ -43,6 +46,7 @@ class UserModel {
       'fullName': fullName,
       'roleId': roleId,
       'permissions': permissions,
+      'avatarUrl': avatarUrl,
     };
   }
 
@@ -55,6 +59,7 @@ class UserModel {
       fullName: fullName,
       roleId: roleId,
       permissions: permissions,
+      avatarUrl: avatarUrl,
     );
   }
 
@@ -66,6 +71,8 @@ class UserModel {
     String? fullName,
     String? roleId,
     List<String>? permissions,
+    String? avatarUrl,
+    bool clearAvatarUrl = false,
   }) {
     return UserModel(
       userId: userId ?? this.userId,
@@ -75,6 +82,7 @@ class UserModel {
       fullName: fullName ?? this.fullName,
       roleId: roleId ?? this.roleId,
       permissions: permissions ?? this.permissions,
+      avatarUrl: clearAvatarUrl ? null : (avatarUrl ?? this.avatarUrl),
     );
   }
 

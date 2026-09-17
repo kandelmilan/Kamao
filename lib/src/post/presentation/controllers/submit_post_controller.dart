@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:kamao/app/app.dart';
 import 'package:kamao/src/home/domain/entities/campaign/campaign_detail_entity.dart';
 import 'package:kamao/src/home/domain/usecase/marketplace/get_campaign_detail_usecase.dart';
+import 'package:kamao/src/main_nav/main_nav.dart';
 import 'package:kamao/src/post/domain/entities/social_media_entity.dart';
 import 'package:kamao/src/post/domain/entities/submit_post_params.dart';
 import 'package:kamao/src/post/domain/usecase/get_social_media_usecase.dart';
@@ -71,6 +73,15 @@ class SubmitPostController extends GetxController {
     isLoading.value = true;
     error.value = null;
 
+    // Prefer showing Select Post images ASAP when platform is already known.
+    final preferred = initialPlatformId?.trim();
+    if (preferred != null && preferred.isNotEmpty) {
+      selectedPlatform.value = preferred;
+      // Fire without awaiting so thumbnails can paint while detail loads.
+      // ignore: unawaited_futures
+      loadMedia();
+    }
+
     final detailResult = await _getCampaignDetailUseCase(
       CampaignIdParams(campaignId),
     );
@@ -81,13 +92,15 @@ class SubmitPostController extends GetxController {
       },
       (detail) async {
         campaign.value = detail;
-        final preferred = initialPlatformId?.trim();
-        if (preferred != null && preferred.isNotEmpty) {
-          selectedPlatform.value = preferred;
-        } else if (detail.platforms.isNotEmpty) {
-          selectedPlatform.value = detail.platforms.first;
+        final current = selectedPlatform.value?.trim();
+        if (current == null || current.isEmpty) {
+          if (detail.platforms.isNotEmpty) {
+            selectedPlatform.value = detail.platforms.first;
+            await loadMedia();
+          }
+        } else if (mediaPosts.isEmpty && !isLoadingMedia.value) {
+          await loadMedia();
         }
-        await loadMedia();
       },
     );
 
@@ -207,14 +220,20 @@ class SubmitPostController extends GetxController {
 
     isSubmitting.value = true;
 
+    final thumb =
+        selected?.thumbnailImageUrl?.trim() ??
+        selected?.thumbnailUrl?.trim() ??
+        '';
+
     final params = SubmitPostParams(
       campaignId: campaignId,
       platform: platform.toLowerCase(),
       contentUrl: contentUrl,
       externalPostId: selected?.externalPostId.trim() ?? '',
       caption: selected?.caption?.trim() ?? '',
-      thumbnailUrl: selected?.thumbnailUrl?.trim() ?? '',
-      receiptPath: receiptRequired ? receiptPath.value : null,
+      thumbnailUrl: thumb,
+      // JSON `/submissions` when null; multipart `/submissions/form` when set.
+      receiptPath: receiptPath.value,
     );
 
     final result = await _submitPostUseCase(params);
@@ -223,10 +242,23 @@ class SubmitPostController extends GetxController {
       (failure) => Get.snackbar("Couldn't submit", failure.message),
       (_) {
         Get.snackbar('Submitted', 'Your post was sent for review.');
-        Get.back(result: true);
+        _navigateToHome();
       },
     );
 
     isSubmitting.value = false;
+  }
+
+  void _navigateToHome() {
+    if (Get.isRegistered<MainNavController>()) {
+      Get.find<MainNavController>().changeTab(MainNavTab.home);
+      Get.until(
+        (route) =>
+            route.settings.name == AppRoutes.mainNav || route.isFirst,
+      );
+      return;
+    }
+
+    Get.offAllNamed(AppRoutes.mainNav);
   }
 }

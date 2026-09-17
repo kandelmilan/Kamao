@@ -1,4 +1,3 @@
-// Store values that are used across the app.
 class AppConstants {
   AppConstants._();
 
@@ -45,5 +44,7 @@ class AppConstants {
 
   static const String lastActivityKey = 'last_activity';
 
-  static const String assetBaseUrl = 'https://aayurise.gyanbato.com';
+  /// Host for relative upload paths like `/uploads/avatars/...`.
+  /// Files are served under `/api/uploads/...` (not the site root).
+  static const String assetBaseUrl = 'https://aayurise.gyanbato.com/api';
 }

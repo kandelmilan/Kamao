@@ -68,13 +68,24 @@ class PostRepositoryImpl implements PostRepository {
         externalPostId: params.externalPostId,
         caption: params.caption,
         thumbnailUrl: params.thumbnailUrl,
-        receiptPath: params.receiptPath,
+        receiptPath: params.hasReceipt ? params.receiptPath : null,
       );
       return Right(id);
     } on DioException catch (e) {
-      return Left(ServerFailure(e.message ?? 'Failed to submit post'));
+      return Left(
+        ServerFailure(_dioMessage(e, fallback: 'Failed to submit post')),
+      );
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
+  }
+
+  String _dioMessage(DioException e, {required String fallback}) {
+    final data = e.response?.data;
+    if (data is Map) {
+      final detail = data['detail'] ?? data['message'] ?? data['title'];
+      if (detail is String && detail.trim().isNotEmpty) return detail.trim();
+    }
+    return e.message ?? fallback;
   }
 }

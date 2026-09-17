@@ -1,6 +1,6 @@
 class ForgotPasswordRequestEntity {
   const ForgotPasswordRequestEntity({
-    required this.tenantCode,
+    this.tenantCode = 'Demo',
     required this.email,
   });
 

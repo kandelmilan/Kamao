@@ -14,6 +14,9 @@ abstract class PostRemoteDataSource {
   Future<List<SubmissionModel>> getApprovedSubmissions();
 
   /// Returns the new submission id from `data`.
+  ///
+  /// Uses JSON `POST /creator/submissions` when [receiptPath] is empty,
+  /// otherwise multipart `POST /creator/submissions/form`.
   Future<String> submitPost({
     required String campaignId,
     required String platform,
@@ -74,28 +77,86 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
     String thumbnailUrl = '',
     String? receiptPath,
   }) async {
-    final map = <String, dynamic>{
+    final hasReceipt = receiptPath != null && receiptPath.trim().isNotEmpty;
+
+    final Response<dynamic> response;
+    if (hasReceipt) {
+      response = await _submitWithReceipt(
+        campaignId: campaignId,
+        platform: platform,
+        contentUrl: contentUrl,
+        externalPostId: externalPostId,
+        caption: caption,
+        thumbnailUrl: thumbnailUrl,
+        receiptPath: receiptPath.trim(),
+      );
+    } else {
+      response = await _submitWithoutReceipt(
+        campaignId: campaignId,
+        platform: platform,
+        contentUrl: contentUrl,
+        externalPostId: externalPostId,
+        caption: caption,
+        thumbnailUrl: thumbnailUrl,
+      );
+    }
+
+    return _parseSubmissionId(response);
+  }
+
+  Future<Response<dynamic>> _submitWithoutReceipt({
+    required String campaignId,
+    required String platform,
+    required String contentUrl,
+    required String externalPostId,
+    required String caption,
+    required String thumbnailUrl,
+  }) {
+    return _apiService.post(
+      ApiEndpoints.submissions,
+      data: {
+        'campaignId': campaignId,
+        'platform': platform,
+        'contentUrl': contentUrl,
+        'externalPostId': externalPostId,
+        'caption': caption,
+        'thumbnailUrl': thumbnailUrl,
+        'receiptBase64': null,
+        'receiptFileName': null,
+      },
+    );
+  }
+
+  Future<Response<dynamic>> _submitWithReceipt({
+    required String campaignId,
+    required String platform,
+    required String contentUrl,
+    required String externalPostId,
+    required String caption,
+    required String thumbnailUrl,
+    required String receiptPath,
+  }) async {
+    final name = receiptPath.split('/').last;
+    final formData = FormData.fromMap({
       'campaignId': campaignId,
       'platform': platform,
       'contentUrl': contentUrl,
       'externalPostId': externalPostId,
       'caption': caption,
       'thumbnailUrl': thumbnailUrl,
-    };
-
-    if (receiptPath != null && receiptPath.isNotEmpty) {
-      final name = receiptPath.split('/').last;
-      map['receipt'] = await MultipartFile.fromFile(
+      'receipt': await MultipartFile.fromFile(
         receiptPath,
         filename: name.isNotEmpty ? name : 'receipt.jpg',
-      );
-    }
+      ),
+    });
 
-    final response = await _apiService.uploadFile(
+    return _apiService.uploadFile(
       ApiEndpoints.submissionsForm,
-      formData: FormData.fromMap(map),
+      formData: formData,
     );
+  }
 
+  String _parseSubmissionId(Response<dynamic> response) {
     final data = response.data is Map ? response.data['data'] : null;
     if (data is String) return data;
     return data?.toString() ?? '';

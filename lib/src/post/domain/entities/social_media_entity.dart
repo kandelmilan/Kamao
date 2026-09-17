@@ -1,3 +1,5 @@
+import 'package:kamao/core/utils/image_url_resolver.dart';
+
 /// A connected-account post returned by `GET /creator/social/media`.
 class SocialMediaItemEntity {
   const SocialMediaItemEntity({
@@ -12,11 +14,16 @@ class SocialMediaItemEntity {
   final String platform;
   final String externalPostId;
   final String permalink;
+
+  /// Raw thumbnail from the media API (absolute CDN URL or relative path).
   final String? thumbnailUrl;
   final String? caption;
   final DateTime? publishedAt;
 
   String get id => externalPostId;
+
+  /// Absolute URL safe for [Image.network] / submit payload.
+  String? get thumbnailImageUrl => resolveImageUrl(thumbnailUrl);
 }
 
 /// Response wrapper: `{ connected, warning, items }`.

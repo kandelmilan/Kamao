@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:kamao/app/app.dart';
 import 'package:kamao/src/auth/auth.dart';
 
-/// Login — Figma Campaign App 711:1033 (green brand system).
+/// Login — matches green brand login screen (logo, fields, CTA).
 class _Palette {
   _Palette._();
 
@@ -11,6 +11,7 @@ class _Palette {
   static const heading = AppColors.onboardingTitle;
   static const subtitle = Color(0xFF7B7B7B);
   static const label = AppColors.heading;
+  static const fieldBorder = Color(0xFFE0E0E0);
   static const gradientTop = AppColors.onboardingBgTop;
 }
 
@@ -35,16 +36,16 @@ class LoginView extends GetView<AuthController> {
       fillColor: Colors.white,
       contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 18),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: _Palette.fieldBorder),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: _Palette.fieldBorder),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: _brandColor, width: 2),
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: _brandColor, width: 1.5),
       ),
     );
   }
@@ -159,6 +160,7 @@ class LoginView extends GetView<AuthController> {
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             const AppLogo(),
+                            SizedBox(height: 8 * scale),
                             Text.rich(
                               TextSpan(
                                 children: [
@@ -171,36 +173,29 @@ class LoginView extends GetView<AuthController> {
                                       height: 1.0,
                                     ),
                                   ),
-                                  const TextSpan(
+                                  TextSpan(
                                     text: '👋',
-                                    style: TextStyle(fontSize: 20),
+                                    style: TextStyle(fontSize: 20 * scale),
                                   ),
                                 ],
                               ),
                               textAlign: TextAlign.center,
                             ),
                             SizedBox(height: 8 * scale),
-                            SizedBox(
-                              width: double.infinity,
-                              child: FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: Text(
-                                  'Log in to access your rewards, wallet & active campaigns',
-                                  textAlign: TextAlign.center,
-                                  maxLines: 1,
-                                  style: TextStyle(
-                                    color: _Palette.subtitle,
-                                    fontWeight: FontWeight.w400,
-                                    fontSize: 14,
-                                    height: 1.0,
-                                  ),
-                                ),
+                            Text(
+                              'Log in to access your rewards, wallet & active campaigns',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: _Palette.subtitle,
+                                fontWeight: FontWeight.w400,
+                                fontSize: 14 * scale,
+                                height: 1.35,
                               ),
                             ),
-                            SizedBox(height: 30 * scale),
+                            SizedBox(height: 32 * scale),
                             Align(
                               alignment: Alignment.centerLeft,
-                              child: _fieldLabel('EMAIL '),
+                              child: _fieldLabel('EMAIL / PHONE NUMBER'),
                             ),
                             SizedBox(height: 8 * scale),
                             TextField(
@@ -220,7 +215,7 @@ class LoginView extends GetView<AuthController> {
                               controller: controller.passwordController,
                               obscureText: controller.obscurePassword.value,
                               decoration: _buildFieldDecoration(
-                                hint: '••••••',
+                                hint: '••••••••',
                                 suffixIcon: IconButton(
                                   icon: Icon(
                                     controller.obscurePassword.value
@@ -233,8 +228,34 @@ class LoginView extends GetView<AuthController> {
                                 ),
                               ),
                             ),
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: TextButton(
+                                onPressed: () {
+                                  FocusScope.of(context).unfocus();
+                                  Get.to(() => const ForgotPasswordView());
+                                },
+                                style: TextButton.styleFrom(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 0,
+                                    vertical: 8 * scale,
+                                  ),
+                                  minimumSize: Size.zero,
+                                  tapTargetSize:
+                                      MaterialTapTargetSize.shrinkWrap,
+                                ),
+                                child: Text(
+                                  'Forgot password?',
+                                  style: TextStyle(
+                                    color: _brandColor,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14 * scale,
+                                  ),
+                                ),
+                              ),
+                            ),
                             _loginErrorMessage(scale),
-                            SizedBox(height: 28 * scale),
+                            SizedBox(height: 20 * scale),
                             SizedBox(
                               width: double.infinity,
                               height: 56 * scale,
@@ -249,8 +270,10 @@ class LoginView extends GetView<AuthController> {
                                   backgroundColor: _brandColor,
                                   foregroundColor: Colors.white,
                                   elevation: 0,
+                                  disabledBackgroundColor: _brandColor
+                                      .withValues(alpha: 0.7),
                                   shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16),
+                                    borderRadius: BorderRadius.circular(12),
                                   ),
                                 ),
                                 child: controller.isLoading.value
@@ -271,7 +294,7 @@ class LoginView extends GetView<AuthController> {
                                       ),
                               ),
                             ),
-                            SizedBox(height: 20 * scale),
+                            SizedBox(height: 24 * scale),
                             TextButton(
                               onPressed: () {
                                 FocusScope.of(context).unfocus();
@@ -290,30 +313,6 @@ class LoginView extends GetView<AuthController> {
                                     ),
                                     TextSpan(
                                       text: 'Sign Up',
-                                      style: TextStyle(
-                                        color: _brandColor,
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            TextButton(
-                              onPressed: () {
-                                FocusScope.of(context).unfocus();
-                                Get.to(() => const ForgotPasswordView());
-                              },
-                              child: RichText(
-                                text: TextSpan(
-                                  style: TextStyle(
-                                    fontSize: 14 * scale,
-                                    fontWeight: FontWeight.w500,
-                                    color: Colors.grey.shade600,
-                                  ),
-                                  children: const [
-                                    TextSpan(
-                                      text: 'Forget Password?',
                                       style: TextStyle(
                                         color: _brandColor,
                                         fontWeight: FontWeight.w700,

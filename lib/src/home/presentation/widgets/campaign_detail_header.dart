@@ -1,10 +1,15 @@
+import 'dart:math' as math;
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:kamao/app/app.dart';
+import 'package:kamao/core/core.dart';
 import 'package:kamao/core/utils/image_url_resolver.dart';
 import 'package:kamao/src/home/domain/entities/campaign/campaign_detail_entity.dart';
 import 'package:remixicon/remixicon.dart';
 
-/// Campaign header — Figma 725:2638 (412×193 soft gradient).
+/// Campaign header — Figma 725:2638 (412×193 cover + overlapping logo).
 class CampaignDetailHeader extends StatelessWidget {
   const CampaignDetailHeader({
     super.key,
@@ -24,7 +29,7 @@ class CampaignDetailHeader extends StatelessWidget {
   /// Design frame height (excludes status bar).
   static const double headerHeight = 193;
   static const double logoSize = 79;
-  static const Color _brandText = Color(0xFF433D46);
+  static const double logoInnerSize = 55.3;
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +39,7 @@ class CampaignDetailHeader extends StatelessWidget {
 
     // Logo sits at y=145 in the 193 design frame → hangs ~31px below header.
     const logoTopInHeader = 145.0;
-    final logoOverlap = (logoTopInHeader + logoSize) - headerHeight; // ~31
+    final logoOverlap = (logoTopInHeader + logoSize) - headerHeight;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -49,72 +54,46 @@ class CampaignDetailHeader extends StatelessWidget {
                   borderRadius: const BorderRadius.vertical(
                     bottom: Radius.circular(28),
                   ),
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      // Soft header gradient (Figma).
-                      const DecoratedBox(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment(-0.98, -0.17),
-                            end: Alignment(0.98, 0.17),
-                            colors: [
-                              Color(0xFFFFFFFF),
-                              Color(0xFFF5FAEB),
-                            ],
-                            stops: [0.4977, 1.0],
-                          ),
-                        ),
-                      ),
-                      if (coverUrl != null)
-                        Opacity(
-                          opacity: 0.92,
-                          child: Image.network(
-                            coverUrl,
-                            fit: BoxFit.cover,
-                            alignment: Alignment.center,
-                            errorBuilder: (_, __, ___) =>
-                                const SizedBox.shrink(),
-                          ),
-                        ),
-                      if (coverUrl != null)
-                        const DecoratedBox(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                Color(0x00000000),
-                                Color(0x66FFFFFF),
-                                Color(0xFFF5FAEB),
-                              ],
-                              stops: [0.35, 0.72, 1.0],
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
+                  child: coverUrl != null
+                      ? Image.network(
+                          coverUrl,
+                          fit: BoxFit.cover,
+                          alignment: Alignment.center,
+                          errorBuilder: (_, __, ___) => const _HeaderFallback(),
+                        )
+                      : const _HeaderFallback(),
                 ),
               ),
               Positioned(
                 top: topPadding + 8,
-                left: 16,
-                right: 16,
+                left: 20,
+                right: 20,
                 child: Row(
                   children: [
-                    _GlassCircle(
-                      icon: RemixIcons.arrow_left_s_line,
+                    _NavCircle(
                       onTap: onBack,
+                      background: const Color(0xFFF9FFFE),
+                      border: Colors.white,
+                      child: SvgPicture.asset(
+                        AppImages.campaignBack,
+                        width: 7,
+                        height: 12.25,
+                      ),
                     ),
                     const Spacer(),
-                    _GlassCircle(
-                      icon: isFavourite
-                          ? RemixIcons.heart_fill
-                          : RemixIcons.heart_line,
+                    _NavCircle(
                       onTap: isTogglingFavourite ? null : onBookmark,
-                      iconColor: isFavourite
-                          ? const Color(0xFFE86161)
-                          : AppColors.heading,
+                      background: const Color(0xE6FFFFFF),
+                      border: const Color(0x80E2E8F0),
+                      child: Icon(
+                        isFavourite
+                            ? RemixIcons.heart_fill
+                            : RemixIcons.heart_line,
+                        size: 20,
+                        color: isFavourite
+                            ? const Color(0xFFE11D48)
+                            : const Color(0xFF353037),
+                      ),
                     ),
                   ],
                 ),
@@ -125,36 +104,40 @@ class CampaignDetailHeader extends StatelessWidget {
                 child: Container(
                   width: logoSize,
                   height: logoSize,
-                  padding: const EdgeInsets.all(4.94),
+                  alignment: Alignment.center,
                   decoration: BoxDecoration(
                     color: Colors.white,
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
                         color: const Color(0x40000000),
-                        blurRadius: 15.06,
+                        blurRadius: 7.53,
                         offset: const Offset(0, -2.47),
                       ),
                     ],
                   ),
-                  child: ClipOval(
-                    child: logoUrl != null
-                        ? Image.network(logoUrl, fit: BoxFit.cover)
-                        : ColoredBox(
-                            color: AppColors.onboardingGreen,
-                            child: Center(
-                              child: Text(
-                                campaign.brandName.isNotEmpty
-                                    ? campaign.brandName[0].toUpperCase()
-                                    : '?',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 28,
-                                  fontWeight: FontWeight.w700,
+                  child: SizedBox(
+                    width: logoInnerSize,
+                    height: logoInnerSize,
+                    child: ClipOval(
+                      child: logoUrl != null
+                          ? Image.network(logoUrl, fit: BoxFit.cover)
+                          : ColoredBox(
+                              color: AppColors.onboardingGreen,
+                              child: Center(
+                                child: Text(
+                                  campaign.brandName.isNotEmpty
+                                      ? campaign.brandName[0].toUpperCase()
+                                      : '?',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.w700,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
+                    ),
                   ),
                 ),
               ),
@@ -162,42 +145,25 @@ class CampaignDetailHeader extends StatelessWidget {
           ),
         ),
         SizedBox(height: logoOverlap + 12),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                campaign.brandName.isNotEmpty
-                    ? campaign.brandName
-                    : 'Campaign',
-                style: const TextStyle(
-                  fontFamily: 'Roboto',
-                  fontSize: 26,
-                  fontWeight: FontWeight.w500,
-                  height: 32 / 26,
-                  color: _brandText,
-                ),
-              ),
-              if (_subtitle.isNotEmpty) ...[
-                const SizedBox(height: 4),
-                Text(
-                  _subtitle,
-                  style: const TextStyle(
-                    fontFamily: 'Roboto',
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    height: 1.0,
-                    color: _brandText,
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
       ],
     );
   }
+}
+
+/// Brand name, Join Campaign, tagline — Figma 725:2657.
+class CampaignHeaderTitles extends StatelessWidget {
+  const CampaignHeaderTitles({
+    super.key,
+    required this.campaign,
+    required this.isJoining,
+    required this.onJoin,
+  });
+
+  final CampaignDetailEntity campaign;
+  final bool isJoining;
+  final VoidCallback onJoin;
+
+  static const _brandText = Color(0xFF433D46);
 
   String get _subtitle {
     if (campaign.name.trim().isNotEmpty &&
@@ -211,32 +177,188 @@ class CampaignDetailHeader extends StatelessWidget {
     }
     return '';
   }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Text(
+                campaign.brandName.isNotEmpty ? campaign.brandName : 'Campaign',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontFamily: 'Roboto',
+                  fontSize: 26,
+                  fontWeight: FontWeight.w500,
+                  height: 32 / 26,
+                  color: _brandText,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            _JoinCampaignButton(isJoining: isJoining, onTap: onJoin),
+          ],
+        ),
+        if (_subtitle.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Text(
+            _subtitle,
+            style: const TextStyle(
+              fontFamily: 'Roboto',
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              height: 1.0,
+              color: _brandText,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
 }
 
-class _GlassCircle extends StatelessWidget {
-  const _GlassCircle({
-    required this.icon,
+class _HeaderFallback extends StatelessWidget {
+  const _HeaderFallback();
+
+  @override
+  Widget build(BuildContext context) {
+    return const DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment(-0.98, -0.17),
+          end: Alignment(0.98, 0.17),
+          colors: [Color(0xFFFFFFFF), Color(0xFFF5FAEB)],
+          stops: [0.4977, 1.0],
+        ),
+      ),
+    );
+  }
+}
+
+class _JoinCampaignButton extends StatelessWidget {
+  const _JoinCampaignButton({required this.isJoining, required this.onTap});
+
+  final bool isJoining;
+  final VoidCallback onTap;
+
+  /// Figma: 103×29, radius 8, padding 8×14,
+  /// linear-gradient(275.24deg, #25DA1F -42.13%, #334D32 70.04%).
+  static const double _width = 103;
+  static const double _height = 29;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: _width,
+      height: _height,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            gradient: LinearGradient(
+              colors: const [Color(0xFF25DA1F), Color(0xFF334D32)],
+              // CSS stop -42.13% → clamp to 0; 70.04% → 0.7004
+              stops: const [0.0, 0.7004],
+              // CSS 275.24deg → Flutter GradientRotation (deg − 90)
+              transform: GradientRotation((275.24 - 90) * math.pi / 180),
+            ),
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: isJoining ? null : onTap,
+              borderRadius: BorderRadius.circular(8),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(14, 8, 14, 8),
+                child: Center(
+                  child: isJoining
+                      ? const SizedBox(
+                          width: 12,
+                          height: 12,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 1.6,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const SizedBox(
+                          width: 75,
+                          height: 13,
+                          child: Text(
+                            'Join Campaign',
+                            textAlign: TextAlign.center,
+                            maxLines: 1,
+                            softWrap: false,
+                            style: TextStyle(
+                              fontFamily: 'Roboto',
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                              height: 1.0,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _NavCircle extends StatelessWidget {
+  const _NavCircle({
     required this.onTap,
-    this.iconColor = AppColors.heading,
+    required this.background,
+    required this.border,
+    required this.child,
   });
 
-  final IconData icon;
   final VoidCallback? onTap;
-  final Color iconColor;
+  final Color background;
+  final Color border;
+  final Widget child;
 
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.white,
-      shape: const CircleBorder(),
-      elevation: 1.5,
-      shadowColor: Colors.black26,
+      color: Colors.transparent,
       child: InkWell(
         customBorder: const CircleBorder(),
         onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(10),
-          child: Icon(icon, size: 22, color: iconColor),
+        child: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x0D000000),
+                blurRadius: 2,
+                offset: Offset(0, 1),
+              ),
+            ],
+          ),
+          child: ClipOval(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: background,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: border),
+                ),
+                child: Center(child: child),
+              ),
+            ),
+          ),
         ),
       ),
     );

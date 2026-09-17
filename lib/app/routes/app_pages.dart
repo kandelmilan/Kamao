@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import 'package:kamao/src/auth/auth.dart';
 import 'package:kamao/src/brand/presentation/bindings/brands_binding.dart';
 import 'package:kamao/src/brand/presentation/views/brands_page.dart';
+import 'package:kamao/src/help_support/help_support.dart';
 import 'package:kamao/src/home/home.dart';
 import 'package:kamao/src/home/presentation/bindings/campaign_detail_binding.dart';
 import 'package:kamao/src/home/presentation/bindings/marketplace_binding.dart';
@@ -12,7 +13,7 @@ import 'package:kamao/src/onboarding/onboarding.dart';
 import 'package:kamao/src/post/presentation/bindings/submit_post_binding.dart';
 import 'package:kamao/src/post/presentation/views/submit_post_view.dart';
 import 'package:kamao/src/splash/splash.dart';
-import 'package:kamao/src/wallet/presentation/bindings%20/wallet_bindings.dart';
+import 'package:kamao/src/wallet/presentation/bindings/wallet_bindings.dart';
 import 'package:kamao/src/wallet/presentation/bindings/withdraw_binding.dart';
 import 'package:kamao/src/wallet/presentation/views/wallet_transactions_view.dart';
 import 'package:kamao/src/wallet/presentation/views/wallet_view.dart';
@@ -83,6 +84,31 @@ abstract class AppPages {
       name: AppRoutes.withdraw,
       page: () => const WithdrawView(),
       binding: WithdrawBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.helpSupport,
+      page: () => const HelpSupportView(),
+      binding: HelpSupportBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.raiseTicket,
+      page: () => const RaiseTicketView(),
+      binding: RaiseTicketBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.viewTickets,
+      page: () => const ViewTicketsView(),
+      binding: ViewTicketsBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.ticketDetail,
+      page: () => const TicketDetailView(),
+      binding: TicketDetailBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.creatorLevels,
+      page: () => const CreatorLevelsView(),
+      binding: CreatorLevelsBinding(),
     ),
   ];
 }

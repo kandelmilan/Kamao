@@ -5,7 +5,10 @@ class ApiEndpoints {
   static const String register = '/auth/register';
   static const String refreshToken = '/auth/refresh';
   static const String profile = '/auth/me';
+  static const String profileAvatar = '/auth/me/avatar';
   static const String profileUser = '/creator/profile';
+  static const String creatorProgress = '/creator/progress';
+  static const String creatorProgressGuide = '/creator/progress/guide';
   static const String forgotPassword = '/auth/forgot-password';
   static const String resetPassword = '/auth/reset-password';
   static const String changePassword = '/auth/change-password';
@@ -45,6 +48,8 @@ class ApiEndpoints {
       '/creator/marketplace/$campaignId';
   static String marketplaceFavourite(String campaignId) =>
       '/creator/marketplace/$campaignId/favourite';
+  static String marketplaceUnfavourite(String campaignId) =>
+      '/creator/marketplace/$campaignId/unfavourite';
   static String marketplaceView(String campaignId) =>
       '/creator/marketplace/$campaignId/view';
   static const String marketplaceFeatured = '/creator/marketplace/featured';
@@ -52,6 +57,9 @@ class ApiEndpoints {
   static const String walletWithdrawals = '/creator/wallet/withdrawals';
   static const String walletPayoutMethod = '/creator/wallet/payout-method';
   // ── Submissions / posts ─────────────────────────────────────────────
+  /// JSON body when no receipt file is attached.
+  static const String submissions = '/creator/submissions';
+  /// Multipart form when a receipt image is attached.
   static const String submissionsForm = '/creator/submissions/form';
   static const String submissionsPending = '/creator/submissions/pending';
   static const String submissionsApproved = '/creator/submissions/approved';
@@ -60,4 +68,8 @@ class ApiEndpoints {
   static const String socialConnections = '/creator/social/connections';
   static String socialStart(String platform) =>
       '/creator/social/$platform/start';
+  // ── Help & Support ─────────────────────────────────────────────────
+  static const String supportTickets = '/support-tickets';
+  static String supportTicketDetail(String ticketId) =>
+      '/support-tickets/$ticketId';
 }

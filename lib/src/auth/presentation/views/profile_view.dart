@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:kamao/app/app.dart';
 import 'package:kamao/src/auth/presentation/controllers/profile_controller.dart';
+import 'package:kamao/src/auth/presentation/widgets/creator_level_badge.dart';
+import 'package:kamao/src/auth/presentation/widgets/user_avatar.dart';
 import 'package:remixicon/remixicon.dart';
 
 /// Profile tab — Figma Campaign App node 725:4267.
@@ -79,7 +81,6 @@ class ProfileView extends StatelessWidget {
               padding: EdgeInsets.zero,
               children: [
                 _headerWithMetrics(context, controller),
-                const SizedBox(height: 144),
                 SafeArea(
                   top: false,
                   child: Padding(
@@ -88,7 +89,9 @@ class ProfileView extends StatelessWidget {
                       children: [
                         _accountsAndWalletCard(controller),
                         const SizedBox(height: 16),
-                        _settingsCard(controller),
+                        _accountSettingsCard(controller),
+                        const SizedBox(height: 16),
+                        _supportAndLegalCard(controller),
                         const SizedBox(height: 16),
                         _logoutButton(context, controller),
                       ],
@@ -106,6 +109,10 @@ class ProfileView extends StatelessWidget {
 
   // ---------- Header (soft green) + floating metrics ----------
 
+  /// Metrics hang this far below the green header; keep in sync with
+  /// the trailing [SizedBox] so Social Accounts sits ~16px under the card.
+  static const _metricsHang = 80.0;
+
   Widget _headerWithMetrics(
     BuildContext context,
     ProfileController controller,
@@ -113,67 +120,83 @@ class ProfileView extends StatelessWidget {
     final user = controller.profile.value!.user;
     final topInset = MediaQuery.of(context).padding.top;
 
-    return Stack(
-      clipBehavior: Clip.none,
+    return Column(
       children: [
-        Container(
-          width: double.infinity,
-          padding: EdgeInsets.only(top: topInset + 28, bottom: 56),
-          decoration: const BoxDecoration(
-            borderRadius: BorderRadius.only(
-              bottomLeft: Radius.circular(28),
-              bottomRight: Radius.circular(28),
-            ),
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [_headerCurve, _headerBg],
-            ),
-          ),
-          child: Column(
-            children: [
-              _avatar(user, controller),
-              const SizedBox(height: 12),
-              Text(
-                controller.displayName,
-                style: const TextStyle(
-                  fontFamily: 'Roboto',
-                  fontSize: 24,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: -0.6,
-                  height: 32 / 24,
-                  color: AppColors.cardTitle,
+        Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Container(
+              width: double.infinity,
+              // Bottom padding leaves ~16–20px between badge and metrics top.
+              padding: EdgeInsets.only(top: topInset + 24, bottom: 88),
+              decoration: const BoxDecoration(
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(28),
+                  bottomRight: Radius.circular(28),
+                ),
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [_headerCurve, _headerBg],
                 ),
               ),
-              const SizedBox(height: 4),
-              _usernameRow(controller),
-            ],
-          ),
+              child: Column(
+                children: [
+                  _avatar(user, controller),
+                  const SizedBox(height: 10),
+                  Text(
+                    controller.displayName,
+                    style: const TextStyle(
+                      fontFamily: 'Roboto',
+                      fontSize: 24,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: -0.6,
+                      height: 32 / 24,
+                      color: AppColors.cardTitle,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  _usernameRow(controller),
+                  if (controller.levelBadgeLabel.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    CreatorLevelBadge(
+                      label: controller.levelBadgeLabel,
+                      code: controller.levelCode,
+                      compact: false,
+                      onTap: controller.openCreatorLevels,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            Positioned(
+              left: 20,
+              right: 20,
+              bottom: -_metricsHang,
+              child: _metricsCard(controller),
+            ),
+          ],
         ),
-        Positioned(
-          left: 20,
-          right: 20,
-          bottom: -120,
-          child: _metricsCard(controller),
-        ),
+        // Clear the hanging metrics + 16px gap before the next card.
+        const SizedBox(height: _metricsHang + 16),
       ],
     );
   }
 
   Widget _avatar(dynamic user, ProfileController controller) {
+    final initial = user.fullName.isNotEmpty
+        ? user.fullName[0].toUpperCase()
+        : (user.userName.isNotEmpty ? user.userName[0].toUpperCase() : '?');
+
     return SizedBox(
       width: 96,
       height: 96,
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          Container(
-            width: 96,
-            height: 96,
+          DecoratedBox(
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: AppColors.white, width: 3),
-              color: const Color(0xFFE8F0E5),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.06),
@@ -181,29 +204,37 @@ class ProfileView extends StatelessWidget {
                   offset: const Offset(0, 2),
                 ),
               ],
-              image: controller.hasAvatar
-                  ? DecorationImage(
-                      image: NetworkImage(controller.avatarUrl),
-                      fit: BoxFit.cover,
-                    )
-                  : null,
             ),
-            alignment: Alignment.center,
-            child: !controller.hasAvatar
-                ? Text(
-                    user.fullName.isNotEmpty
-                        ? user.fullName[0].toUpperCase()
-                        : (user.userName.isNotEmpty
-                              ? user.userName[0].toUpperCase()
-                              : '?'),
-                    style: const TextStyle(
-                      fontFamily: 'Roboto',
-                      fontSize: 32,
-                      fontWeight: FontWeight.w600,
-                      color: _rowIconColor,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                UserAvatar(
+                  size: 96,
+                  initial: initial,
+                  borderColor: AppColors.white,
+                  borderWidth: 3,
+                  backgroundColor: const Color(0xFFE8F0E5),
+                ),
+                if (controller.isAvatarBusy.value)
+                  Container(
+                    width: 96,
+                    height: 96,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.black.withValues(alpha: 0.25),
                     ),
-                  )
-                : null,
+                    alignment: Alignment.center,
+                    child: const SizedBox(
+                      width: 28,
+                      height: 28,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ),
           Positioned(
             right: -2,
@@ -274,59 +305,83 @@ class ProfileView extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(1),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(26),
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(color: const Color(0xFFE6F0E4)),
         color: AppColors.white,
         boxShadow: const [
           BoxShadow(
-            color: Color(0x14000000),
-            blurRadius: 12,
-            offset: Offset(0, 6),
+            color: _cardShadow1,
+            blurRadius: 8,
+            offset: Offset(0, 4),
+          ),
+          BoxShadow(
+            color: _cardShadow2,
+            blurRadius: 16,
+            offset: Offset(0, 8),
           ),
         ],
       ),
       child: Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 18),
         decoration: BoxDecoration(
           color: AppColors.white,
-          borderRadius: BorderRadius.circular(25),
+          borderRadius: BorderRadius.circular(23),
         ),
         child: Column(
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: _metricItem(
-                    controller.formattedTotalRewarded,
-                    'Total Rewarded',
+            IntrinsicHeight(
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _metricItem(
+                      controller.formattedTotalRewarded,
+                      'Total Rewarded',
+                    ),
                   ),
-                ),
-                Container(width: 1, height: 36, color: _metricDivider),
-                Expanded(
-                  child: _metricItem(
-                    controller.formattedAveragePostReward,
-                    'Average Rewarded',
+                  const VerticalDivider(
+                    width: 24,
+                    thickness: 1,
+                    indent: 4,
+                    endIndent: 4,
+                    color: _metricDivider,
                   ),
-                ),
-              ],
+                  Expanded(
+                    child: _metricItem(
+                      controller.formattedAveragePostReward,
+                      'Average Rewarded',
+                    ),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 28),
-            Row(
-              children: [
-                Expanded(
-                  child: _metricItem(
-                    '${controller.totalPostCount}',
-                    'Total Posts',
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 14),
+              child: Divider(height: 1, thickness: 1, color: _metricDivider),
+            ),
+            IntrinsicHeight(
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _metricItem(
+                      '${controller.totalPostCount}',
+                      'Total Posts',
+                    ),
                   ),
-                ),
-                Container(width: 1, height: 36, color: _metricDivider),
-                Expanded(
-                  child: _metricItem(
-                    '${controller.rewardedPostCount}',
-                    'Rewarded Posts',
+                  const VerticalDivider(
+                    width: 24,
+                    thickness: 1,
+                    indent: 4,
+                    endIndent: 4,
+                    color: _metricDivider,
                   ),
-                ),
-              ],
+                  Expanded(
+                    child: _metricItem(
+                      '${controller.rewardedPostCount}',
+                      'Rewarded Posts',
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -392,9 +447,9 @@ class ProfileView extends StatelessWidget {
     );
   }
 
-  // ---------- Group 2 — Edit Profile / Change Password / Settings ----------
+  // ---------- Group 2 — Edit Profile / Change Password ----------
 
-  Widget _settingsCard(ProfileController controller) {
+  Widget _accountSettingsCard(ProfileController controller) {
     return _card(
       child: Column(
         children: [
@@ -408,6 +463,34 @@ class ProfileView extends StatelessWidget {
             icon: RemixIcons.lock_password_line,
             title: 'Change Password',
             onTap: controller.openChangePassword,
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ---------- Group 3 — Help / Privacy / Terms / Settings ----------
+
+  Widget _supportAndLegalCard(ProfileController controller) {
+    return _card(
+      child: Column(
+        children: [
+          _settingsRow(
+            icon: RemixIcons.customer_service_2_line,
+            title: 'Help & Support',
+            onTap: controller.openHelpSupport,
+          ),
+          Container(height: 1, color: _cardBorder),
+          _settingsRow(
+            icon: RemixIcons.shield_line,
+            title: 'Privacy Policy',
+            onTap: controller.openPrivacyPolicy,
+          ),
+          Container(height: 1, color: _cardBorder),
+          _settingsRow(
+            icon: RemixIcons.file_list_3_line,
+            title: 'Terms & Conditions',
+            onTap: controller.openTermsAndConditions,
           ),
           Container(height: 1, color: _cardBorder),
           _settingsRow(

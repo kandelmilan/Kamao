@@ -16,4 +16,9 @@ abstract class AppRoutes {
   static const wallet = '/wallet';
   static const walletdetails = '/wallet-details';
   static const withdraw = '/wallet/withdraw';
+  static const helpSupport = '/help-support';
+  static const raiseTicket = '/help-support/raise';
+  static const viewTickets = '/help-support/tickets';
+  static const ticketDetail = '/help-support/tickets/detail';
+  static const creatorLevels = '/creator-levels';
 }

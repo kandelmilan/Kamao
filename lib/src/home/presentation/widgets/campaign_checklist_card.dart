@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:kamao/core/core.dart';
 import 'package:kamao/src/home/domain/entities/campaign/campaign_detail_entity.dart';
 
 /// “What you need to do” — Figma todo-card (#E6F0E4).
@@ -20,7 +22,7 @@ class CampaignChecklistCard extends StatelessWidget {
         boxShadow: const [
           BoxShadow(
             color: Color(0x0A1A153B),
-            blurRadius: 16,
+            blurRadius: 8,
             offset: Offset(0, 4),
           ),
         ],
@@ -63,15 +65,15 @@ class _ChecklistRow extends StatelessWidget {
         Container(
           width: 24,
           height: 24,
-          decoration: const BoxDecoration(
-            color: Color(0xFFDAE9D7),
-            shape: BoxShape.circle,
+          decoration: BoxDecoration(
+            color: const Color(0xFFDAE9D7),
+            borderRadius: BorderRadius.circular(12),
           ),
           alignment: Alignment.center,
-          child: const Icon(
-            Icons.check_rounded,
-            size: 14,
-            color: Color(0xFF426340),
+          child: SvgPicture.asset(
+            AppImages.campaignCheck,
+            width: 12,
+            height: 12,
           ),
         ),
         const SizedBox(width: 18),

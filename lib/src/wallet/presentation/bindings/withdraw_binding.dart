@@ -39,8 +39,12 @@ class WithdrawBinding extends Bindings {
       fenix: true,
     );
 
-    Get.lazyPut(
-      () => WithdrawController(
+    // Recreate on every visit so balance + payout fields refresh.
+    if (Get.isRegistered<WithdrawController>()) {
+      Get.delete<WithdrawController>(force: true);
+    }
+    Get.put(
+      WithdrawController(
         Get.find<GetWalletUseCase>(),
         Get.find<GetPayoutMethodUseCase>(),
         Get.find<CreateWithdrawalUseCase>(),

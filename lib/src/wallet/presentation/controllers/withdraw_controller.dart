@@ -124,6 +124,8 @@ class WithdrawController extends GetxController {
   Future<void> refreshAll() async {
     isLoading.value = true;
     error.value = null;
+    fieldError.value = null;
+    _clearFormFields();
 
     await Future.wait([
       _loadWallet(force: true),
@@ -133,6 +135,13 @@ class WithdrawController extends GetxController {
 
     _applySavedPayoutMethod();
     isLoading.value = false;
+  }
+
+  void _clearFormFields() {
+    amountController.clear();
+    accountNameController.clear();
+    accountNumberController.clear();
+    bankNameController.clear();
   }
 
   Future<void> _loadWallet({bool force = false}) async {

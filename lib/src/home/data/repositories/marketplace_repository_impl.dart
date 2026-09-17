@@ -56,16 +56,26 @@ class MarketplaceRepositoryImpl implements MarketplaceRepository {
   }
 
   @override
-  Future<Either<Failure, bool>> toggleFavouriteCampaign(
-    String campaignId,
-  ) async {
+  Future<Either<Failure, bool>> favouriteCampaign(String campaignId) async {
     try {
-      final isFavourite = await _remoteDataSource.toggleFavouriteCampaign(
+      final isFavourite = await _remoteDataSource.favouriteCampaign(campaignId);
+      return Right(isFavourite);
+    } on DioException catch (e) {
+      return Left(ServerFailure(e.message ?? 'Failed to favourite campaign'));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, bool>> unfavouriteCampaign(String campaignId) async {
+    try {
+      final isFavourite = await _remoteDataSource.unfavouriteCampaign(
         campaignId,
       );
       return Right(isFavourite);
     } on DioException catch (e) {
-      return Left(ServerFailure(e.message ?? 'Failed to update favourite'));
+      return Left(ServerFailure(e.message ?? 'Failed to unfavourite campaign'));
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }

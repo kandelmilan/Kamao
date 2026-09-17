@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:kamao/app/app.dart';
 import 'package:kamao/core/core.dart';
+import 'package:kamao/core/utils/image_url_resolver.dart';
 import 'package:kamao/src/auth/auth.dart';
 
 class AuthController extends GetxController {
@@ -28,7 +29,7 @@ class AuthController extends GetxController {
   // so switching between the two screens never leaves stale text behind.
   final fullNameController = TextEditingController();
   final registerEmailController = TextEditingController();
-  final phoneController = TextEditingController();
+  // final phoneController = TextEditingController();s
   final registerPasswordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
 
@@ -39,6 +40,28 @@ class AuthController extends GetxController {
   final RxString selectedTenantCode = ''.obs;
   final loginResponse = Rxn<LoginResponseEntity>();
   final currentUser = Rxn<UserEntity>();
+
+  /// Bumped when avatar changes so [Image.network] reloads the same path.
+  final RxInt avatarCacheKey = 0.obs;
+
+  /// Raw `avatarUrl` from `/auth/me` (or avatar upload/delete).
+  String? get avatarPath {
+    final path = currentUser.value?.avatarUrl;
+    if (path == null || path.isEmpty) return null;
+    return path;
+  }
+
+  /// Absolute avatar URL via [resolveImageUrl].
+  String? get avatarUrl {
+    final resolved = resolveImageUrl(avatarPath);
+    if (resolved == null) return null;
+    final key = avatarCacheKey.value;
+    if (key == 0) return resolved;
+    final sep = resolved.contains('?') ? '&' : '?';
+    return '$resolved${sep}v=$key';
+  }
+
+  bool get hasAvatar => avatarPath != null;
 
   // Backend login error, shown inline under the password field instead of
   // a snackbar. Null when there's nothing to show.
@@ -253,7 +276,7 @@ class AuthController extends GetxController {
       return;
     }
 
-    // if (phoneController.text.trim().isEmpty) {
+    // if (zController.text.trim().isEmpty) {
     //   Get.snackbar('Phone Number', 'Please enter your phone number.');
     //   return;
     // }
@@ -357,21 +380,26 @@ class AuthController extends GetxController {
         Get.snackbar('Error', failure.message);
       },
       (user) {
-        currentUser.value = user;
+        applyMeUser(user);
       },
     );
   }
 
-  Future<void> forgotPassword() async {
-    if (selectedTenantCode.value.isEmpty) {
-      Get.snackbar('Organization', 'Please select an organization.');
-      return;
+  /// Apply `/auth/me` (or avatar upload/delete) user payload as the source of
+  /// truth for identity + avatar.
+  void applyMeUser(UserEntity user, {bool bumpAvatarCache = false}) {
+    final previousAvatar = currentUser.value?.avatarUrl;
+    currentUser.value = user;
+    if (bumpAvatarCache || previousAvatar != user.avatarUrl) {
+      avatarCacheKey.value = DateTime.now().millisecondsSinceEpoch;
     }
+  }
 
+  Future<void> forgotPassword() async {
     isLoading.value = true;
 
     final request = ForgotPasswordRequestEntity(
-      tenantCode: selectedTenantCode.value,
+      // tenantCode defaults to 'Demo'
       email: emailController.text.trim(),
     );
 
@@ -443,7 +471,7 @@ class AuthController extends GetxController {
   void clearRegisterFields() {
     fullNameController.clear();
     registerEmailController.clear();
-    phoneController.clear();
+    // phoneController.clear();
     registerPasswordController.clear();
     confirmPasswordController.clear();
     // selectedAccountType.value = '';
@@ -469,7 +497,7 @@ class AuthController extends GetxController {
     // tenantCodeController.dispose();
     fullNameController.dispose();
     registerEmailController.dispose();
-    phoneController.dispose();
+    // phoneController.dispose();
     registerPasswordController.dispose();
     confirmPasswordController.dispose();
 

@@ -1,4 +1,6 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:kamao/src/brand/brand.dart';
 import 'package:kamao/src/home/domain/entities/campaign/campaign_detail_entity.dart';
 import 'package:kamao/src/home/domain/usecase/marketplace/get_campaign_detail_usecase.dart';
 import 'package:kamao/src/home/domain/usecase/marketplace/join_campaign_usecase.dart';
@@ -6,19 +8,25 @@ import 'package:kamao/src/home/domain/usecase/marketplace/toggle_favourite_campa
 import 'package:kamao/src/home/presentation/controllers/home_controller.dart';
 
 class CampaignDetailController extends GetxController {
-  CampaignDetailController(
-    this._getCampaignDetailUseCase,
-    this._joinCampaignUseCase,
-    this._toggleFavouriteCampaignUseCase,
-    this.campaignId,
-  );
+  CampaignDetailController({
+    required GetCampaignDetailUseCase getCampaignDetailUseCase,
+    required JoinCampaignUseCase joinCampaignUseCase,
+    required ToggleFavouriteCampaignUseCase toggleFavouriteCampaignUseCase,
+    required GetBrandDetailUseCase getBrandDetailUseCase,
+    required this.campaignId,
+  }) : _getCampaignDetailUseCase = getCampaignDetailUseCase,
+       _joinCampaignUseCase = joinCampaignUseCase,
+       _toggleFavouriteCampaignUseCase = toggleFavouriteCampaignUseCase,
+       _getBrandDetailUseCase = getBrandDetailUseCase;
 
   final GetCampaignDetailUseCase _getCampaignDetailUseCase;
   final JoinCampaignUseCase _joinCampaignUseCase;
   final ToggleFavouriteCampaignUseCase _toggleFavouriteCampaignUseCase;
+  final GetBrandDetailUseCase _getBrandDetailUseCase;
   final String campaignId;
 
   final Rxn<CampaignDetailEntity> campaign = Rxn<CampaignDetailEntity>();
+  final Rxn<BrandProfileEntity> brand = Rxn<BrandProfileEntity>();
   final RxBool isLoading = false.obs;
   final RxBool isJoining = false.obs;
   final RxBool isTogglingFavourite = false.obs;
@@ -38,12 +46,18 @@ class CampaignDetailController extends GetxController {
       CampaignIdParams(campaignId),
     );
 
-    result.fold(
-      (failure) => error.value = failure.message,
-      (detail) => campaign.value = detail,
-    );
+    result.fold((failure) => error.value = failure.message, (detail) {
+      campaign.value = detail;
+      _loadBrand(detail.brandId);
+    });
 
     isLoading.value = false;
+  }
+
+  Future<void> _loadBrand(String brandId) async {
+    if (brandId.isEmpty) return;
+    final result = await _getBrandDetailUseCase(IdParams(brandId));
+    result.fold((_) {}, (detail) => brand.value = detail.brand);
   }
 
   Future<bool> join({String? platformId}) async {
@@ -57,15 +71,23 @@ class CampaignDetailController extends GetxController {
 
     final result = await _joinCampaignUseCase(JoinCampaignParams(campaignId));
 
-    result.fold((failure) => Get.snackbar('Couldn\'t join', failure.message), (
-      joined,
-    ) {
-      if (joined) {
-        campaign.value = current.copyWith(alreadyJoined: true);
-        _syncHomeJoinedState();
-        success = true;
-      }
-    });
+    result.fold(
+      (failure) => Get.snackbar(
+        "Couldn't join",
+        failure.message,
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.white,
+        colorText: const Color(0xFF353037),
+        margin: const EdgeInsets.all(16),
+      ),
+      (joined) {
+        if (joined) {
+          campaign.value = current.copyWith(alreadyJoined: true);
+          _syncHomeJoinedState();
+          success = true;
+        }
+      },
+    );
 
     isJoining.value = false;
     return success;
@@ -78,11 +100,21 @@ class CampaignDetailController extends GetxController {
     isTogglingFavourite.value = true;
 
     final result = await _toggleFavouriteCampaignUseCase(
-      CampaignIdParams(campaignId),
+      ToggleFavouriteCampaignParams(
+        campaignId: campaignId,
+        currentlyFavourite: current.isFavourite,
+      ),
     );
 
     result.fold(
-      (failure) => Get.snackbar("Couldn't update favourite", failure.message),
+      (failure) => Get.snackbar(
+        "Couldn't update favourite",
+        failure.message,
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.white,
+        colorText: const Color(0xFF353037),
+        margin: const EdgeInsets.all(16),
+      ),
       (isFavourite) {
         campaign.value = current.copyWith(isFavourite: isFavourite);
         _syncHomeFavouriteState(isFavourite);
