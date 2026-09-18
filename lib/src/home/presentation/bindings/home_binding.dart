@@ -49,6 +49,9 @@ class HomeBinding extends Bindings {
       marketplaceRepository,
     );
     final viewCampaignUseCase = ViewCampaignUseCase(marketplaceRepository);
+    final getCampaignDetailUseCase = GetCampaignDetailUseCase(
+      marketplaceRepository,
+    );
 
     final appConfigRemoteDataSource = AppConfigRemoteDataSourceImpl(apiService);
     final appConfigRepository = AppConfigRepositoryImpl(
@@ -78,6 +81,7 @@ class HomeBinding extends Bindings {
         getPopularBrandsUseCase,
         getFeaturedBrandsUseCase,
         getRecentBrandsUseCase,
+        getCampaignDetailUseCase,
       ),
     );
   }

@@ -75,6 +75,11 @@ class AuthDependencyBinding extends Bindings {
       fenix: true,
     );
 
+    Get.lazyPut<ChangePasswordUseCase>(
+      () => ChangePasswordUseCase(Get.find()),
+      fenix: true,
+    );
+
     Get.put<AuthController>(
       AuthController(
         Get.find(),

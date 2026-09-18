@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:kamao/core/utils/campaign_platform_enricher.dart';
 import 'package:kamao/src/brand/brand.dart';
 import 'package:kamao/src/home/domain/entities/campaign/campaign_detail_entity.dart';
 import 'package:kamao/src/home/domain/usecase/marketplace/get_campaign_detail_usecase.dart';
@@ -48,6 +49,7 @@ class CampaignDetailController extends GetxController {
 
     result.fold((failure) => error.value = failure.message, (detail) {
       campaign.value = detail;
+      CampaignPlatformCache.putFromDetail(detail);
       _loadBrand(detail.brandId);
     });
 

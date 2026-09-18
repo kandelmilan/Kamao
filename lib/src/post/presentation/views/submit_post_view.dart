@@ -318,18 +318,7 @@ class _CampaignBriefCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 16),
-              Text(
-                _description,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontFamily: 'Roboto',
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  height: 1,
-                  color: _SubmitPostTokens.bodyText,
-                ),
-              ),
+              _ExpandableDescription(text: _description),
               const SizedBox(height: 16),
               Wrap(
                 spacing: 8,
@@ -404,6 +393,77 @@ class _CampaignBriefCard extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _ExpandableDescription extends StatefulWidget {
+  const _ExpandableDescription({required this.text});
+
+  final String text;
+
+  @override
+  State<_ExpandableDescription> createState() => _ExpandableDescriptionState();
+}
+
+class _ExpandableDescriptionState extends State<_ExpandableDescription> {
+  static const _collapsedMaxLines = 2;
+
+  static const _style = TextStyle(
+    fontFamily: 'Roboto',
+    fontSize: 14,
+    fontWeight: FontWeight.w500,
+    height: 1.25,
+    color: _SubmitPostTokens.bodyText,
+  );
+
+  bool _expanded = false;
+
+  bool _exceedsMaxLines(BuildContext context, double maxWidth) {
+    final painter = TextPainter(
+      text: TextSpan(text: widget.text, style: _style),
+      maxLines: _collapsedMaxLines,
+      textDirection: Directionality.of(context),
+    )..layout(maxWidth: maxWidth);
+    return painter.didExceedMaxLines;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final needsToggle = _exceedsMaxLines(context, constraints.maxWidth);
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              widget.text,
+              maxLines: _expanded ? null : _collapsedMaxLines,
+              overflow:
+                  _expanded ? TextOverflow.visible : TextOverflow.ellipsis,
+              style: _style,
+            ),
+            if (needsToggle) ...[
+              const SizedBox(height: 6),
+              GestureDetector(
+                onTap: () => setState(() => _expanded = !_expanded),
+                behavior: HitTestBehavior.opaque,
+                child: Text(
+                  _expanded ? 'See less' : 'See all',
+                  style: const TextStyle(
+                    fontFamily: 'Roboto',
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    height: 1,
+                    color: _SubmitPostTokens.linkBlue,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        );
+      },
     );
   }
 }

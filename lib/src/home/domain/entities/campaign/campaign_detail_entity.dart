@@ -1,3 +1,5 @@
+import 'package:kamao/core/utils/campaign_platforms.dart';
+
 /// A single "what you need to do" row, built dynamically from the
 /// campaign's directives (and brief include/exclude summaries) rather
 /// than hardcoded fields — so new directive types from the backend show
@@ -109,6 +111,21 @@ class CampaignDetailEntity {
   /// e.g. ['Instagram']
   final List<String> platforms;
 
+  /// Content-type codes from ContentType directives (`IG_REEL`, `TT_VIDEO`, …).
+  List<String> get contentTypes => contentTypesFromDirectives(
+        directives.map(
+          (d) => (directiveType: d.directiveType, valueText: d.valueText),
+        ),
+      );
+
+  /// Logos for cards / Post-on — prefers content-type codes.
+  List<String> get displayPlatforms => resolveCampaignPlatforms(
+        contentTypes: contentTypes,
+        platforms: platforms,
+        name: name,
+        objective: objective,
+      );
+
   /// Short line shown under the brand name in the header.
   String get brandTagline => objective;
 
@@ -132,10 +149,14 @@ class CampaignDetailEntity {
       grouped.putIfAbsent(d.directiveType, () => []).add(d.valueText);
     }
     grouped.forEach((type, values) {
+      final isContentType =
+          type.trim().toLowerCase().replaceAll(' ', '') == 'contenttype';
       items.add(
         CampaignChecklistItem(
           label: _humanizeLabel(type),
-          value: values.join(' / '),
+          value: isContentType
+              ? formatContentTypeLabels(values)
+              : values.join(' / '),
         ),
       );
     });

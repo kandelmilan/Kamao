@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:kamao/core/core.dart';
 import 'package:kamao/src/home/domain/entities/campaign/campaign_detail_entity.dart';
+import 'package:remixicon/remixicon.dart';
 
 /// “What you need to do” — Figma todo-card (#E6F0E4).
 class CampaignChecklistCard extends StatelessWidget {
@@ -70,10 +69,10 @@ class _ChecklistRow extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
           ),
           alignment: Alignment.center,
-          child: SvgPicture.asset(
-            AppImages.campaignCheck,
-            width: 12,
-            height: 12,
+          child: const Icon(
+            RemixIcons.check_line,
+            size: 14,
+            color: Color(0xFF426340),
           ),
         ),
         const SizedBox(width: 18),

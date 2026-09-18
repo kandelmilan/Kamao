@@ -19,4 +19,8 @@ abstract class AuthRepository {
   Future<Either<Failure, ForgotPasswordResponseEntity>> forgotPassword(
     ForgotPasswordRequestEntity request,
   );
+
+  Future<Either<Failure, bool>> changePassword(
+    ChangePasswordRequestEntity request,
+  );
 }

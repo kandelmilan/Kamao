@@ -21,4 +21,6 @@ abstract class AppRoutes {
   static const viewTickets = '/help-support/tickets';
   static const ticketDetail = '/help-support/tickets/detail';
   static const creatorLevels = '/creator-levels';
+  static const changePassword = '/change-password';
+  static const editProfile = '/edit-profile';
 }

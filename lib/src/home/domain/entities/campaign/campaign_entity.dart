@@ -1,3 +1,5 @@
+import 'package:kamao/core/utils/campaign_platforms.dart';
+
 class CampaignEntity {
   const CampaignEntity({
     required this.id,
@@ -24,6 +26,8 @@ class CampaignEntity {
     this.brandLogoUrl,
     this.brandCoverUrl,
     this.brandCategory,
+    this.platforms = const [],
+    this.contentTypes = const [],
   });
 
   final String id;
@@ -51,7 +55,29 @@ class CampaignEntity {
   final bool isFavourite;
   final String earnRangeLabel;
 
-  CampaignEntity copyWith({bool? alreadyJoined, bool? isFavourite}) {
+  /// Raw platform labels from the API (e.g. `Instagram`, `TikTok`).
+  final List<String> platforms;
+
+  /// Content-type codes from the API (e.g. `IG_REEL`, `TT_VIDEO`, `FB_POST`).
+  final List<String> contentTypes;
+
+  /// Logos to show on cards — prefers content types (`IG`/`TT`/`FB`).
+  List<String> get displayPlatforms => resolveCampaignPlatforms(
+        contentTypes: contentTypes,
+        platforms: platforms,
+        name: name,
+        objective: objective,
+      );
+
+  /// Human labels for cards, e.g. `IG_REEL` → `Instagram Reel`.
+  String get contentTypeLabel => formatContentTypeLabels(contentTypes);
+
+  CampaignEntity copyWith({
+    bool? alreadyJoined,
+    bool? isFavourite,
+    List<String>? platforms,
+    List<String>? contentTypes,
+  }) {
     return CampaignEntity(
       id: id,
       code: code,
@@ -77,6 +103,8 @@ class CampaignEntity {
       creatorMaxReward: creatorMaxReward,
       isFavourite: isFavourite ?? this.isFavourite,
       earnRangeLabel: earnRangeLabel,
+      platforms: platforms ?? this.platforms,
+      contentTypes: contentTypes ?? this.contentTypes,
     );
   }
 }

@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:kamao/app/app.dart';
 import 'package:kamao/core/core.dart';
-import 'package:kamao/core/utils/image_url_resolver.dart';
 import 'package:kamao/src/home/domain/entities/campaign/campaign_entity.dart';
 import 'package:remixicon/remixicon.dart';
 import '../../domain/entities/brand_profile_entity.dart';
@@ -140,6 +138,7 @@ class BrandDetailView extends StatelessWidget {
                       : _CampaignsGrid(
                           campaigns: detail.campaigns,
                           brand: detail.brand,
+                          isPopular: controller.isPopularCampaign,
                           onTap: controller.openCampaign,
                         ),
                 ),
@@ -315,11 +314,13 @@ class _CampaignsGrid extends StatelessWidget {
   const _CampaignsGrid({
     required this.campaigns,
     required this.brand,
+    required this.isPopular,
     required this.onTap,
   });
 
   final List<CampaignEntity> campaigns;
   final BrandProfileEntity brand;
+  final bool Function(String campaignId) isPopular;
   final void Function(CampaignEntity) onTap;
 
   @override
@@ -342,7 +343,7 @@ class _CampaignsGrid extends StatelessWidget {
                 child: _ActiveCampaignCard(
                   campaign: left,
                   brand: brand,
-                  badge: i.isEven ? 'Popular' : 'Trending',
+                  showPopularBadge: isPopular(left.id),
                   onTap: () => onTap(left),
                 ),
               ),
@@ -353,7 +354,7 @@ class _CampaignsGrid extends StatelessWidget {
                     : _ActiveCampaignCard(
                         campaign: right,
                         brand: brand,
-                        badge: (i + 1).isEven ? 'Popular' : 'Trending',
+                        showPopularBadge: isPopular(right.id),
                         onTap: () => onTap(right),
                       ),
               ),
@@ -371,14 +372,14 @@ class _ActiveCampaignCard extends StatelessWidget {
   const _ActiveCampaignCard({
     required this.campaign,
     required this.brand,
-    required this.badge,
     required this.onTap,
+    this.showPopularBadge = false,
   });
 
   final CampaignEntity campaign;
   final BrandProfileEntity brand;
-  final String badge;
   final VoidCallback onTap;
+  final bool showPopularBadge;
 
   static final _amountFormat = NumberFormat('#,##0');
 
@@ -414,6 +415,7 @@ class _ActiveCampaignCard extends StatelessWidget {
     final tagline = campaign.name.trim().isNotEmpty
         ? campaign.name.trim()
         : campaign.objective.trim();
+    final contentTypeLabel = campaign.contentTypeLabel;
 
     return Material(
       color: Colors.transparent,
@@ -466,38 +468,39 @@ class _ActiveCampaignCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                    Positioned(
-                      top: 6,
-                      right: 6,
-                      child: Container(
-                        padding: const EdgeInsets.fromLTRB(6, 2, 6, 2.25),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(
-                            color: const Color(0xFFF7FAF6),
-                            width: 0.5,
-                          ),
-                          boxShadow: const [
-                            BoxShadow(
-                              color: Color(0x40000000),
-                              blurRadius: 2,
-                              offset: Offset(0, 4),
+                    if (showPopularBadge)
+                      Positioned(
+                        top: 6,
+                        right: 6,
+                        child: Container(
+                          padding: const EdgeInsets.fromLTRB(6, 2, 6, 2.25),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                              color: const Color(0xFFF7FAF6),
+                              width: 0.5,
                             ),
-                          ],
-                        ),
-                        child: Text(
-                          badge,
-                          style: const TextStyle(
-                            fontFamily: 'Roboto',
-                            fontSize: 9,
-                            fontWeight: FontWeight.w500,
-                            height: 11.25 / 9,
-                            color: Color(0xFF426340),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Color(0x40000000),
+                                blurRadius: 2,
+                                offset: Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: const Text(
+                            'Popular',
+                            style: TextStyle(
+                              fontFamily: 'Roboto',
+                              fontSize: 9,
+                              fontWeight: FontWeight.w500,
+                              height: 11.25 / 9,
+                              color: Color(0xFF426340),
+                            ),
                           ),
                         ),
                       ),
-                    ),
                     Positioned(
                       left: 6,
                       bottom: 0,
@@ -574,7 +577,20 @@ class _ActiveCampaignCard extends StatelessWidget {
                           color: Color(0xFF6E6971),
                         ),
                       ),
-                    if (tagline.isNotEmpty)
+                    if (contentTypeLabel.isNotEmpty)
+                      Text(
+                        contentTypeLabel,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontFamily: 'Roboto',
+                          fontSize: 10,
+                          fontWeight: FontWeight.w500,
+                          height: 15 / 10,
+                          color: Color(0xFF6E6971),
+                        ),
+                      )
+                    else if (tagline.isNotEmpty)
                       Text(
                         tagline,
                         maxLines: 1,
@@ -594,7 +610,7 @@ class _ActiveCampaignCard extends StatelessWidget {
                       children: [
                         Expanded(
                           child: _SocialBubbles(
-                            platforms: brand.connectedPlatforms,
+                            platforms: campaign.displayPlatforms,
                           ),
                         ),
                         Container(
@@ -616,10 +632,10 @@ class _ActiveCampaignCard extends StatelessWidget {
                             ],
                           ),
                           alignment: Alignment.center,
-                          child: SvgPicture.asset(
-                            AppImages.iconChevronRight,
-                            width: 12.5,
-                            height: 12.5,
+                          child: const Icon(
+                            RemixIcons.arrow_right_s_line,
+                            size: 14,
+                            color: Color(0xFF4A434D),
                           ),
                         ),
                       ],
@@ -760,29 +776,8 @@ class _SocialBubbles extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final shown = platforms.take(3).toList();
-    if (shown.isEmpty) {
-      return Row(
-        children: const [
-          _Bubble(
-            color: Color(0x14FF007F),
-            icon: RemixIcons.instagram_fill,
-            iconColor: Color(0xFFE1306C),
-          ),
-          SizedBox(width: 5),
-          _Bubble(
-            color: Color(0x14000000),
-            icon: RemixIcons.tiktok_fill,
-            iconColor: Colors.black,
-          ),
-          SizedBox(width: 5),
-          _Bubble(
-            color: Color(0xFFE9EFFD),
-            icon: RemixIcons.facebook_fill,
-            iconColor: Color(0xFF1877F2),
-          ),
-        ],
-      );
-    }
+    if (shown.isEmpty) return const SizedBox.shrink();
+
     return Row(
       children: [
         for (var i = 0; i < shown.length; i++) ...[

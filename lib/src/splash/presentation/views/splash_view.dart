@@ -31,7 +31,11 @@ class _SplashBodyState extends State<_SplashBody> {
   @override
   void initState() {
     super.initState();
-    FlutterNativeSplash.remove();
+    // Drop the OS/native splash only after this frame is painted so Android
+    // 12+ never flashes a blank window between system splash and SplashView.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      FlutterNativeSplash.remove();
+    });
   }
 
   @override

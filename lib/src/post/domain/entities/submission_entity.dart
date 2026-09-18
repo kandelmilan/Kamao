@@ -1,4 +1,4 @@
-import 'package:kamao/core/constants/app_constants.dart';
+import 'package:kamao/core/utils/image_url_resolver.dart';
 
 enum SubmissionListKind { pending, approved }
 
@@ -55,13 +55,7 @@ class SubmissionEntity {
   final String? thumbnailUrl;
   final String? proofUrl;
 
-  String? get thumbnailImageUrl {
-    final path = thumbnailUrl;
-    if (path == null || path.isEmpty) return null;
-    if (path.startsWith('http')) return path;
-    final normalized = path.startsWith('/') ? path : '/$path';
-    return '${AppConstants.assetBaseUrl}$normalized';
-  }
+  String? get thumbnailImageUrl => resolveImageUrl(thumbnailUrl);
 
   num? get displayReward => payoutAmount ?? calculatedReward;
 

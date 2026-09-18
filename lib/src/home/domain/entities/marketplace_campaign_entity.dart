@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:kamao/core/utils/campaign_platforms.dart';
 
 class MarketplaceCampaignEntity extends Equatable {
   const MarketplaceCampaignEntity({
@@ -26,6 +27,8 @@ class MarketplaceCampaignEntity extends Equatable {
     required this.creatorMaxReward,
     required this.isFavourite,
     required this.earnRangeLabel,
+    this.platforms = const [],
+    this.contentTypes = const [],
   });
 
   final String id;
@@ -52,6 +55,15 @@ class MarketplaceCampaignEntity extends Equatable {
   final num creatorMaxReward;
   final bool isFavourite;
   final String earnRangeLabel;
+  final List<String> platforms;
+  final List<String> contentTypes;
+
+  List<String> get displayPlatforms => resolveCampaignPlatforms(
+        contentTypes: contentTypes,
+        platforms: platforms,
+        name: name,
+        objective: objective,
+      );
 
   @override
   List<Object?> get props => [
@@ -79,5 +91,7 @@ class MarketplaceCampaignEntity extends Equatable {
         creatorMaxReward,
         isFavourite,
         earnRangeLabel,
+        platforms,
+        contentTypes,
       ];
 }

@@ -10,6 +10,14 @@ class ProfileUserModel {
     required this.roleId,
     required this.permissions,
     this.avatarUrl,
+    this.phone,
+    this.dateOfBirth,
+    this.country,
+    this.city,
+    this.address,
+    this.gender,
+    this.shortDescription,
+    this.niches = const [],
   });
 
   final String userId;
@@ -20,8 +28,17 @@ class ProfileUserModel {
   final String roleId;
   final List<String> permissions;
   final String? avatarUrl;
+  final String? phone;
+  final DateTime? dateOfBirth;
+  final String? country;
+  final String? city;
+  final String? address;
+  final String? gender;
+  final String? shortDescription;
+  final List<String> niches;
 
   factory ProfileUserModel.fromJson(Map<String, dynamic> json) {
+    final rawDob = json['dateOfBirth']?.toString();
     return ProfileUserModel(
       userId: json['userId'] as String? ?? '',
       tenantId: json['tenantId'] as String? ?? '',
@@ -33,6 +50,19 @@ class ProfileUserModel {
           .map((e) => e as String)
           .toList(),
       avatarUrl: json['avatarUrl'] as String?,
+      phone: json['phone']?.toString(),
+      dateOfBirth: rawDob == null || rawDob.isEmpty
+          ? null
+          : DateTime.tryParse(rawDob),
+      country: json['country']?.toString(),
+      city: json['city']?.toString(),
+      address: json['address']?.toString(),
+      gender: json['gender']?.toString(),
+      shortDescription: json['shortDescription']?.toString(),
+      niches: (json['niches'] as List<dynamic>? ?? const [])
+          .map((e) => e.toString())
+          .where((e) => e.isNotEmpty)
+          .toList(),
     );
   }
 
@@ -46,6 +76,14 @@ class ProfileUserModel {
       roleId: roleId,
       permissions: permissions,
       avatarUrl: avatarUrl,
+      phone: phone,
+      dateOfBirth: dateOfBirth,
+      country: country,
+      city: city,
+      address: address,
+      gender: gender,
+      shortDescription: shortDescription,
+      niches: niches,
     );
   }
 }

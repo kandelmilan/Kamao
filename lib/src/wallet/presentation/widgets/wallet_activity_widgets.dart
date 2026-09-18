@@ -16,35 +16,76 @@ class WalletActivityTabs extends StatelessWidget {
 
   final WalletController controller;
 
+  static const _trackColor = Color(0xFFEDECED);
+  static const _untappedColor = Color(0xFF4A434D);
+  static const _tappedColor = Color(0xFF426340);
+  static const _pillHeight = 28.0;
+  static const _transition = Duration(milliseconds: 220);
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 40,
+      height: 36,
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: const Color(0xFFEDECED),
+        color: _trackColor,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Obx(() {
         final selected = controller.selectedTab.value;
-        return Row(
-          children: [
-            Expanded(
-              child: _ActivityTabButton(
-                label: 'Withdrawals',
-                isSelected: selected == WalletActivityTab.withdrawals,
-                onTap: () =>
-                    controller.selectTab(WalletActivityTab.withdrawals),
-              ),
-            ),
-            Expanded(
-              child: _ActivityTabButton(
-                label: 'Ledger',
-                isSelected: selected == WalletActivityTab.ledger,
-                onTap: () => controller.selectTab(WalletActivityTab.ledger),
-              ),
-            ),
-          ],
+        final isLedger = selected == WalletActivityTab.ledger;
+
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final pillWidth = constraints.maxWidth / 2;
+
+            return Stack(
+              children: [
+                // Sliding white pill — inactive side stays fully transparent.
+                AnimatedAlign(
+                  duration: _transition,
+                  curve: Curves.easeInOut,
+                  alignment:
+                      isLedger ? Alignment.centerRight : Alignment.centerLeft,
+                  child: Container(
+                    width: pillWidth,
+                    height: _pillHeight,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x0D000000),
+                          blurRadius: 2,
+                          offset: Offset(0, 1),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _ActivityTabButton(
+                        label: 'Withdrawals',
+                        isSelected: !isLedger,
+                        onTap: () => controller
+                            .selectTab(WalletActivityTab.withdrawals),
+                      ),
+                    ),
+                    Expanded(
+                      child: _ActivityTabButton(
+                        label: 'Ledger',
+                        isSelected: isLedger,
+                        onTap: () =>
+                            controller.selectTab(WalletActivityTab.ledger),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            );
+          },
         );
       }),
     );
@@ -67,32 +108,22 @@ class _ActivityTabButton extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: isSelected ? Colors.white : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
-          boxShadow: isSelected
-              ? const [
-                  BoxShadow(
-                    color: Color(0x0D000000),
-                    blurRadius: 2,
-                    offset: Offset(0, 1),
-                  ),
-                ]
-              : null,
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontFamily: 'Roboto',
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-            height: 16 / 12,
-            color: isSelected
-                ? const Color(0xFF581C87)
-                : const Color(0xFF4A434D),
+      child: SizedBox(
+        height: WalletActivityTabs._pillHeight,
+        child: Center(
+          child: AnimatedDefaultTextStyle(
+            duration: WalletActivityTabs._transition,
+            curve: Curves.easeInOut,
+            style: TextStyle(
+              fontFamily: 'Roboto',
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              height: 16 / 12,
+              color: isSelected
+                  ? WalletActivityTabs._tappedColor
+                  : WalletActivityTabs._untappedColor,
+            ),
+            child: Text(label, textAlign: TextAlign.center),
           ),
         ),
       ),
@@ -110,10 +141,15 @@ class WalletActivityList extends StatelessWidget {
     super.key,
     required this.controller,
     this.maxItems,
+    this.expandEmpty = false,
   });
 
   final WalletController controller;
   final int? maxItems;
+
+  /// When true, empty state fills available height and centers the message
+  /// (used on the All Transactions page).
+  final bool expandEmpty;
 
   @override
   Widget build(BuildContext context) {
@@ -157,14 +193,24 @@ class WalletActivityList extends StatelessWidget {
       }
 
       if (isEmpty) {
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 32),
-          child: Center(
-            child: Text(
-              isWithdrawals ? 'No withdrawals yet' : 'No ledger entries yet',
-              style: const TextStyle(fontSize: 13, color: AppColors.bodyGrey),
-            ),
+        final emptyMessage = Text(
+          isWithdrawals ? 'No withdrawal yet' : 'No ledger entries yet',
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            fontFamily: 'Roboto',
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: AppColors.bodyGrey,
           ),
+        );
+
+        if (expandEmpty) {
+          return Center(child: emptyMessage);
+        }
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 24),
+          child: Center(child: emptyMessage),
         );
       }
 

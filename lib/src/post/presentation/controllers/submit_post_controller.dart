@@ -94,7 +94,10 @@ class SubmitPostController extends GetxController {
         campaign.value = detail;
         final current = selectedPlatform.value?.trim();
         if (current == null || current.isEmpty) {
-          if (detail.platforms.isNotEmpty) {
+          if (detail.displayPlatforms.isNotEmpty) {
+            selectedPlatform.value = detail.displayPlatforms.first;
+            await loadMedia();
+          } else if (detail.platforms.isNotEmpty) {
             selectedPlatform.value = detail.platforms.first;
             await loadMedia();
           }

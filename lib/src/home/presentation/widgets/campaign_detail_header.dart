@@ -2,7 +2,6 @@ import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:kamao/app/app.dart';
 import 'package:kamao/core/core.dart';
 import 'package:kamao/core/utils/image_url_resolver.dart';
@@ -74,10 +73,10 @@ class CampaignDetailHeader extends StatelessWidget {
                       onTap: onBack,
                       background: const Color(0xFFF9FFFE),
                       border: Colors.white,
-                      child: SvgPicture.asset(
-                        AppImages.campaignBack,
-                        width: 7,
-                        height: 12.25,
+                      child: const Icon(
+                        RemixIcons.arrow_left_s_line,
+                        size: 20,
+                        color: Color(0xFF353037),
                       ),
                     ),
                     const Spacer(),
@@ -150,17 +149,19 @@ class CampaignDetailHeader extends StatelessWidget {
   }
 }
 
-/// Brand name, Join Campaign, tagline — Figma 725:2657.
+/// Brand name, Join Campaign / Submit Post, tagline — Figma 725:2657.
 class CampaignHeaderTitles extends StatelessWidget {
   const CampaignHeaderTitles({
     super.key,
     required this.campaign,
     required this.isJoining,
+    required this.alreadyJoined,
     required this.onJoin,
   });
 
   final CampaignDetailEntity campaign;
   final bool isJoining;
+  final bool alreadyJoined;
   final VoidCallback onJoin;
 
   static const _brandText = Color(0xFF433D46);
@@ -201,7 +202,11 @@ class CampaignHeaderTitles extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            _JoinCampaignButton(isJoining: isJoining, onTap: onJoin),
+            _JoinCampaignButton(
+              isJoining: isJoining,
+              alreadyJoined: alreadyJoined,
+              onTap: onJoin,
+            ),
           ],
         ),
         if (_subtitle.isNotEmpty) ...[
@@ -241,20 +246,25 @@ class _HeaderFallback extends StatelessWidget {
 }
 
 class _JoinCampaignButton extends StatelessWidget {
-  const _JoinCampaignButton({required this.isJoining, required this.onTap});
+  const _JoinCampaignButton({
+    required this.isJoining,
+    required this.alreadyJoined,
+    required this.onTap,
+  });
 
   final bool isJoining;
+  final bool alreadyJoined;
   final VoidCallback onTap;
 
-  /// Figma: 103×29, radius 8, padding 8×14,
+  /// Figma: ~103×29, radius 8, padding 8×14,
   /// linear-gradient(275.24deg, #25DA1F -42.13%, #334D32 70.04%).
-  static const double _width = 103;
   static const double _height = 29;
 
   @override
   Widget build(BuildContext context) {
+    final label = alreadyJoined ? 'Submit Post' : 'Join Campaign';
+
     return SizedBox(
-      width: _width,
       height: _height,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(8),
@@ -275,7 +285,7 @@ class _JoinCampaignButton extends StatelessWidget {
               onTap: isJoining ? null : onTap,
               borderRadius: BorderRadius.circular(8),
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(14, 8, 14, 8),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                 child: Center(
                   child: isJoining
                       ? const SizedBox(
@@ -286,21 +296,17 @@ class _JoinCampaignButton extends StatelessWidget {
                             color: Colors.white,
                           ),
                         )
-                      : const SizedBox(
-                          width: 75,
-                          height: 13,
-                          child: Text(
-                            'Join Campaign',
-                            textAlign: TextAlign.center,
-                            maxLines: 1,
-                            softWrap: false,
-                            style: TextStyle(
-                              fontFamily: 'Roboto',
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500,
-                              height: 1.0,
-                              color: Colors.white,
-                            ),
+                      : Text(
+                          label,
+                          textAlign: TextAlign.center,
+                          maxLines: 1,
+                          softWrap: false,
+                          style: const TextStyle(
+                            fontFamily: 'Roboto',
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                            height: 1.0,
+                            color: Colors.white,
                           ),
                         ),
                 ),

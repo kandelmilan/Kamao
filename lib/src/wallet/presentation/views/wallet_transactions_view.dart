@@ -73,20 +73,36 @@ class WalletTransactionsView extends GetView<WalletController> {
               ),
             ),
             SafeArea(
-              child: RefreshIndicator(
-                onRefresh: controller.refresh,
-                child: SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: EdgeInsets.fromLTRB(20, 12, 20, 24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      WalletActivityTabs(controller: controller),
-                      const SizedBox(height: 16),
-                      WalletActivityList(controller: controller),
-                    ],
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                    child: WalletActivityTabs(controller: controller),
                   ),
-                ),
+                  Expanded(
+                    child: RefreshIndicator(
+                      onRefresh: controller.refresh,
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          return SingleChildScrollView(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+                            child: ConstrainedBox(
+                              constraints: BoxConstraints(
+                                minHeight: constraints.maxHeight - 40,
+                              ),
+                              child: WalletActivityList(
+                                controller: controller,
+                                expandEmpty: true,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],

@@ -12,6 +12,8 @@ class ApiEndpoints {
   static const String forgotPassword = '/auth/forgot-password';
   static const String resetPassword = '/auth/reset-password';
   static const String changePassword = '/auth/change-password';
+  /// PUT `/creator/profile` — update creator profile fields.
+  static const String updateProfile = '/auth/me';
   // ── Tenant ──────────────────────────────────────────────────────────
   static const String tenants = "/auth/login-tenants";
   // ── Wallet ────────────────────────────────────────────────────────

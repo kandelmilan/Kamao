@@ -8,6 +8,14 @@ class ProfileUserEntity {
     required this.roleId,
     required this.permissions,
     this.avatarUrl,
+    this.phone,
+    this.dateOfBirth,
+    this.country,
+    this.city,
+    this.address,
+    this.gender,
+    this.shortDescription,
+    this.niches = const [],
   });
 
   final String userId;
@@ -20,6 +28,14 @@ class ProfileUserEntity {
 
   /// Relative or absolute avatar path from the API (nullable when unset).
   final String? avatarUrl;
+  final String? phone;
+  final DateTime? dateOfBirth;
+  final String? country;
+  final String? city;
+  final String? address;
+  final String? gender;
+  final String? shortDescription;
+  final List<String> niches;
 
   ProfileUserEntity copyWith({
     String? userId,
@@ -31,6 +47,14 @@ class ProfileUserEntity {
     List<String>? permissions,
     String? avatarUrl,
     bool clearAvatarUrl = false,
+    String? phone,
+    DateTime? dateOfBirth,
+    String? country,
+    String? city,
+    String? address,
+    String? gender,
+    String? shortDescription,
+    List<String>? niches,
   }) {
     return ProfileUserEntity(
       userId: userId ?? this.userId,
@@ -41,6 +65,14 @@ class ProfileUserEntity {
       roleId: roleId ?? this.roleId,
       permissions: permissions ?? this.permissions,
       avatarUrl: clearAvatarUrl ? null : (avatarUrl ?? this.avatarUrl),
+      phone: phone ?? this.phone,
+      dateOfBirth: dateOfBirth ?? this.dateOfBirth,
+      country: country ?? this.country,
+      city: city ?? this.city,
+      address: address ?? this.address,
+      gender: gender ?? this.gender,
+      shortDescription: shortDescription ?? this.shortDescription,
+      niches: niches ?? this.niches,
     );
   }
 }

@@ -4,10 +4,10 @@ class AppLegalLinks {
   AppLegalLinks._();
 
   static const String privacyPolicy =
-      'https://www.gyanbato.com/Home/Privacy';
+      'https://aayurise.gyanbato.com/privacy';
 
   static const String termsAndConditions =
-      'https://www.gyanbato.com/Home/Terms';
+      'https://aayurise.gyanbato.com/terms';
 
   static Future<bool> openPrivacyPolicy() => openUrl(privacyPolicy);
 

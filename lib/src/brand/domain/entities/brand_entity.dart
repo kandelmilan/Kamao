@@ -1,4 +1,5 @@
 import 'package:kamao/core/core.dart';
+import 'package:kamao/core/utils/campaign_platforms.dart';
 
 class BrandEntity {
   const BrandEntity({
@@ -15,6 +16,8 @@ class BrandEntity {
     required this.liveCampaignCount,
     required this.rewardedPostCount,
     this.isFavourite = false,
+    this.platforms = const [],
+    this.contentTypes = const [],
   });
 
   final String id;
@@ -33,19 +36,20 @@ class BrandEntity {
   final int rewardedPostCount;
   final bool isFavourite;
 
-  String? get logoImageUrl {
-    final path = logoUrl;
-    if (path == null || path.isEmpty) return null;
-    if (path.startsWith('http')) return path;
-    return '${AppConstants.assetBaseUrl}$path';
-  }
+  /// Platform labels when the API sends them on brand cards.
+  final List<String> platforms;
 
-  String? get coverImageFullUrl {
-    final path = coverImageUrl;
-    if (path == null || path.isEmpty) return null;
-    if (path.startsWith('http')) return path;
-    return '${AppConstants.assetBaseUrl}$path';
-  }
+  /// Content-type codes (`IG`, `TT`, `FB`, `IG_REEL`, …) when present.
+  final List<String> contentTypes;
+
+  String? get logoImageUrl => resolveImageUrl(logoUrl);
+
+  String? get coverImageFullUrl => resolveImageUrl(coverImageUrl);
+
+  List<String> get displayPlatforms => resolveCampaignPlatforms(
+        contentTypes: contentTypes,
+        platforms: platforms,
+      );
 
   BrandEntity copyWith({bool? isFavourite}) {
     return BrandEntity(
@@ -62,6 +66,8 @@ class BrandEntity {
       liveCampaignCount: liveCampaignCount,
       rewardedPostCount: rewardedPostCount,
       isFavourite: isFavourite ?? this.isFavourite,
+      platforms: platforms,
+      contentTypes: contentTypes,
     );
   }
 }

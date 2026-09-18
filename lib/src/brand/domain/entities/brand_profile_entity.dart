@@ -64,21 +64,10 @@ class BrandProfileEntity {
   final int liveCampaignCount;
   final bool isFavourite;
 
-  /// Full, directly-loadable logo URL — joins [logoUrl] with
-  /// AppConstants.assetBaseUrl, same convention as BrandEntity.
-  String? get logoImageUrl {
-    final path = logoUrl;
-    if (path == null || path.isEmpty) return null;
-    if (path.startsWith('http')) return path;
-    return '${AppConstants.assetBaseUrl}$path';
-  }
+  /// Full, directly-loadable logo URL via [resolveImageUrl].
+  String? get logoImageUrl => resolveImageUrl(logoUrl);
 
-  String? get coverImageFullUrl {
-    final path = coverImageUrl;
-    if (path == null || path.isEmpty) return null;
-    if (path.startsWith('http')) return path;
-    return '${AppConstants.assetBaseUrl}$path';
-  }
+  String? get coverImageFullUrl => resolveImageUrl(coverImageUrl);
 
   /// Non-empty post tips, in order — drives the "Post Tips" card.
   List<String> get postTips => [

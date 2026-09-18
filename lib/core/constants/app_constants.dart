@@ -44,7 +44,10 @@ class AppConstants {
 
   static const String lastActivityKey = 'last_activity';
 
-  /// Host for relative upload paths like `/uploads/avatars/...`.
-  /// Files are served under `/api/uploads/...` (not the site root).
+  /// Host for app uploads (`/uploads/avatars/...`, `/uploads/ugc/...`).
+  /// Prefer [resolveImageUrl] — commerce files use [publicAssetBaseUrl].
   static const String assetBaseUrl = 'https://aayurise.gyanbato.com/api';
+
+  /// Host for commerce/brand static files (`/uploads/commerce/...`).
+  static const String publicAssetBaseUrl = 'https://aayurise.gyanbato.com';
 }

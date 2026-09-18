@@ -1,10 +1,12 @@
 import 'package:get/get.dart';
 import 'package:kamao/app/app.dart';
+import 'package:kamao/core/utils/campaign_platform_enricher.dart';
 import 'package:kamao/src/brand/domain/usecase/favourite_brand_usecase.dart';
 import 'package:kamao/src/brand/domain/usecase/get_brand_detail_usecase.dart';
 import 'package:kamao/src/brand/domain/usecase/view_brand_usecase.dart';
 import 'package:kamao/src/brand/presentation/controllers/brands_controller.dart';
 import 'package:kamao/src/home/domain/entities/campaign/campaign_entity.dart';
+import 'package:kamao/src/home/domain/usecase/marketplace/get_campaign_detail_usecase.dart';
 import 'package:kamao/src/home/presentation/controllers/home_controller.dart';
 import '../../domain/entities/brand_detail_entity.dart';
 
@@ -13,7 +15,8 @@ class BrandDetailController extends GetxController {
     this._getBrandDetail,
     this._viewBrand,
     this._favouriteBrand,
-    this._unfavouriteBrand, {
+    this._unfavouriteBrand,
+    this._getCampaignDetail, {
     required this.brandId,
   });
 
@@ -21,6 +24,7 @@ class BrandDetailController extends GetxController {
   final ViewBrandUseCase _viewBrand;
   final FavouriteBrandUseCase _favouriteBrand;
   final UnfavouriteBrandUseCase _unfavouriteBrand;
+  final GetCampaignDetailUseCase _getCampaignDetail;
   final String brandId;
 
   final isLoading = false.obs;
@@ -43,9 +47,20 @@ class BrandDetailController extends GetxController {
       (detail) {
         brandDetail.value = detail;
         _recordView();
+        // ignore: unawaited_futures
+        _enrichCampaignPlatforms(detail);
       },
     );
     isLoading.value = false;
+  }
+
+  Future<void> _enrichCampaignPlatforms(BrandDetailEntity detail) async {
+    final enriched = await enrichCampaignPlatforms(
+      campaigns: detail.campaigns,
+      getDetail: _getCampaignDetail,
+    );
+    if (brandDetail.value?.brand.id != detail.brand.id) return;
+    brandDetail.value = detail.copyWith(campaigns: enriched);
   }
 
   Future<void> refresh() => loadBrandDetail();
@@ -107,5 +122,13 @@ class BrandDetailController extends GetxController {
 
   void openCampaign(CampaignEntity campaign) {
     Get.toNamed(AppRoutes.campaignDetail, arguments: campaign.id);
+  }
+
+  /// True when this campaign appears in the home popular-campaigns list.
+  bool isPopularCampaign(String campaignId) {
+    if (!Get.isRegistered<HomeController>()) return false;
+    return Get.find<HomeController>().popularCampaigns.any(
+      (c) => c.id == campaignId,
+    );
   }
 }

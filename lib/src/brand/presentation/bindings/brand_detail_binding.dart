@@ -1,7 +1,9 @@
 import 'package:get/get.dart';
 import 'package:kamao/core/core.dart';
 import 'package:kamao/src/brand/brand.dart';
-
+import 'package:kamao/src/home/data/datasources/marketplace_remote_data_source.dart';
+import 'package:kamao/src/home/data/repositories/marketplace_repository_impl.dart';
+import 'package:kamao/src/home/domain/usecase/marketplace/get_campaign_detail_usecase.dart';
 
 class BrandDetailBinding extends Bindings {
   BrandDetailBinding({required this.brandId});
@@ -14,6 +16,9 @@ class BrandDetailBinding extends Bindings {
 
     final dataSource = BrandRemoteDataSourceImpl(apiService);
     final repository = BrandRepositoryImpl(dataSource);
+    final marketplaceRepository = MarketplaceRepositoryImpl(
+      MarketplaceRemoteDataSourceImpl(apiService),
+    );
 
     Get.put(
       BrandDetailController(
@@ -21,6 +26,7 @@ class BrandDetailBinding extends Bindings {
         ViewBrandUseCase(repository),
         FavouriteBrandUseCase(repository),
         UnfavouriteBrandUseCase(repository),
+        GetCampaignDetailUseCase(marketplaceRepository),
         brandId: brandId,
       ),
       tag: brandId,

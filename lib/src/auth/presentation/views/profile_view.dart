@@ -493,11 +493,11 @@ class ProfileView extends StatelessWidget {
             onTap: controller.openTermsAndConditions,
           ),
           Container(height: 1, color: _cardBorder),
-          _settingsRow(
-            icon: RemixIcons.settings_3_line,
-            title: 'Settings',
-            onTap: controller.openSettings,
-          ),
+          // _settingsRow(
+          //   icon: RemixIcons.settings_3_line,
+          //   title: 'Settings',
+          //   onTap: controller.openSettings,
+          // ),
         ],
       ),
     );

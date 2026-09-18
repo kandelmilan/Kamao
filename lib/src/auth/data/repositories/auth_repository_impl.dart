@@ -81,4 +81,18 @@ class AuthRepositoryImpl implements AuthRepository {
       (response) => Right(response.data!.toEntity()),
     );
   }
+
+  @override
+  Future<Either<Failure, bool>> changePassword(
+    ChangePasswordRequestEntity request,
+  ) async {
+    final requestModel = ChangePasswordRequestModel.fromEntity(request);
+
+    final result = await _remoteDataSource.changePassword(requestModel);
+
+    return result.fold(
+      (failure) => Left(failure),
+      (response) => Right(response.data ?? response.success),
+    );
+  }
 }

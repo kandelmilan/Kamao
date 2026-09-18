@@ -73,14 +73,10 @@ class _SearchBarState extends State<_SearchBar> {
       ),
       child: Row(
         children: [
-          SvgPicture.asset(
-            AppImages.iconSearch,
-            width: 16,
-            height: 16,
-            colorFilter: ColorFilter.mode(
-              _focused ? AppColors.seeAllGreen : const Color(0xFF6E6971),
-              BlendMode.srcIn,
-            ),
+          Icon(
+            RemixIcons.search_line,
+            size: 16,
+            color: _focused ? AppColors.seeAllGreen : const Color(0xFF6E6971),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -122,10 +118,10 @@ class _SearchBarState extends State<_SearchBar> {
                 ),
               ),
             ),
-          SvgPicture.asset(
-            AppImages.iconFilter,
-            width: 16,
-            height: 16,
+          const Icon(
+            RemixIcons.filter_3_line,
+            size: 16,
+            color: Color(0xFF6E6971),
           ),
         ],
       ),
@@ -233,20 +229,43 @@ class _CategoryChip extends StatelessWidget {
   }
 }
 
+class _SectionTitleIcon extends StatelessWidget {
+  const _SectionTitleIcon({
+    required this.icon,
+    this.iconSize = 20,
+    this.color,
+  });
+
+  final IconData icon;
+  final double iconSize;
+  final Color? color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Icon(
+      icon,
+      size: iconSize,
+      color: color ?? AppColors.cardTitle,
+    );
+  }
+}
+
 class _BrandsSection extends StatelessWidget {
   const _BrandsSection({
     required this.title,
-    required this.iconAsset,
+    required this.icon,
     required this.brands,
     required this.isLoading,
     this.iconSize = 20,
+    this.iconColor,
     this.seeAll,
     this.hideWhenEmpty = false,
   });
 
   final String title;
-  final String iconAsset;
+  final IconData icon;
   final double iconSize;
+  final Color? iconColor;
   final List<BrandEntity> Function() brands;
   final bool Function() isLoading;
   final VoidCallback? seeAll;
@@ -276,7 +295,11 @@ class _BrandsSection extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Row(
               children: [
-                SvgPicture.asset(iconAsset, width: iconSize, height: iconSize),
+                _SectionTitleIcon(
+                  icon: icon,
+                  iconSize: iconSize,
+                  color: iconColor,
+                ),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
@@ -307,7 +330,8 @@ class _BrandsSection extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           SizedBox(
-            height: 102,
+            // Circle (≤72) + gap (6) + 2-line name (~32)
+            height: 114,
             child: loading && count == 0
                 ? const Center(
                     child: SizedBox(
@@ -330,13 +354,32 @@ class _BrandsSection extends StatelessWidget {
                       ),
                     ),
                   )
-                : ListView.separated(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    scrollDirection: Axis.horizontal,
-                    itemCount: count,
-                    separatorBuilder: (_, _) => const SizedBox(width: 4),
-                    itemBuilder: (context, index) =>
-                        BrandCircleItem(brand: list[index]),
+                : LayoutBuilder(
+                    builder: (context, constraints) {
+                      // Exactly 4 brands visible; extra items scroll horizontally.
+                      const visibleCount = 4;
+                      const horizontalPadding = 20.0;
+                      const gap = 8.0;
+                      final available =
+                          constraints.maxWidth - (horizontalPadding * 2);
+                      final itemWidth =
+                          (available - gap * (visibleCount - 1)) /
+                          visibleCount;
+
+                      return ListView.separated(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: horizontalPadding,
+                        ),
+                        scrollDirection: Axis.horizontal,
+                        itemCount: count,
+                        separatorBuilder: (_, _) =>
+                            const SizedBox(width: gap),
+                        itemBuilder: (context, index) => BrandCircleItem(
+                          brand: list[index],
+                          width: itemWidth,
+                        ),
+                      );
+                    },
                   ),
           ),
         ],
@@ -368,7 +411,11 @@ class _FavouriteCampaignsSection extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Row(
               children: [
-                SvgPicture.asset(AppImages.iconHearts, width: 20, height: 20),
+                const _SectionTitleIcon(
+                  icon: RemixIcons.heart_line,
+                  iconSize: 20,
+                  color: Color(0xFF29252A),
+                ),
                 const SizedBox(width: 8),
                 const Expanded(
                   child: Text(
@@ -407,15 +454,17 @@ class _FavouriteCampaignsSection extends StatelessWidget {
                     scrollDirection: Axis.horizontal,
                     itemCount: list.length,
                     separatorBuilder: (_, _) => const SizedBox(width: 12),
-                    itemBuilder: (context, index) => _FavouriteCampaignCard(
-                      item: list[index],
-                      badgeLabel: index.isEven ? 'Popular' : 'Trending',
-                      badgeDot: index.isEven
-                          ? const Color(0xFFE86161)
-                          : AppColors.seeAllGreen,
-                      onTap: () =>
-                          controller.openCampaign(list[index].campaign),
-                    ),
+                    itemBuilder: (context, index) {
+                      final item = list[index];
+                      final isPopular = controller.popularCampaigns.any(
+                        (c) => c.id == item.campaign.id,
+                      );
+                      return _FavouriteCampaignCard(
+                        item: item,
+                        showPopularBadge: isPopular,
+                        onTap: () => controller.openCampaign(item.campaign),
+                      );
+                    },
                   ),
           ),
         ],
@@ -428,14 +477,12 @@ class _FavouriteCampaignCard extends StatelessWidget {
   const _FavouriteCampaignCard({
     required this.item,
     required this.onTap,
-    required this.badgeLabel,
-    required this.badgeDot,
+    this.showPopularBadge = false,
   });
 
   final FavouriteCampaignEntity item;
   final VoidCallback onTap;
-  final String badgeLabel;
-  final Color badgeDot;
+  final bool showPopularBadge;
 
   @override
   Widget build(BuildContext context) {
@@ -488,49 +535,50 @@ class _FavouriteCampaignCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                  Positioned(
-                    top: 6,
-                    right: 6,
-                    child: Container(
-                      padding: const EdgeInsets.fromLTRB(6, 2, 6, 2.25),
-                      decoration: BoxDecoration(
-                        color: AppColors.white,
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: const Color(0xFFF7FAF6)),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.25),
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            width: 5,
-                            height: 5,
-                            decoration: BoxDecoration(
-                              color: badgeDot,
-                              shape: BoxShape.circle,
+                  if (showPopularBadge)
+                    Positioned(
+                      top: 6,
+                      right: 6,
+                      child: Container(
+                        padding: const EdgeInsets.fromLTRB(6, 2, 6, 2.25),
+                        decoration: BoxDecoration(
+                          color: AppColors.white,
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: const Color(0xFFF7FAF6)),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.25),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
                             ),
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            badgeLabel,
-                            style: const TextStyle(
-                              fontFamily: 'Roboto',
-                              fontSize: 9,
-                              fontWeight: FontWeight.w500,
-                              height: 11.25 / 9,
-                              color: AppColors.seeAllGreen,
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: 5,
+                              height: 5,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFFE86161),
+                                shape: BoxShape.circle,
+                              ),
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 4),
+                            const Text(
+                              'Popular',
+                              style: TextStyle(
+                                fontFamily: 'Roboto',
+                                fontSize: 9,
+                                fontWeight: FontWeight.w500,
+                                height: 11.25 / 9,
+                                color: AppColors.seeAllGreen,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
                   Positioned(
                     left: 6,
                     bottom: 0,
@@ -594,7 +642,9 @@ class _FavouriteCampaignCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    campaign.brandCategory ?? 'Campaign',
+                    campaign.contentTypeLabel.isNotEmpty
+                        ? campaign.contentTypeLabel
+                        : (campaign.brandCategory ?? 'Campaign'),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
@@ -620,23 +670,14 @@ class _FavouriteCampaignCard extends StatelessWidget {
                   const SizedBox(height: 10),
                   Row(
                     children: [
-                      const _SocialBubble(
-                        color: Color(0x14FF007F),
-                        icon: RemixIcons.instagram_line,
-                        iconColor: Color(0xFFE1306C),
-                      ),
-                      const SizedBox(width: 5),
-                      const _SocialBubble(
-                        color: Color(0x14000000),
-                        icon: RemixIcons.tiktok_line,
-                        iconColor: Colors.black,
-                      ),
-                      const SizedBox(width: 5),
-                      const _SocialBubble(
-                        color: Color(0xFFE9EFFD),
-                        icon: RemixIcons.facebook_fill,
-                        iconColor: Color(0xFF1877F2),
-                      ),
+                      for (var i = 0;
+                          i < campaign.displayPlatforms.length;
+                          i++) ...[
+                        if (i > 0) const SizedBox(width: 5),
+                        _SocialBubble.forPlatform(
+                          campaign.displayPlatforms[i],
+                        ),
+                      ],
                       const Spacer(),
                       Container(
                         width: 20,
@@ -657,10 +698,10 @@ class _FavouriteCampaignCard extends StatelessWidget {
                           ],
                         ),
                         alignment: Alignment.center,
-                        child: SvgPicture.asset(
-                          AppImages.iconChevronRight,
-                          width: 12.5,
-                          height: 12.5,
+                        child: const Icon(
+                          RemixIcons.arrow_right_s_line,
+                          size: 14,
+                          color: AppColors.cardTitle,
                         ),
                       ),
                     ],
@@ -681,6 +722,41 @@ class _SocialBubble extends StatelessWidget {
     required this.icon,
     required this.iconColor,
   });
+
+  factory _SocialBubble.forPlatform(String platform) {
+    switch (platform.toLowerCase()) {
+      case 'instagram':
+        return const _SocialBubble(
+          color: Color(0x14FF007F),
+          icon: RemixIcons.instagram_line,
+          iconColor: Color(0xFFE1306C),
+        );
+      case 'tiktok':
+        return const _SocialBubble(
+          color: Color(0x14000000),
+          icon: RemixIcons.tiktok_line,
+          iconColor: Colors.black,
+        );
+      case 'facebook':
+        return const _SocialBubble(
+          color: Color(0xFFE9EFFD),
+          icon: RemixIcons.facebook_fill,
+          iconColor: Color(0xFF1877F2),
+        );
+      case 'youtube':
+        return const _SocialBubble(
+          color: Color(0x14E02020),
+          icon: RemixIcons.youtube_fill,
+          iconColor: Color(0xFFE02020),
+        );
+      default:
+        return const _SocialBubble(
+          color: Color(0xFFF3F4F6),
+          icon: RemixIcons.links_line,
+          iconColor: Color(0xFF6E6971),
+        );
+    }
+  }
 
   final Color color;
   final IconData icon;
@@ -821,26 +897,6 @@ class _RewardedPostCard extends StatelessWidget {
               )
             else
               const ColoredBox(color: Color(0xFFE7E2EC)),
-            if (post.caption != null && post.caption!.trim().isNotEmpty)
-              Positioned(
-                left: 8,
-                right: 8,
-                top: 12,
-                child: Text(
-                  post.caption!,
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontFamily: 'Roboto',
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.white,
-                    shadows: [
-                      Shadow(color: Color(0x99000000), blurRadius: 8),
-                    ],
-                  ),
-                ),
-              ),
             Positioned(
               left: 5,
               right: 5,
@@ -888,10 +944,10 @@ class _RewardedPostCard extends StatelessWidget {
                       ),
                     ),
                     alignment: Alignment.center,
-                    child: SvgPicture.asset(
-                      AppImages.iconPlay,
-                      width: 11,
-                      height: 11,
+                    child: const Icon(
+                      RemixIcons.play_fill,
+                      size: 11,
+                      color: Colors.white,
                     ),
                   ),
                 ],

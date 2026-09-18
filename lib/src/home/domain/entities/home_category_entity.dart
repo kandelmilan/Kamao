@@ -15,10 +15,5 @@ class HomeCategoryEntity {
   final String? coverImageUrl;
   final String? logoUrl;
 
-  String? get logoImageUrl {
-    final path = logoUrl;
-    if (path == null || path.isEmpty) return null;
-    if (path.startsWith('http')) return path;
-    return '${AppConstants.assetBaseUrl}$path';
-  }
+  String? get logoImageUrl => resolveImageUrl(logoUrl);
 }

@@ -28,7 +28,6 @@ dependencies:
   flutter_svg: ^2.3.0
   image_picker: ^1.2.3
   flutter_web_auth_2: ^5.1.0
-
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -40,7 +39,6 @@ flutter:
   assets:
     - assets/images/onboarding/
     - assets/images/home/
-    - assets/images/home/icons/
     - assets/images/app_logo.png
 
   uses-material-design: true
@@ -49,3 +47,18 @@ flutter_launcher_icons:
   android: true
   ios: true
   image_path: "assets/images/app_logo.png"
+
+# Native launch screen: solid brand color only (no logo).
+# Android 12+ always shows a brief OS splash — keep it blank green so the
+# Flutter SplashView is the only branded splash the user sees.
+flutter_native_splash:
+  color: "#F7FBEE"
+  android: true
+  ios: true
+  fullscreen: true
+  android_12:
+    color: "#F7FBEE"
+    # Solid brand square (same as bg) — hides the default launcher icon
+    # without showing a second logo before SplashView.
+    image: assets/images/splash_blank.png
+    icon_background_color: "#F7FBEE"

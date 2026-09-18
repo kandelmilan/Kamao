@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:kamao/app/app.dart';
 import 'package:kamao/core/utils/image_url_resolver.dart';
+import 'package:kamao/core/utils/campaign_platform_enricher.dart';
 import 'package:kamao/src/brand/brand.dart';
 import 'package:kamao/src/brand/presentation/utils/brand_list_page.dart';
 import 'package:kamao/core/core.dart';
@@ -15,6 +16,7 @@ import 'package:kamao/src/home/presentation/utils/favourite_campaigns_list/favou
 import 'package:kamao/src/home/presentation/utils/recently_rewarded_list/recently_rewarded_list_page.dart';
 import 'package:kamao/src/wallet/wallet.dart';
 import 'package:kamao/src/social_connections/presentation/controllers/social_connections_controller.dart';
+import 'package:kamao/src/main_nav/main_nav.dart';
 
 
 class HomeController extends GetxController {
@@ -34,6 +36,7 @@ class HomeController extends GetxController {
     this._getPopularBrandsUseCase,
     this._getFeaturedBrandsUseCase,
     this._getRecentBrandsUseCase,
+    this._getCampaignDetailUseCase,
   );
 
   final GetWalletUseCase _getWalletUseCase;
@@ -51,6 +54,7 @@ class HomeController extends GetxController {
   final GetPopularBrandsUseCase _getPopularBrandsUseCase;
   final GetFeaturedBrandsUseCase _getFeaturedBrandsUseCase;
   final GetRecentBrandsUseCase _getRecentBrandsUseCase;
+  final GetCampaignDetailUseCase _getCampaignDetailUseCase;
 
   // ---------------------------------------------------------------
   // Recently rewarded — GET /creator/home/recently-rewarded
@@ -254,7 +258,7 @@ class HomeController extends GetxController {
 
   /// Weekly growth amount for the wallet badge.
   /// TODO: replace with API-backed weekly earnings when available.
-  final RxDouble weeklyGrowthAmount = 1850.0.obs;
+  final RxDouble weeklyGrowthAmount = 0.0.obs;
 
   /// Weekly growth amount for the wallet badge.
   String get weeklyGrowthAmountLabel {
@@ -314,6 +318,12 @@ class HomeController extends GetxController {
 
   void openCreatorLevels() {
     Get.toNamed(AppRoutes.creatorLevels);
+  }
+
+  void openProfile() {
+    if (Get.isRegistered<MainNavController>()) {
+      Get.find<MainNavController>().changeTab(MainNavTab.profile);
+    }
   }
 
   void onSearchChanged(String value) {
@@ -640,9 +650,30 @@ class HomeController extends GetxController {
 
     result.fold(
       (failure) => favouriteCampaignsError.value = failure.message,
-      (list) => favouriteCampaigns.assignAll(list),
+      (list) {
+        favouriteCampaigns.assignAll(list);
+        // ignore: unawaited_futures
+        _enrichFavouritePlatforms(list);
+      },
     );
     isFavouriteCampaignsLoading.value = false;
+  }
+
+  /// List APIs omit contentTypes/platforms; detail has them (Post on).
+  Future<void> _enrichFavouritePlatforms(
+    List<FavouriteCampaignEntity> list,
+  ) async {
+    if (list.isEmpty) return;
+    final enriched = await enrichCampaignPlatforms(
+      campaigns: list.map((f) => f.campaign).toList(),
+      getDetail: _getCampaignDetailUseCase,
+    );
+    // Only apply if this is still the active favourite list.
+    if (favouriteCampaigns.length != list.length) return;
+    favouriteCampaigns.assignAll([
+      for (var i = 0; i < list.length; i++)
+        list[i].copyWith(campaign: enriched[i]),
+    ]);
   }
 
   // ---------------------------------------------------------------

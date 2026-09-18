@@ -16,6 +16,7 @@ export 'services/storage/auth-storage_service.dart';
 export 'usecase/usecase.dart';
 export 'utils/app_logger.dart';
 export 'utils/app_legal_links.dart';
+export 'utils/image_url_resolver.dart';
 export 'mixins/paginated_list_mixin.dart';
 export 'models/paginated_response.dart';
 export 'premisssions/premission.dart';

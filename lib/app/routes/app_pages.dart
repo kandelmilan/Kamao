@@ -110,5 +110,15 @@ abstract class AppPages {
       page: () => const CreatorLevelsView(),
       binding: CreatorLevelsBinding(),
     ),
+    GetPage(
+      name: AppRoutes.changePassword,
+      page: () => const ChangePasswordView(),
+      binding: ChangePasswordBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.editProfile,
+      page: () => const EditProfileView(),
+      binding: EditProfileBinding(),
+    ),
   ];
 }

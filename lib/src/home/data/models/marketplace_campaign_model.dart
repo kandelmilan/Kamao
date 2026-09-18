@@ -1,3 +1,4 @@
+import 'package:kamao/core/utils/campaign_platforms.dart';
 import 'package:kamao/src/home/domain/entities/marketplace_campaign_entity.dart';
 
 class MarketplaceCampaignModel extends MarketplaceCampaignEntity {
@@ -26,7 +27,10 @@ class MarketplaceCampaignModel extends MarketplaceCampaignEntity {
     required super.creatorMaxReward,
     required super.isFavourite,
     required super.earnRangeLabel,
+    super.platforms,
+    super.contentTypes,
   });
+
   factory MarketplaceCampaignModel.fromJson(Map<String, dynamic> json) {
     return MarketplaceCampaignModel(
       id: json['id'] as String,
@@ -53,7 +57,45 @@ class MarketplaceCampaignModel extends MarketplaceCampaignEntity {
       creatorMaxReward: json['creatorMaxReward'] as num? ?? 0,
       isFavourite: json['isFavourite'] as bool? ?? false,
       earnRangeLabel: json['earnRangeLabel'] as String? ?? '',
+      platforms: _parseStringList(json['platforms']),
+      contentTypes: _parseContentTypes(json),
     );
+  }
+
+  static List<String> _parseContentTypes(Map<String, dynamic> json) {
+    final direct = _parseStringList(
+      json['contentTypes'] ?? json['contentType'],
+    );
+    if (direct.isNotEmpty) return direct;
+
+    final directives = json['directives'];
+    if (directives is! List) return const [];
+    return contentTypesFromDirectives(
+      directives.whereType<Map>().map(
+            (e) => (
+              directiveType: e['directiveType']?.toString() ?? '',
+              valueText: e['valueText']?.toString() ?? '',
+            ),
+          ),
+    );
+  }
+
+  static List<String> _parseStringList(dynamic value) {
+    if (value == null) return const [];
+    if (value is String) {
+      return value
+          .split(RegExp(r'[/|,;]+'))
+          .map((s) => s.trim())
+          .where((s) => s.isNotEmpty)
+          .toList();
+    }
+    if (value is List) {
+      return value
+          .map((e) => e.toString().trim())
+          .where((s) => s.isNotEmpty)
+          .toList();
+    }
+    return const [];
   }
 
   static DateTime _parseDate(dynamic value) {

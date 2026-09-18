@@ -10,11 +10,13 @@ class RaiseTicketView extends GetView<RaiseTicketController> {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      type: MaterialType.transparency,
-      child: Stack(
+    final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFFAFAF9),
+      resizeToAvoidBottomInset: true,
+      body: Stack(
         children: [
-          const Positioned.fill(child: ColoredBox(color: Color(0xFFFAFAF9))),
           Positioned(
             top: 0,
             left: 0,
@@ -39,7 +41,14 @@ class RaiseTicketView extends GetView<RaiseTicketController> {
                 const _RaiseHeader(),
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
+                    padding: EdgeInsets.fromLTRB(
+                      20,
+                      8,
+                      20,
+                      24 + (bottomInset > 0 ? 12 : 0),
+                    ),
                     child: Container(
                       padding: const EdgeInsets.fromLTRB(16, 18, 16, 18),
                       decoration: BoxDecoration(
@@ -74,6 +83,7 @@ class RaiseTicketView extends GetView<RaiseTicketController> {
                             child: TextField(
                               controller: controller.subjectController,
                               textCapitalization: TextCapitalization.sentences,
+                              textInputAction: TextInputAction.next,
                               style: const TextStyle(
                                 fontFamily: 'Roboto',
                                 fontSize: 15,
@@ -96,6 +106,7 @@ class RaiseTicketView extends GetView<RaiseTicketController> {
                             child: TextField(
                               controller: controller.descriptionController,
                               textCapitalization: TextCapitalization.sentences,
+                              textInputAction: TextInputAction.newline,
                               minLines: 5,
                               maxLines: 10,
                               style: const TextStyle(
@@ -281,7 +292,6 @@ class _RaiseHeader extends StatelessWidget {
           const Expanded(
             child: Text(
               'Raise a ticket',
-              textAlign: TextAlign.center,
               style: TextStyle(
                 fontFamily: 'Roboto',
                 fontSize: 20,
@@ -290,7 +300,6 @@ class _RaiseHeader extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 48),
         ],
       ),
     );

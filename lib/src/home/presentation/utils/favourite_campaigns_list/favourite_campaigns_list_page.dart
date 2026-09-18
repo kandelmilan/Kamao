@@ -1,6 +1,5 @@
 import 'package:dartz/dartz.dart' hide State;
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:kamao/app/app.dart';
@@ -8,6 +7,7 @@ import 'package:kamao/core/core.dart';
 import 'package:kamao/core/utils/image_url_resolver.dart';
 import 'package:kamao/src/home/domain/entities/campaign/campaign_entity.dart';
 import 'package:kamao/src/home/domain/entities/campaign/favourite_campaign_entity.dart';
+import 'package:remixicon/remixicon.dart';
 
 typedef FavouriteCampaignsFetcher =
     Future<Either<Failure, List<FavouriteCampaignEntity>>> Function({
@@ -475,14 +475,10 @@ class _SearchBarState extends State<_SearchBar> {
         child: Row(
           children: [
             const SizedBox(width: 16),
-            SvgPicture.asset(
-              AppImages.iconSearch,
-              width: 16,
-              height: 16,
-              colorFilter: ColorFilter.mode(
-                _focused ? AppColors.seeAllGreen : _Palette.searchHint,
-                BlendMode.srcIn,
-              ),
+            Icon(
+              RemixIcons.search_line,
+              size: 16,
+              color: _focused ? AppColors.seeAllGreen : _Palette.searchHint,
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -531,16 +527,12 @@ class _SearchBarState extends State<_SearchBar> {
               borderRadius: BorderRadius.circular(16),
               child: Padding(
                 padding: const EdgeInsets.all(8),
-                child: SvgPicture.asset(
-                  AppImages.iconFilter,
-                  width: 16,
-                  height: 16,
-                  colorFilter: ColorFilter.mode(
-                    widget.filterActive
-                        ? AppColors.seeAllGreen
-                        : _Palette.searchHint,
-                    BlendMode.srcIn,
-                  ),
+                child: Icon(
+                  RemixIcons.filter_3_line,
+                  size: 16,
+                  color: widget.filterActive
+                      ? AppColors.seeAllGreen
+                      : _Palette.searchHint,
                 ),
               ),
             ),

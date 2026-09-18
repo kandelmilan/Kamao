@@ -39,7 +39,7 @@ class ViewTicketsView extends GetView<ViewTicketsController> {
           SafeArea(
             child: Column(
               children: [
-                _TicketsHeader(onNewTicket: controller.openRaiseTicket),
+                const _TicketsHeader(),
                 Expanded(
                   child: Obx(() {
                     if (controller.isLoading.value &&
@@ -63,6 +63,7 @@ class ViewTicketsView extends GetView<ViewTicketsController> {
                     }
 
                     final filtered = controller.filteredTickets;
+                    final allEmpty = controller.tickets.isEmpty;
 
                     return RefreshIndicator(
                       color: AppColors.onboardingGreen,
@@ -73,17 +74,53 @@ class ViewTicketsView extends GetView<ViewTicketsController> {
                           SliverToBoxAdapter(
                             child: Padding(
                               padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
-                              child: _MyTicketsCard(
+                              child: _TicketsToolbar(
                                 filter: controller.statusFilter.value,
                                 onFilterChanged: controller.setStatusFilter,
-                                tickets: filtered,
-                                allEmpty: controller.tickets.isEmpty,
-                                onOpen: controller.openTicket,
                                 onRaise: controller.openRaiseTicket,
                               ),
                             ),
                           ),
-                          const SliverToBoxAdapter(child: SizedBox(height: 24)),
+                          if (allEmpty)
+                            SliverFillRemaining(
+                              hasScrollBody: false,
+                              child: _EmptyState(
+                                icon: RemixIcons.file_list_3_line,
+                                title: 'No tickets yet',
+                                subtitle:
+                                    'Raise a ticket and it will appear here.',
+                                actionLabel: 'New ticket',
+                                onAction: controller.openRaiseTicket,
+                              ),
+                            )
+                          else if (filtered.isEmpty)
+                            const SliverFillRemaining(
+                              hasScrollBody: false,
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 32),
+                                child: _InlineEmpty(
+                                  title: 'No matches',
+                                  subtitle:
+                                      'No tickets for this status filter.',
+                                ),
+                              ),
+                            )
+                          else
+                            SliverPadding(
+                              padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+                              sliver: SliverList.separated(
+                                itemCount: filtered.length,
+                                separatorBuilder: (_, __) =>
+                                    const SizedBox(height: 12),
+                                itemBuilder: (context, index) {
+                                  final ticket = filtered[index];
+                                  return _TicketCard(
+                                    ticket: ticket,
+                                    onTap: () => controller.openTicket(ticket),
+                                  );
+                                },
+                              ),
+                            ),
                         ],
                       ),
                     );
@@ -99,9 +136,7 @@ class ViewTicketsView extends GetView<ViewTicketsController> {
 }
 
 class _TicketsHeader extends StatelessWidget {
-  const _TicketsHeader({required this.onNewTicket});
-
-  final VoidCallback onNewTicket;
+  const _TicketsHeader();
 
   @override
   Widget build(BuildContext context) {
@@ -119,8 +154,7 @@ class _TicketsHeader extends StatelessWidget {
           ),
           const Expanded(
             child: Text(
-              'Support',
-              textAlign: TextAlign.center,
+              'View tickets',
               style: TextStyle(
                 fontFamily: 'Roboto',
                 fontSize: 20,
@@ -129,168 +163,87 @@ class _TicketsHeader extends StatelessWidget {
               ),
             ),
           ),
-          TextButton(
-            onPressed: onNewTicket,
-            style: TextButton.styleFrom(
-              foregroundColor: AppColors.onboardingGreen,
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-            ),
-            child: const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(RemixIcons.add_line, size: 18),
-                SizedBox(width: 2),
-                Text(
-                  'New',
-                  style: TextStyle(
-                    fontFamily: 'Roboto',
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
-          ),
         ],
       ),
     );
   }
 }
 
-class _MyTicketsCard extends StatelessWidget {
-  const _MyTicketsCard({
+class _TicketsToolbar extends StatelessWidget {
+  const _TicketsToolbar({
     required this.filter,
     required this.onFilterChanged,
-    required this.tickets,
-    required this.allEmpty,
-    required this.onOpen,
     required this.onRaise,
   });
 
   final String filter;
   final ValueChanged<String> onFilterChanged;
-  final List<SupportTicketEntity> tickets;
-  final bool allEmpty;
-  final ValueChanged<SupportTicketEntity> onOpen;
   final VoidCallback onRaise;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFF2F5F9)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0A1A153B),
-            blurRadius: 12,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-            child: Row(
-              children: [
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFE8F0E5),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: const Color(0xFFE8F0E5),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(
+                RemixIcons.customer_service_2_line,
+                size: 18,
+                color: Color(0xFF4C5749),
+              ),
+            ),
+            const SizedBox(width: 10),
+            const Expanded(
+              child: Text(
+                'My tickets',
+                style: TextStyle(
+                  fontFamily: 'Roboto',
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.cardTitle,
+                ),
+              ),
+            ),
+            SizedBox(
+              height: 36,
+              child: ElevatedButton.icon(
+                onPressed: onRaise,
+                icon: const Icon(RemixIcons.add_line, size: 16),
+                label: const Text(
+                  'New ticket',
+                  style: TextStyle(
+                    fontFamily: 'Roboto',
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.walletButton,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Icon(
-                    RemixIcons.customer_service_2_line,
-                    size: 16,
-                    color: Color(0xFF4C5749),
-                  ),
                 ),
-                const SizedBox(width: 10),
-                const Expanded(
-                  child: Text(
-                    'My tickets',
-                    style: TextStyle(
-                      fontFamily: 'Roboto',
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.cardTitle,
-                    ),
-                  ),
-                ),
-                SizedBox(
-                  height: 36,
-                  child: ElevatedButton.icon(
-                    onPressed: onRaise,
-                    icon: const Icon(RemixIcons.add_line, size: 16),
-                    label: const Text(
-                      'New ticket',
-                      style: TextStyle(
-                        fontFamily: 'Roboto',
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.walletButton,
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-            child: _StatusFilterDropdown(
-              value: filter,
-              onChanged: onFilterChanged,
-            ),
-          ),
-          const Divider(height: 1, color: Color(0xFFF2F5F9)),
-          if (allEmpty)
-            Padding(
-              padding: const EdgeInsets.all(24),
-              child: _InlineEmpty(
-                title: 'No tickets yet',
-                subtitle: 'Raise a ticket and it will appear here.',
-                actionLabel: 'New ticket',
-                onAction: onRaise,
               ),
-            )
-          else if (tickets.isEmpty)
-            const Padding(
-              padding: EdgeInsets.all(24),
-              child: _InlineEmpty(
-                title: 'No matches',
-                subtitle: 'No tickets for this status filter.',
-              ),
-            )
-          else
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
-              itemCount: tickets.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 8),
-              itemBuilder: (context, index) {
-                final ticket = tickets[index];
-                return _TicketCard(
-                  ticket: ticket,
-                  onTap: () => onOpen(ticket),
-                );
-              },
             ),
-        ],
-      ),
+          ],
+        ),
+        const SizedBox(height: 14),
+        _StatusFilterDropdown(
+          value: filter,
+          onChanged: onFilterChanged,
+        ),
+      ],
     );
   }
 }
@@ -323,7 +276,7 @@ class _StatusFilterDropdown extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 14),
           decoration: BoxDecoration(
-            color: const Color(0xFFF7FAF6),
+            color: Colors.white,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: const Color(0xFFE4EBE1)),
           ),
@@ -371,95 +324,144 @@ class _TicketCard extends StatelessWidget {
     final updated = ticket.updatedAt ?? ticket.createdAt;
     final updatedLabel = updated == null
         ? ''
-        : DateFormat('M/d/yyyy h:mm:ss a').format(updated.toLocal());
+        : DateFormat('MMM d, yyyy · h:mm a').format(updated.toLocal());
     final shortId = ticket.id.length > 8
         ? '${ticket.id.substring(0, 8)}…'
         : ticket.id;
+    final description = ticket.description.trim();
 
     return Material(
-      color: const Color(0xFFF7FAF6),
-      borderRadius: BorderRadius.circular(14),
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      elevation: 0,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          ticket.subject,
-                          style: const TextStyle(
-                            fontFamily: 'Roboto',
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.onboardingGreen,
+        borderRadius: BorderRadius.circular(16),
+        child: Ink(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFE8ECE6)),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x0A1A153B),
+                blurRadius: 10,
+                offset: Offset(0, 3),
+              ),
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 12, 14),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              ticket.subject.isEmpty
+                                  ? 'Untitled ticket'
+                                  : ticket.subject,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontFamily: 'Roboto',
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                                height: 1.3,
+                                color: AppColors.heading,
+                              ),
+                            ),
                           ),
+                          const SizedBox(width: 10),
+                          SupportStatusChip(status: ticket.status),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        '#$shortId',
+                        style: const TextStyle(
+                          fontFamily: 'Roboto',
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: Color(0xFF9B7BA8),
                         ),
-                        const SizedBox(height: 4),
+                      ),
+                      if (description.isNotEmpty) ...[
+                        const SizedBox(height: 10),
                         Text(
-                          shortId,
+                          description,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
                             fontFamily: 'Roboto',
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: Color(0xFF9B7BA8),
+                            fontSize: 13,
+                            fontWeight: FontWeight.w400,
+                            height: 1.35,
+                            color: AppColors.bodyGrey,
                           ),
                         ),
                       ],
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  SupportStatusChip(status: ticket.status),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  const Text(
-                    'PRIORITY',
-                    style: TextStyle(
-                      fontFamily: 'Roboto',
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.5,
-                      color: Color(0xFF9A949E),
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    ticket.priority.isEmpty ? '—' : ticket.priority,
-                    style: const TextStyle(
-                      fontFamily: 'Roboto',
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.subtext,
-                    ),
-                  ),
-                  const Spacer(),
-                  if (updatedLabel.isNotEmpty)
-                    Flexible(
-                      child: Text(
-                        updatedLabel,
-                        textAlign: TextAlign.right,
-                        style: const TextStyle(
-                          fontFamily: 'Roboto',
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
-                          color: Color(0xFF9A949E),
-                        ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          const Icon(
+                            RemixIcons.flag_2_line,
+                            size: 14,
+                            color: Color(0xFF9A949E),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            ticket.priority.isEmpty ? '—' : ticket.priority,
+                            style: const TextStyle(
+                              fontFamily: 'Roboto',
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.subtext,
+                            ),
+                          ),
+                          if (updatedLabel.isNotEmpty) ...[
+                            const SizedBox(width: 12),
+                            const Icon(
+                              RemixIcons.time_line,
+                              size: 14,
+                              color: Color(0xFF9A949E),
+                            ),
+                            const SizedBox(width: 4),
+                            Flexible(
+                              child: Text(
+                                updatedLabel,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontFamily: 'Roboto',
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                  color: Color(0xFF9A949E),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
-                    ),
-                ],
-              ),
-            ],
+                    ],
+                  ),
+                ),
+                const Padding(
+                  padding: EdgeInsets.only(top: 2, left: 4),
+                  child: Icon(
+                    RemixIcons.arrow_right_s_line,
+                    size: 22,
+                    color: Color(0xFF9A949E),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -483,6 +485,7 @@ class _InlineEmpty extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Text(
           title,

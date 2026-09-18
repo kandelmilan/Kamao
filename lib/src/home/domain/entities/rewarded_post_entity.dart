@@ -33,17 +33,7 @@ class RewardedPostEntity {
   final String currency;
   final DateTime postedAt;
 
-  String? get thumbnailImageUrl {
-    final path = thumbnailUrl;
-    if (path == null || path.isEmpty) return null;
-    if (path.startsWith('http')) return path;
-    return '${AppConstants.assetBaseUrl}$path';
-  }
+  String? get thumbnailImageUrl => resolveImageUrl(thumbnailUrl);
 
-  String? get brandLogoImageUrl {
-    final path = brandLogoUrl;
-    if (path == null || path.isEmpty) return null;
-    if (path.startsWith('http')) return path;
-    return '${AppConstants.assetBaseUrl}$path';
-  }
+  String? get brandLogoImageUrl => resolveImageUrl(brandLogoUrl);
 }

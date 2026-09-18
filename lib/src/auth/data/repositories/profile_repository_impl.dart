@@ -56,4 +56,18 @@ class ProfileRepositoryImpl implements ProfileRepository {
       (response) => Right(response.data!.toEntity()),
     );
   }
+
+  @override
+  Future<Either<Failure, bool>> updateProfile(
+    UpdateProfileRequestEntity request,
+  ) async {
+    final result = await _remoteDataSource.updateProfile(
+      UpdateProfileRequestModel.fromEntity(request),
+    );
+
+    return result.fold(
+      (failure) => Left(failure),
+      (response) => Right(response.data ?? true),
+    );
+  }
 }

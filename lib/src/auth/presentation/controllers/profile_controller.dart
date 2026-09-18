@@ -164,11 +164,10 @@ class ProfileController extends GetxController {
 
     final action = await Get.bottomSheet<_AvatarAction>(
       SafeArea(
-        child: Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-          ),
+        child: Material(
+          color: Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          clipBehavior: Clip.antiAlias,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -188,7 +187,10 @@ class ProfileController extends GetxController {
               ),
               if (hasAvatar)
                 ListTile(
-                  leading: const Icon(Icons.delete_outline, color: Color(0xFFE11D48)),
+                  leading: const Icon(
+                    Icons.delete_outline,
+                    color: Color(0xFFE11D48),
+                  ),
                   title: const Text(
                     'Remove photo',
                     style: TextStyle(color: Color(0xFFE11D48)),
@@ -215,16 +217,22 @@ class ProfileController extends GetxController {
   }
 
   Future<void> _pickAndUploadAvatar() async {
-    final file = await _picker.pickImage(
+    final picked = await _picker.pickImage(
       source: ImageSource.gallery,
-      imageQuality: 85,
-      maxWidth: 1024,
-      maxHeight: 1024,
+      imageQuality: 95,
+      maxWidth: 2048,
+      maxHeight: 2048,
     );
-    if (file == null) return;
+    if (picked == null) return;
+
+    final croppedPath = await Get.to<String>(
+      () => AvatarCropConfirmView(imagePath: picked.path),
+    );
+    if (croppedPath == null || croppedPath.isEmpty) return;
 
     isAvatarBusy.value = true;
-    final result = await _uploadAvatarUseCase(UploadAvatarParams(file.path));
+    final result =
+        await _uploadAvatarUseCase(UploadAvatarParams(croppedPath));
     result.fold(
       (failure) => Get.snackbar("Couldn't update photo", failure.message),
       (user) {
@@ -276,11 +284,11 @@ class ProfileController extends GetxController {
   }
 
   void openEditProfile() {
-    // TODO: Get.toNamed(Routes.editProfile);
+    Get.toNamed(AppRoutes.editProfile);
   }
 
   void openChangePassword() {
-    // TODO: Get.toNamed(Routes.changePassword);
+    Get.toNamed(AppRoutes.changePassword);
   }
 
   void openHelpSupport() {

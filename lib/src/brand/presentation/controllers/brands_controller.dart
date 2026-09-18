@@ -67,6 +67,7 @@ class BrandsController extends GetxController {
     await Future.wait([
       loadFeaturedBrands(),
       loadNewBrands(),
+      loadPopularBrands(),
       loadCategories(),
     ]);
   }
@@ -189,6 +190,11 @@ class BrandsController extends GetxController {
       fetcher: ({required int take}) =>
           _getPopularBrands(TakeParams(take: take)),
     );
+  }
+
+  /// True when this brand appears in the popular-brands list.
+  bool isPopularBrand(String brandId) {
+    return popularBrands.any((b) => b.id == brandId);
   }
 
   void onSeeAllRecent() {

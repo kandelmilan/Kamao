@@ -166,7 +166,6 @@ class _DetailHeader extends StatelessWidget {
           const Expanded(
             child: Text(
               'Ticket',
-              textAlign: TextAlign.center,
               style: TextStyle(
                 fontFamily: 'Roboto',
                 fontSize: 20,
@@ -175,7 +174,6 @@ class _DetailHeader extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 48),
         ],
       ),
     );

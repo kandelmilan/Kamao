@@ -1,3 +1,4 @@
+import 'package:kamao/core/utils/campaign_platforms.dart';
 import 'package:kamao/src/home/domain/entities/campaign/campaign_entity.dart';
 
 class CampaignModel extends CampaignEntity {
@@ -26,6 +27,8 @@ class CampaignModel extends CampaignEntity {
     super.brandLogoUrl,
     super.brandCoverUrl,
     super.brandCategory,
+    super.platforms,
+    super.contentTypes,
   });
 
   factory CampaignModel.fromJson(Map<String, dynamic> json) {
@@ -59,7 +62,46 @@ class CampaignModel extends CampaignEntity {
       creatorMaxReward: (json['creatorMaxReward'] as num?)?.toDouble() ?? 0,
       isFavourite: json['isFavourite'] as bool? ?? false,
       earnRangeLabel: json['earnRangeLabel'] as String? ?? '',
+      platforms: _parseStringList(json['platforms']),
+      contentTypes: _parseContentTypes(json),
     );
+  }
+
+  /// Prefers `contentTypes` / `contentType`, then ContentType directives.
+  static List<String> _parseContentTypes(Map<String, dynamic> json) {
+    final direct = _parseStringList(
+      json['contentTypes'] ?? json['contentType'],
+    );
+    if (direct.isNotEmpty) return direct;
+
+    final directives = json['directives'];
+    if (directives is! List) return const [];
+    return contentTypesFromDirectives(
+      directives.whereType<Map>().map(
+            (e) => (
+              directiveType: e['directiveType']?.toString() ?? '',
+              valueText: e['valueText']?.toString() ?? '',
+            ),
+          ),
+    );
+  }
+
+  static List<String> _parseStringList(dynamic value) {
+    if (value == null) return const [];
+    if (value is String) {
+      return value
+          .split(RegExp(r'[/|,;]+'))
+          .map((s) => s.trim())
+          .where((s) => s.isNotEmpty)
+          .toList();
+    }
+    if (value is List) {
+      return value
+          .map((e) => e.toString().trim())
+          .where((s) => s.isNotEmpty)
+          .toList();
+    }
+    return const [];
   }
 
   static DateTime? _parseDate(dynamic value) {

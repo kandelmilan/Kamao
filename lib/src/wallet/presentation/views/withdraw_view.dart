@@ -11,166 +11,173 @@ class WithdrawView extends GetView<WithdrawController> {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      type: MaterialType.transparency,
-      child: Stack(
-        children: [
-          const Positioned.fill(
-            child: ColoredBox(color: AppColors.homeBg),
-          ),
-          SafeArea(
-            child: Column(
-              children: [
-                const _WithdrawHeader(),
-                Expanded(
-                  child: Obx(() {
-                    if (controller.isLoading.value &&
-                        controller.summary.value == null) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-                    return SingleChildScrollView(
-                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          _AvailableCard(controller: controller),
-                          const SizedBox(height: 28),
-                          const _SectionTitle(title: 'Withdrawal Request'),
-                          const SizedBox(height: 18),
-                          _AmountField(controller: controller),
-                          const SizedBox(height: 16),
-                          _PayoutMethodField(controller: controller),
-                          const SizedBox(height: 16),
-                          _LabeledField(
-                            label: 'ACCOUNT HOLDER NAME',
+    final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
+
+    return Scaffold(
+      backgroundColor: AppColors.homeBg,
+      resizeToAvoidBottomInset: true,
+      body: SafeArea(
+        child: Column(
+          children: [
+            const _WithdrawHeader(),
+            Expanded(
+              child: Obx(() {
+                if (controller.isLoading.value &&
+                    controller.summary.value == null) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                return SingleChildScrollView(
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
+                  padding: EdgeInsets.fromLTRB(
+                    20,
+                    8,
+                    20,
+                    24 + (bottomInset > 0 ? 12 : 0),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _AvailableCard(controller: controller),
+                      const SizedBox(height: 28),
+                      const _SectionTitle(title: 'Withdrawal Request'),
+                      const SizedBox(height: 18),
+                      _AmountField(controller: controller),
+                      const SizedBox(height: 16),
+                      _PayoutMethodField(controller: controller),
+                      const SizedBox(height: 16),
+                      _LabeledField(
+                        label: 'ACCOUNT HOLDER NAME',
+                        child: TextField(
+                          controller: controller.accountNameController,
+                          textCapitalization: TextCapitalization.words,
+                          textInputAction: TextInputAction.next,
+                          style: _fieldTextStyle,
+                          decoration: _inputDecoration(
+                            hint: 'Full name as per ID',
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Obx(() {
+                        final isWallet = controller.isWalletDestination;
+                        return _LabeledField(
+                          label: isWallet
+                              ? 'MOBILE NUMBER'
+                              : 'ACCOUNT NUMBER',
+                          child: TextField(
+                            controller: controller.accountNumberController,
+                            keyboardType: TextInputType.phone,
+                            textInputAction: isWallet
+                                ? TextInputAction.done
+                                : TextInputAction.next,
+                            style: _fieldTextStyle,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                              LengthLimitingTextInputFormatter(20),
+                            ],
+                            decoration: _inputDecoration(
+                              hint: isWallet
+                                  ? '98XXXXXXXX'
+                                  : 'Account number',
+                            ),
+                          ),
+                        );
+                      }),
+                      Obx(() {
+                        if (controller.isWalletDestination) {
+                          return const SizedBox.shrink();
+                        }
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 16),
+                          child: _LabeledField(
+                            label: 'BANK NAME',
                             child: TextField(
-                              controller: controller.accountNameController,
-                              textCapitalization: TextCapitalization.words,
+                              controller: controller.bankNameController,
+                              textCapitalization:
+                                  TextCapitalization.characters,
+                              textInputAction: TextInputAction.done,
                               style: _fieldTextStyle,
                               decoration: _inputDecoration(
-                                hint: 'Full name as per ID',
+                                hint: 'e.g. PRABHU',
                               ),
                             ),
                           ),
-                          const SizedBox(height: 16),
-                          Obx(() {
-                            final isWallet = controller.isWalletDestination;
-                            return _LabeledField(
-                              label: isWallet
-                                  ? 'MOBILE NUMBER'
-                                  : 'ACCOUNT NUMBER',
-                              child: TextField(
-                                controller:
-                                    controller.accountNumberController,
-                                keyboardType: TextInputType.phone,
-                                style: _fieldTextStyle,
-                                inputFormatters: [
-                                  FilteringTextInputFormatter.digitsOnly,
-                                  LengthLimitingTextInputFormatter(20),
-                                ],
-                                decoration: _inputDecoration(
-                                  hint: isWallet
-                                      ? '98XXXXXXXX'
-                                      : 'Account number',
-                                ),
+                        );
+                      }),
+                      Obx(() {
+                        final err = controller.fieldError.value;
+                        if (err == null || err.isEmpty) {
+                          return const SizedBox.shrink();
+                        }
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 12),
+                          child: Text(
+                            err,
+                            style: const TextStyle(
+                              fontFamily: 'Roboto',
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0xFFDC2626),
+                            ),
+                          ),
+                        );
+                      }),
+                      const SizedBox(height: 16),
+                      const _InfoNote(),
+                      const SizedBox(height: 28),
+                      Obx(() {
+                        final busy = controller.isSubmitting.value;
+                        return SizedBox(
+                          width: double.infinity,
+                          height: 56,
+                          child: ElevatedButton(
+                            onPressed: busy ? null : controller.submit,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF334D32),
+                              foregroundColor: Colors.white,
+                              disabledBackgroundColor: const Color(
+                                0xFF334D32,
+                              ).withValues(alpha: 0.5),
+                              elevation: 0,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 16,
                               ),
-                            );
-                          }),
-                          Obx(() {
-                            if (controller.isWalletDestination) {
-                              return const SizedBox.shrink();
-                            }
-                            return Padding(
-                              padding: const EdgeInsets.only(top: 16),
-                              child: _LabeledField(
-                                label: 'BANK NAME',
-                                child: TextField(
-                                  controller: controller.bankNameController,
-                                  textCapitalization:
-                                      TextCapitalization.characters,
-                                  style: _fieldTextStyle,
-                                  decoration: _inputDecoration(
-                                    hint: 'e.g. PRABHU',
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: busy
+                                ? const SizedBox(
+                                    width: 22,
+                                    height: 22,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.4,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : const Text(
+                                    'Request Withdrawal',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontFamily: 'Roboto',
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500,
+                                      height: 24 / 16,
+                                      color: Colors.white,
+                                    ),
                                   ),
-                                ),
-                              ),
-                            );
-                          }),
-                          Obx(() {
-                            final err = controller.fieldError.value;
-                            if (err == null || err.isEmpty) {
-                              return const SizedBox.shrink();
-                            }
-                            return Padding(
-                              padding: const EdgeInsets.only(top: 12),
-                              child: Text(
-                                err,
-                                style: const TextStyle(
-                                  fontFamily: 'Roboto',
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                  color: Color(0xFFDC2626),
-                                ),
-                              ),
-                            );
-                          }),
-                          const SizedBox(height: 16),
-                          const _InfoNote(),
-                          const SizedBox(height: 28),
-                          Obx(() {
-                            final busy = controller.isSubmitting.value;
-                            return SizedBox(
-                              width: double.infinity,
-                              height: 56,
-                              child: ElevatedButton(
-                                onPressed: busy ? null : controller.submit,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF334D32),
-                                  foregroundColor: Colors.white,
-                                  disabledBackgroundColor: const Color(
-                                    0xFF334D32,
-                                  ).withValues(alpha: 0.5),
-                                  elevation: 0,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 24,
-                                    vertical: 16,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                                child: busy
-                                    ? const SizedBox(
-                                        width: 22,
-                                        height: 22,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2.4,
-                                          color: Colors.white,
-                                        ),
-                                      )
-                                    : const Text(
-                                        'Request Withdrawal',
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                          fontFamily: 'Roboto',
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w500,
-                                          height: 24 / 16,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                              ),
-                            );
-                          }),
-                        ],
-                      ),
-                    );
-                  }),
-                ),
-              ],
+                          ),
+                        );
+                      }),
+                    ],
+                  ),
+                );
+              }),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

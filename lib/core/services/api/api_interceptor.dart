@@ -192,7 +192,7 @@ class ApiInterceptor extends Interceptor {
 
   void _logRequest(RequestOptions options) {
     AppLogger.info(
-      '┌────────────────────────────────────────────────────',
+      '┌──────────────────────────────────────────────────── ',
       tag: 'API',
     );
 

@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:kamao/app/app.dart';
-import 'package:kamao/core/constants/app_images.dart';
 import 'package:kamao/core/utils/image_url_resolver.dart';
 import 'package:kamao/src/brand/domain/entities/brand_entity.dart';
 import 'package:kamao/src/brand/presentation/controllers/brands_controller.dart';
@@ -164,14 +162,10 @@ class _SearchSection extends StatelessWidget {
         ),
         child: Row(
           children: [
-            SvgPicture.asset(
-              AppImages.iconSearch,
-              width: 16,
-              height: 16,
-              colorFilter: const ColorFilter.mode(
-                _Palette.searchHint,
-                BlendMode.srcIn,
-              ),
+            const Icon(
+              RemixIcons.search_line,
+              size: 16,
+              color: _Palette.searchHint,
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -198,14 +192,10 @@ class _SearchSection extends StatelessWidget {
             ),
             InkWell(
               onTap: onFilter,
-              child: SvgPicture.asset(
-                AppImages.iconFilter,
-                width: 16,
-                height: 16,
-                colorFilter: const ColorFilter.mode(
-                  _Palette.searchHint,
-                  BlendMode.srcIn,
-                ),
+              child: const Icon(
+                RemixIcons.filter_3_line,
+                size: 16,
+                color: _Palette.searchHint,
               ),
             ),
           ],
@@ -309,7 +299,7 @@ class _FeaturedSection extends GetView<BrandsController> {
         const SizedBox(height: 12),
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.fromLTRB(20, 20, 0, 20),
+          padding: const EdgeInsets.fromLTRB(20, 20, 0, 24),
           decoration: BoxDecoration(
             color: _Palette.mintStrip,
             border: Border.all(color: _Palette.mintBorder),
@@ -317,15 +307,17 @@ class _FeaturedSection extends GetView<BrandsController> {
           child: Obx(() {
             final status = controller.featuredStatus.value;
             final query = controller.searchQuery.value;
+            // Rebuild when popular list arrives so Popular badges stay in sync.
+            final _ = controller.popularBrands.length;
             if (status.isLoading) {
               return const SizedBox(
-                height: 220,
+                height: 230,
                 child: _HorizontalShimmer(itemWidth: 148, height: 220),
               );
             }
             if (status.isError) {
               return SizedBox(
-                height: 220,
+                height: 230,
                 child: _ErrorInline(
                   message:
                       status.errorMessage ?? 'Failed to load featured brands',
@@ -336,19 +328,21 @@ class _FeaturedSection extends GetView<BrandsController> {
             final items = _filterBrands(controller.featuredBrands, query);
             if (items.isEmpty) {
               return const SizedBox(
-                height: 220,
+                height: 230,
                 child: _EmptyInline(label: 'No featured brands yet'),
               );
             }
             return SizedBox(
-              height: 220,
+              height: 230,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
+                clipBehavior: Clip.none,
+                padding: const EdgeInsets.only(bottom: 8),
                 itemCount: items.length,
                 separatorBuilder: (_, __) => const SizedBox(width: 12),
                 itemBuilder: (_, i) => _FeaturedBrandCard(
                   brand: items[i],
-                  badge: i.isEven ? 'Popular' : 'Trending',
+                  showPopularBadge: controller.isPopularBrand(items[i].id),
                 ),
               ),
             );
@@ -360,10 +354,16 @@ class _FeaturedSection extends GetView<BrandsController> {
 }
 
 class _FeaturedBrandCard extends StatelessWidget {
-  const _FeaturedBrandCard({required this.brand, required this.badge});
+  const _FeaturedBrandCard({
+    required this.brand,
+    this.showPopularBadge = false,
+  });
 
   final BrandEntity brand;
-  final String badge;
+  final bool showPopularBadge;
+
+  /// Matches home Favourite Campaign card footprint.
+  static const double cardWidth = 148;
 
   @override
   Widget build(BuildContext context) {
@@ -381,73 +381,81 @@ class _FeaturedBrandCard extends StatelessWidget {
       onTap: () => openBrandDetail(brand.id),
       borderRadius: BorderRadius.circular(16),
       child: Container(
-        width: 148,
+        width: cardWidth,
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          boxShadow: const [
+          boxShadow: [
             BoxShadow(
-              color: Color(0x1A000000),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 8,
-              offset: Offset(0, 2),
+              offset: const Offset(0, 2),
             ),
           ],
         ),
-        clipBehavior: Clip.antiAlias,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             SizedBox(
-              height: 90,
+              height: 108,
               width: double.infinity,
               child: Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  Positioned.fill(
-                    child: cover == null
-                        ? Container(color: const Color(0xFFFFF7ED))
-                        : Image.network(
-                            cover,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) =>
-                                Container(color: const Color(0xFFFFF7ED)),
-                          ),
-                  ),
-                  Positioned(
-                    top: 6,
-                    right: 6,
-                    child: Container(
-                      padding: const EdgeInsets.fromLTRB(6, 2, 6, 2.25),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(
-                          color: const Color(0xFFF7FAF6),
-                          width: 0.5,
-                        ),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Color(0x40000000),
-                            blurRadius: 2,
-                            offset: Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Text(
-                        badge,
-                        style: const TextStyle(
-                          fontFamily: 'Roboto',
-                          fontSize: 9,
-                          fontWeight: FontWeight.w500,
-                          height: 11.25 / 9,
-                          color: _Palette.badgeText,
-                        ),
+                  ClipRRect(
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(16),
+                    ),
+                    child: SizedBox(
+                      height: 90,
+                      width: double.infinity,
+                      child: ColoredBox(
+                        color: const Color(0xFFFFF7ED),
+                        child: cover == null
+                            ? const SizedBox.shrink()
+                            : Image.network(
+                                cover,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) =>
+                                    const SizedBox.shrink(),
+                              ),
                       ),
                     ),
                   ),
+                  if (showPopularBadge)
+                    Positioned(
+                      top: 6,
+                      right: 6,
+                      child: Container(
+                        padding: const EdgeInsets.fromLTRB(6, 2, 6, 2.25),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: const Color(0xFFF7FAF6)),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.25),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: const Text(
+                          'Popular',
+                          style: TextStyle(
+                            fontFamily: 'Roboto',
+                            fontSize: 9,
+                            fontWeight: FontWeight.w500,
+                            height: 11.25 / 9,
+                            color: _Palette.badgeText,
+                          ),
+                        ),
+                      ),
+                    ),
                   Positioned(
                     left: 6,
-                    bottom: -18,
+                    bottom: 0,
                     child: Container(
                       width: 40,
                       height: 40,
@@ -458,97 +466,87 @@ class _FeaturedBrandCard extends StatelessWidget {
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withValues(alpha: 0.25),
-                            blurRadius: 3.8,
-                            offset: const Offset(0, -1.25),
+                            blurRadius: 4,
+                            offset: const Offset(0, -1),
                           ),
                         ],
                       ),
                       child: ClipOval(
                         child: logo == null
-                            ? const Icon(RemixIcons.store_2_line, size: 16)
-                            : Image.network(logo, fit: BoxFit.cover),
+                            ? const ColoredBox(
+                                color: Color(0xFFF3F4F6),
+                                child: Icon(
+                                  RemixIcons.store_2_line,
+                                  size: 16,
+                                ),
+                              )
+                            : Image.network(
+                                logo,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => const ColoredBox(
+                                  color: Color(0xFFF3F4F6),
+                                  child: Icon(
+                                    RemixIcons.store_2_line,
+                                    size: 16,
+                                  ),
+                                ),
+                              ),
                       ),
                     ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 22),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(10, 0, 10, 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      brand.name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontFamily: 'Roboto',
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        height: 16 / 14,
-                        color: _Palette.brandName,
-                      ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(10, 6, 10, 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    brand.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontFamily: 'Roboto',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      height: 16 / 14,
+                      color: _Palette.brandName,
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      category,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontFamily: 'Roboto',
-                        fontSize: 10,
-                        fontWeight: FontWeight.w500,
-                        height: 1.5,
-                        color: _Palette.metaText,
-                      ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    category,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontFamily: 'Roboto',
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500,
+                      height: 15 / 10,
+                      color: _Palette.metaText,
                     ),
-                    Text(
-                      tagline,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontFamily: 'Roboto',
-                        fontSize: 10,
-                        fontWeight: FontWeight.w500,
-                        height: 1.5,
-                        color: _Palette.metaText,
-                      ),
+                  ),
+                  Text(
+                    tagline,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontFamily: 'Roboto',
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500,
+                      height: 15 / 10,
+                      color: _Palette.metaText,
                     ),
-                    const Spacer(),
-                    Row(
-                      children: [
-                        const Expanded(child: _SocialBubbles()),
-                        Container(
-                          width: 20,
-                          height: 20,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: const Color(0xFFEDECED),
-                              width: 0.5,
-                            ),
-                            boxShadow: const [
-                              BoxShadow(
-                                color: Color(0x08000000),
-                                blurRadius: 3,
-                                offset: Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: const Icon(
-                            RemixIcons.arrow_right_s_line,
-                            size: 12,
-                            color: _Palette.metaText,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 10),
+                  const Row(
+                    children: [
+                      Expanded(child: _SocialBubbles()),
+                      _CardArrow(),
+                    ],
+                  ),
+                ],
               ),
             ),
           ],
@@ -558,32 +556,84 @@ class _FeaturedBrandCard extends StatelessWidget {
   }
 }
 
-class _SocialBubbles extends StatelessWidget {
-  const _SocialBubbles();
+class _CardArrow extends StatelessWidget {
+  const _CardArrow();
 
   @override
   Widget build(BuildContext context) {
-    return const Row(
+    return Container(
+      width: 20,
+      height: 20,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: const Color(0xFFEDECED),
+          width: 0.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 3,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      alignment: Alignment.center,
+      child: const Icon(
+        RemixIcons.arrow_right_s_line,
+        size: 14,
+        color: _Palette.titleText,
+      ),
+    );
+  }
+}
+
+class _SocialBubbles extends StatelessWidget {
+  const _SocialBubbles();
+
+  static const _platforms = ['instagram', 'tiktok', 'facebook'];
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        _Bubble(
+        for (var i = 0; i < _platforms.length; i++) ...[
+          if (i > 0) const SizedBox(width: 5),
+          _bubbleFor(_platforms[i]),
+        ],
+      ],
+    );
+  }
+
+  Widget _bubbleFor(String platform) {
+    switch (platform) {
+      case 'instagram':
+        return const _Bubble(
           color: Color(0x14FF007F),
           icon: RemixIcons.instagram_fill,
           iconColor: Color(0xFFE1306C),
-        ),
-        SizedBox(width: 5),
-        _Bubble(
+        );
+      case 'tiktok':
+        return const _Bubble(
           color: Color(0x14000000),
           icon: RemixIcons.tiktok_fill,
           iconColor: Colors.black,
-        ),
-        SizedBox(width: 5),
-        _Bubble(
+        );
+      case 'facebook':
+        return const _Bubble(
           color: Color(0xFFE9EFFD),
           icon: RemixIcons.facebook_fill,
           iconColor: Color(0xFF1877F2),
-        ),
-      ],
-    );
+        );
+      default:
+        return const _Bubble(
+          color: Color(0xFFF3F4F6),
+          icon: RemixIcons.links_line,
+          iconColor: Color(0xFF6E6971),
+        );
+    }
   }
 }
 
@@ -618,48 +668,67 @@ class _NewBrandsRail extends GetView<BrandsController> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 20),
-      child: Obx(() {
-        final status = controller.newStatus.value;
-        final query = controller.searchQuery.value;
-        if (status.isLoading) {
-          return const SizedBox(
-            height: 102,
+    return Obx(() {
+      final status = controller.newStatus.value;
+      final query = controller.searchQuery.value;
+      if (status.isLoading) {
+        return const SizedBox(
+          height: 114,
+          child: Padding(
+            padding: EdgeInsets.only(left: 20),
             child: _HorizontalShimmer(
               itemWidth: 72,
-              height: 102,
+              height: 114,
               circular: true,
             ),
-          );
-        }
-        if (status.isError) {
-          return SizedBox(
-            height: 102,
-            child: _ErrorInline(
-              message: status.errorMessage ?? 'Failed to load new brands',
-              onRetry: controller.loadNewBrands,
-            ),
-          );
-        }
-        final items = _filterBrands(controller.newBrands, query);
-        if (items.isEmpty) {
-          return const SizedBox(
-            height: 102,
-            child: _EmptyInline(label: 'No new brands yet'),
-          );
-        }
-        return SizedBox(
-          height: 102,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: items.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 16),
-            itemBuilder: (_, i) => BrandCircleItem(brand: items[i]),
           ),
         );
-      }),
-    );
+      }
+      if (status.isError) {
+        return SizedBox(
+          height: 114,
+          child: _ErrorInline(
+            message: status.errorMessage ?? 'Failed to load new brands',
+            onRetry: controller.loadNewBrands,
+          ),
+        );
+      }
+      final items = _filterBrands(controller.newBrands, query);
+      if (items.isEmpty) {
+        return const SizedBox(
+          height: 114,
+          child: _EmptyInline(label: 'No new brands yet'),
+        );
+      }
+      return SizedBox(
+        height: 114,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            // Exactly 4 brands visible; extra items scroll horizontally.
+            const visibleCount = 4;
+            const horizontalPadding = 20.0;
+            const gap = 8.0;
+            final available =
+                constraints.maxWidth - (horizontalPadding * 2);
+            final itemWidth =
+                (available - gap * (visibleCount - 1)) / visibleCount;
+
+            return ListView.separated(
+              padding: const EdgeInsets.symmetric(
+                horizontal: horizontalPadding,
+              ),
+              scrollDirection: Axis.horizontal,
+              itemCount: items.length,
+              separatorBuilder: (_, __) => const SizedBox(width: gap),
+              itemBuilder: (_, i) => BrandCircleItem(
+                brand: items[i],
+                width: itemWidth,
+              ),
+            );
+          },
+        ),
+      );
+    });
   }
 }
 
@@ -755,14 +824,10 @@ class _CategoryRow extends StatelessWidget {
                   ),
                 ),
               ),
-              SvgPicture.asset(
-                AppImages.iconChevronRight,
-                width: 20,
-                height: 20,
-                colorFilter: const ColorFilter.mode(
-                  Color(0xFF9CA3AF),
-                  BlendMode.srcIn,
-                ),
+              const Icon(
+                RemixIcons.arrow_right_s_line,
+                size: 20,
+                color: Color(0xFF9CA3AF),
               ),
             ],
           ),

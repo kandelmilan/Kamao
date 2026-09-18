@@ -24,19 +24,17 @@ class HomeView extends GetView<HomeController> {
   @override
   Widget build(BuildContext context) {
     return Material(
-      type: MaterialType.transparency,
-      child: Container(
-        color: AppColors.homeBg,
-        child: SafeArea(
-          bottom: false,
-          child: RefreshIndicator(
-            onRefresh: controller.refreshHome,
-            child: SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.only(bottom: 32),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
+      color: AppColors.homeBg,
+      child: SafeArea(
+        bottom: false,
+        child: RefreshIndicator(
+          onRefresh: controller.refreshHome,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.only(bottom: 32),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
                   _HeaderSection(controller: controller),
                   const SizedBox(height: 16),
                   Padding(
@@ -59,8 +57,9 @@ class HomeView extends GetView<HomeController> {
                   const SizedBox(height: 24),
                   _BrandsSection(
                     title: 'Popular Brands',
-                    iconAsset: AppImages.iconFire,
+                    icon: RemixIcons.fire_fill,
                     iconSize: 20,
+                    iconColor: const Color(0xFFF59E0B),
                     brands: () => controller.filteredPopularBrands,
                     isLoading: () => controller.isPopularBrandsLoading.value,
                     seeAll: controller.seeAllPopularBrands,
@@ -118,7 +117,7 @@ class HomeView extends GetView<HomeController> {
                         const SizedBox(height: 30),
                         _BrandsSection(
                           title: 'Recent Brands',
-                          iconAsset: AppImages.iconTime,
+                          icon: RemixIcons.time_line,
                           iconSize: 20,
                           brands: () => controller.filteredRecentBrands,
                           isLoading: () =>
@@ -141,8 +140,9 @@ class HomeView extends GetView<HomeController> {
                         const SizedBox(height: 24),
                         _BrandsSection(
                           title: 'Featured Brands',
-                          iconAsset: AppImages.iconStar,
-                          iconSize: 24,
+                          icon: RemixIcons.star_line,
+                          iconSize: 20,
+                          iconColor: const Color(0xFF353037),
                           brands: () => controller.filteredFeaturedBrands,
                           isLoading: () =>
                               controller.isFeaturedBrandsLoading.value,
@@ -172,8 +172,7 @@ class HomeView extends GetView<HomeController> {
             ),
           ),
         ),
-      ),
-    );
+      );
   }
 }
 
@@ -272,24 +271,28 @@ class _Avatar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Obx(() {
       final name = controller.greetingName;
-      return DecoratedBox(
-        decoration: const BoxDecoration(
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: Color(0x0D000000),
-              blurRadius: 2,
-              offset: Offset(0, 1),
-            ),
-          ],
-        ),
-        child: UserAvatar(
-          size: 44,
-          initial: name.isNotEmpty ? name : null,
-          borderColor: const Color(0xCCFFFFFF),
-          borderWidth: 1,
-          backgroundColor: const Color(0xFFEDE6F1),
-          fallbackIconSize: 22,
+      return GestureDetector(
+        onTap: controller.openProfile,
+        behavior: HitTestBehavior.opaque,
+        child: DecoratedBox(
+          decoration: const BoxDecoration(
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: Color(0x0D000000),
+                blurRadius: 2,
+                offset: Offset(0, 1),
+              ),
+            ],
+          ),
+          child: UserAvatar(
+            size: 44,
+            initial: name.isNotEmpty ? name : null,
+            borderColor: const Color(0xCCFFFFFF),
+            borderWidth: 1,
+            backgroundColor: const Color(0xFFEDE6F1),
+            fallbackIconSize: 22,
+          ),
         ),
       );
     });
@@ -556,16 +559,16 @@ class _WalletCard extends StatelessWidget {
                 ),
               ),
               // Weekly growth badge — Figma 660:2089
-              Positioned(
-                left: 267 * s,
-                top: 19 * s,
-                child: Obx(
-                  () => _WeeklyGrowthBadge(
-                    label: controller.weeklyGrowthAmountLabel,
-                    scale: s,
-                  ),
-                ),
-              ),
+              // Positioned(
+              //   left: 267 * s,
+              //   top: 19 * s,
+              //   child: Obx(
+              //     () => _WeeklyGrowthBadge(
+              //       label: controller.weeklyGrowthAmountLabel,
+              //       scale: s,
+              //     ),
+              //   ),
+              // ),
               // View wallet CTA — Figma 660:2099
               Positioned(
                 left: 19 * s,
@@ -626,7 +629,7 @@ class _WalletCard extends StatelessWidget {
 
 
 // ═════════════════════════════════════════════════════════════
-// Connect Social Accounts card — matches Figma; sheet handles connect/details
+// Connect Social Accounts card 
 // ═════════════════════════════════════════════════════════════
 
 class _ConnectSocialAccountsCard extends StatelessWidget {

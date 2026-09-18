@@ -17,6 +17,11 @@ abstract class ProfileRemoteDataSource {
 
   /// DELETE `/auth/me/avatar`.
   Future<Either<Failure, ApiResponse<UserModel>>> deleteAvatar();
+
+  /// PUT `/creator/profile`.
+  Future<Either<Failure, ApiResponse<bool>>> updateProfile(
+    UpdateProfileRequestModel request,
+  );
 }
 
 class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
@@ -77,6 +82,19 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
     return ApiResponseHandler.handleResponse<UserModel>(
       () => _apiService.delete(ApiEndpoints.profileAvatar),
       (data) => UserModel.fromJson(data as Map<String, dynamic>),
+    );
+  }
+
+  @override
+  Future<Either<Failure, ApiResponse<bool>>> updateProfile(
+    UpdateProfileRequestModel request,
+  ) {
+    return ApiResponseHandler.handleResponse<bool>(
+      () => _apiService.put(
+        ApiEndpoints.updateProfile,
+        data: request.toJson(),
+      ),
+      (_) => true,
     );
   }
 }

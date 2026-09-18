@@ -18,6 +18,10 @@ abstract class AuthRemoteDataSource {
   Future<Either<Failure, ApiResponse<UserModel>>> getMe();
   Future<Either<Failure, ApiResponse<ForgotPasswordResponseModel>>>
   forgotPassword(ForgotPasswordRequestModel request);
+
+  Future<Either<Failure, ApiResponse<bool>>> changePassword(
+    ChangePasswordRequestModel request,
+  );
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -71,6 +75,19 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
           _apiService.post(ApiEndpoints.forgotPassword, data: request.toJson()),
       (data) =>
           ForgotPasswordResponseModel.fromJson(data as Map<String, dynamic>),
+    );
+  }
+
+  @override
+  Future<Either<Failure, ApiResponse<bool>>> changePassword(
+    ChangePasswordRequestModel request,
+  ) {
+    return ApiResponseHandler.handleResponse<bool>(
+      () => _apiService.post(
+        ApiEndpoints.changePassword,
+        data: request.toJson(),
+      ),
+      (data) => data is bool ? data : data == true || data?.toString() == 'true',
     );
   }
 }

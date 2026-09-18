@@ -115,7 +115,6 @@ class _HelpHeader extends StatelessWidget {
           Expanded(
             child: Text(
               title,
-              textAlign: TextAlign.center,
               style: const TextStyle(
                 fontFamily: 'Roboto',
                 fontSize: 20,
@@ -124,7 +123,6 @@ class _HelpHeader extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 48),
         ],
       ),
     );
